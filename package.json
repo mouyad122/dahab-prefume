@@ -1,0 +1,38 @@
+{
+  "name": "dahab-perfumes",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "import:products": "node scripts/import-products.mjs",
+    "verify:products": "node scripts/verify-products.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@prisma/client": "^6.2.1",
+    "@tailwindcss/postcss": "^4.0.0",
+    "framer-motion": "^11.5.4",
+    "lucide-react": "^0.440.0",
+    "next": "^15.1.0",
+    "postcss": "^8.4.47",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.53.0",
+    "tailwindcss": "^4.0.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.0-rc.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^6.2.1",
+    "typescript": "^5.5.4"
+  }
+}

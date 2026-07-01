@@ -1,0 +1,82 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id                    String             @id @default(uuid())
+  sku                   String             @unique
+  slug                  String             @unique
+  name_ar               String
+  inspired_by           String
+  main_category         String
+  gender                String
+  season                String
+  fragrance_family_raw  String
+  short_description_ar  String
+  keywords_ar           String
+  image_filename        String
+  needs_image           Boolean            @default(true)
+  visible_on_website    Boolean
+  featured_on_frontend  Boolean
+  uses_general_pricing  Boolean
+  price_50ml_fils       Int?
+  price_100ml_fils      Int?
+  price_200ml_fils      Int?
+  notes                 String?
+  research_confidence   String
+  needs_review          Boolean            @default(false)
+  source_excel_row      Int                @unique
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+
+  accords               ProductAccord[]
+  family_tags           ProductFamilyTag[]
+
+  @@index([slug])
+  @@index([sku])
+  @@index([source_excel_row])
+  @@index([visible_on_website])
+  @@index([featured_on_frontend])
+  @@index([gender])
+  @@index([season])
+  @@index([main_category])
+  @@index([needs_review])
+}
+
+model ProductAccord {
+  id        String  @id @default(uuid())
+  productId String
+  position  Int
+  name_ar   String
+  strength  Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, position])
+  @@index([name_ar])
+}
+
+model ProductFamilyTag {
+  id        String  @id @default(uuid())
+  productId String
+  tag_ar    String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tag_ar])
+  @@index([tag_ar])
+}
+
+model GlobalPricingSettings {
+  id              String   @id @default(uuid())
+  price_50ml_fils Int
+  price_100ml_fils Int
+  price_200ml_fils Int
+  currency        String   @default("JOD")
+  active          Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
