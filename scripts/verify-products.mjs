@@ -385,57 +385,83 @@ async function main() {
   console.log('9. PUBLIC VISIBILITY VALIDATION');
   console.log('----------------------------------------------------------');
 
-  // Verify initial state: All 331 products should be hidden
-  const initialPublicProducts = await ProductDbService.getPublicProducts({ limit: 100 });
-  assertEqual('Initial visible products count', initialPublicProducts.products.length, 0);
+  // Capture current visibility states to restore later
+  const initiallyVisibleProducts = await prisma.product.findMany({
+    where: { visible_on_website: true },
+    select: { id: true, featured_on_frontend: true },
+  });
 
-  const initialFeaturedProducts = await ProductDbService.getFeaturedPublicProducts();
-  assertEqual('Initial featured products count', initialFeaturedProducts.length, 0);
-
-  const testProduct = allProducts[0]; // Row 2 (DHB-0002)
-  const hiddenSlugResult = await ProductDbService.getPublicProductBySlug(testProduct.slug);
-  assertEqual('Public fetch of hidden product by slug', hiddenSlugResult, null);
-
-  // Temporarily make test product visible with try...finally for bulletproof cleanup
   try {
-    await prisma.product.update({
-      where: { id: testProduct.id },
-      data: { visible_on_website: true },
-    });
-
-    const oneVisibleProducts = await ProductDbService.getPublicProducts({ limit: 100 });
-    assertEqual('Visible products count with 1 visible product', oneVisibleProducts.products.length, 1);
-    assertEqual('Visible product SKU', oneVisibleProducts.products[0]?.sku, testProduct.sku);
-
-    const visibleSlugResult = await ProductDbService.getPublicProductBySlug(testProduct.slug);
-    if (visibleSlugResult && visibleSlugResult.sku === testProduct.sku) {
-      pass('Public fetch of visible product by slug matches');
-    } else {
-      fail('Public fetch of visible product by slug', 'failed to fetch or mismatch');
-    }
-
-    const visibleFeaturedCount = await ProductDbService.getFeaturedPublicProducts();
-    assertEqual('Featured products count (visible but not featured)', visibleFeaturedCount.length, 0);
-
-    // Temporarily make it featured as well
-    await prisma.product.update({
-      where: { id: testProduct.id },
-      data: { featured_on_frontend: true },
-    });
-
-    const visibleAndFeaturedCount = await ProductDbService.getFeaturedPublicProducts();
-    assertEqual('Featured products count (visible AND featured)', visibleAndFeaturedCount.length, 1);
-    assertEqual('Featured product SKU', visibleAndFeaturedCount[0]?.sku, testProduct.sku);
-  } finally {
-    // Cleanup: Revert test product back to hidden/unfeatured
-    await prisma.product.update({
-      where: { id: testProduct.id },
+    // Force hide all products for a clean visibility test context
+    await prisma.product.updateMany({
       data: { visible_on_website: false, featured_on_frontend: false },
     });
-  }
 
-  const finalPublicProducts = await ProductDbService.getPublicProducts({ limit: 100 });
-  assertEqual('Final visible products count after cleanup', finalPublicProducts.products.length, 0);
+    // Verify initial state: All 331 products should be hidden
+    const initialPublicProducts = await ProductDbService.getPublicProducts({ limit: 100 });
+    assertEqual('Initial visible products count', initialPublicProducts.products.length, 0);
+
+    const initialFeaturedProducts = await ProductDbService.getFeaturedPublicProducts();
+    assertEqual('Initial featured products count', initialFeaturedProducts.length, 0);
+
+    const testProduct = allProducts[0]; // Row 2 (DHB-0002)
+    const hiddenSlugResult = await ProductDbService.getPublicProductBySlug(testProduct.slug);
+    assertEqual('Public fetch of hidden product by slug', hiddenSlugResult, null);
+
+    // Temporarily make test product visible with try...finally for nested cleanup
+    try {
+      await prisma.product.update({
+        where: { id: testProduct.id },
+        data: { visible_on_website: true },
+      });
+
+      const oneVisibleProducts = await ProductDbService.getPublicProducts({ limit: 100 });
+      assertEqual('Visible products count with 1 visible product', oneVisibleProducts.products.length, 1);
+      assertEqual('Visible product SKU', oneVisibleProducts.products[0]?.sku, testProduct.sku);
+
+      const visibleSlugResult = await ProductDbService.getPublicProductBySlug(testProduct.slug);
+      if (visibleSlugResult && visibleSlugResult.sku === testProduct.sku) {
+        pass('Public fetch of visible product by slug matches');
+      } else {
+        fail('Public fetch of visible product by slug', 'failed to fetch or mismatch');
+      }
+
+      const visibleFeaturedCount = await ProductDbService.getFeaturedPublicProducts();
+      assertEqual('Featured products count (visible but not featured)', visibleFeaturedCount.length, 0);
+
+      // Temporarily make it featured as well
+      await prisma.product.update({
+        where: { id: testProduct.id },
+        data: { featured_on_frontend: true },
+      });
+
+      const visibleAndFeaturedCount = await ProductDbService.getFeaturedPublicProducts();
+      assertEqual('Featured products count (visible AND featured)', visibleAndFeaturedCount.length, 1);
+      assertEqual('Featured product SKU', visibleAndFeaturedCount[0]?.sku, testProduct.sku);
+    } finally {
+      // Revert test product
+      await prisma.product.update({
+        where: { id: testProduct.id },
+        data: { visible_on_website: false, featured_on_frontend: false },
+      });
+    }
+
+    const finalPublicProducts = await ProductDbService.getPublicProducts({ limit: 100 });
+    assertEqual('Final visible products count after cleanup', finalPublicProducts.products.length, 0);
+  } finally {
+    // Restore the database visibility state to what it was before verify-products was run
+    if (initiallyVisibleProducts.length > 0) {
+      for (const p of initiallyVisibleProducts) {
+        await prisma.product.update({
+          where: { id: p.id },
+          data: {
+            visible_on_website: true,
+            featured_on_frontend: p.featured_on_frontend,
+          },
+        });
+      }
+    }
+  }
 
   console.log('');
 

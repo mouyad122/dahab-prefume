@@ -37,8 +37,26 @@ For the exact JSON request/response schema, please refer to the backend API spec
 ## 3. Product Visibility Rules
 
 * **All products are currently hidden** (`visible_on_website = false`) in the database by default.
-* For local frontend testing, do **not** manually edit or randomly update visibility flags in the database as this will alter the verified state. A controlled dev-only script or admin interface will be provided later.
 * The public API endpoints only return products where `visible_on_website = true`.
+
+### Local Frontend Testing with Real API Data
+For local development and testing of the public catalog APIs, the following controlled dev-only scripts are provided:
+
+1. **Expose Sample Products:**
+   ```bash
+   npm run dev:show-sample-products
+   ```
+   This updates the database to make a small selected sample of products visible (`DHB-0002`, `DHB-0004`, `DHB-0005`, `DHB-0006`, `DHB-0007`, `DHB-0008`, `DHB-0009`, `DHB-0010`) and marks `DHB-0004` (عود ملكي) as featured to let you test custom pricing and featured layout sections. It skips all Needs Review products and retains the `image_filename = "missing"` and `needs_image = true` constraints.
+
+2. **Hide/Reset Database:**
+   ```bash
+   npm run dev:hide-all-products
+   ```
+   This resets all products in the database back to hidden and unfeatured.
+
+> [!WARNING]  
+> These visibility control scripts are development-only support utilities. They refuse to run in production (`NODE_ENV === "production"`). Frontend developers must continue to fetch real API products from `/api/products` endpoints and must not use mock files as the source of truth.
+
 
 ---
 
