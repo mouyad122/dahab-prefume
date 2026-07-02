@@ -1,16 +1,12 @@
-import { initialProducts } from '../data/initialProducts';
+import { prisma } from '../lib/prisma';
 
-export default function sitemap() {
+export default async function sitemap() {
   const baseUrl = 'https://dahabperfume.com';
 
-  // Public static routes
   const staticRoutes = [
     '',
     '/shop',
     '/collections',
-    '/collections/hair-mists',
-    '/collections/private-collection',
-    '/collections/middle-eastern',
     '/about',
     '/contact',
     '/reviews',
@@ -20,20 +16,37 @@ export default function sitemap() {
     '/returns',
     '/terms-and-conditions',
     '/privacy-policy',
-  ].map(route => ({
+  ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route === '' || route === '/shop' ? 'daily' : 'weekly',
     priority: route === '' ? 1.0 : route === '/shop' ? 0.9 : 0.6,
   }));
 
-  // Dynamic product routes
-  const productRoutes = initialProducts.map(p => ({
-    url: `${baseUrl}/products/${p.slug}`,
-    lastModified: new Date(),
+  const [products, categories] = await Promise.all([
+    prisma.product.findMany({
+      where: { visible_on_website: true },
+      select: { slug: true, updated_at: true },
+    }),
+    prisma.category.findMany({
+      where: { is_active: true },
+      select: { slug: true, updated_at: true },
+    }),
+  ]);
+
+  const productRoutes = products.map((product) => ({
+    url: `${baseUrl}/products/${product.slug}`,
+    lastModified: product.updated_at,
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...productRoutes];
+  const categoryRoutes = categories.map((category) => ({
+    url: `${baseUrl}/collections/${category.slug}`,
+    lastModified: category.updated_at,
+    changeFrequency: 'weekly',
+    priority: 0.75,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
 }

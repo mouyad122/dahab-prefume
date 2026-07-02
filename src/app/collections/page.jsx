@@ -1,21 +1,36 @@
 import React from 'react';
 import CollectionsClient from './CollectionsClient';
+import { prisma } from '../../lib/prisma';
 
 export const metadata = {
-  title: 'DAHAB PERFUMES | Luxury Fragrance Collections',
-  description: 'Explore the exclusive DAHAB PERFUMES lines. Discover our nourishing hair mists, high-oil private collection blends, and warm Middle Eastern oud fragrances.',
+  title: 'المجموعات | DAHAB PERFUMES',
+  description: 'استكشف مجموعات دهب للعطور: العطور الشرقية، المجموعة الخاصة، ومعطرات الشعر.',
   alternates: {
     canonical: '/collections',
   },
-  openGraph: {
-    title: 'DAHAB PERFUMES | Luxury Fragrance Collections',
-    description: 'Let your scent spread your influence. Browse our curated fragrance collections.',
-    url: 'https://dahabperfume.com/collections',
-    siteName: 'DAHAB PERFUMES',
-    type: 'website',
-  },
 };
 
-export default function CollectionsPage() {
-  return <CollectionsClient />;
+export const revalidate = 60;
+
+export default async function CollectionsPage() {
+  const categories = await prisma.category.findMany({
+    where: { is_active: true },
+    orderBy: [{ display_order: 'asc' }, { name_ar: 'asc' }],
+    select: {
+      id: true,
+      slug: true,
+      name_ar: true,
+      name_en: true,
+      description_ar: true,
+      description_en: true,
+      image: true,
+      _count: {
+        select: {
+          products: { where: { visible_on_website: true } },
+        },
+      },
+    },
+  });
+
+  return <CollectionsClient categories={categories} />;
 }

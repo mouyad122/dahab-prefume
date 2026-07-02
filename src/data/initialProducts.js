@@ -1,338 +1,319 @@
 /**
- * ====================================================================
- * LEGACY MOCK DATA ONLY.
- * Do not use as the product source of truth.
- * Official product source is the database through ProductDbService and /api/products routes.
- * Frontend must use docs/backend-product-contract.md and /api/products endpoints.
- * ====================================================================
+ * Demo catalog used by the storefront while the admin product source is wired.
+ * Keep the shape aligned with ProductCard, ProductDetailClient, and JSONLD.
  */
+
+const productImages = {
+  vanilla: 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=82&w=900',
+  pomegranate: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=82&w=900',
+  jasmine: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=82&w=900',
+  powder: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=82&w=900',
+  dahab: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=82&w=900',
+  eragon: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=82&w=900',
+  adeeb: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=82&w=900',
+  qaaed: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=82&w=900',
+  kalemat: 'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&q=82&w=900',
+};
 
 export const initialProducts = [
   {
     id: 'hair-mist-vanilla',
     slug: 'musk-vanilla-hair-mist',
     sku: 'DAHAB-HM-VN01',
-    title: {
-      ar: 'هيرميست مسك فانيلا',
-      en: 'Musk Vanilla Hair Mist'
-    },
-    price: 18.00,
-    compareAtPrice: 22.00,
-    volume: '50ml',
+    title: { ar: 'مسك فانيلا هير مست', en: 'Musk Vanilla Hair Mist' },
+    price: 18,
+    compareAtPrice: 22,
+    volume: '50 ml',
     category: 'hair-mists',
     collection: 'hair-mists',
     stock: 12,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.vanilla,
     shortDescription: {
-      ar: 'معطر شعر فاخر بمزيج مغذٍ من زيت الأرجان وزيت جوز الهند برائحة الفانيليا والمسك.',
-      en: 'Premium hair mist enriched with Argan and Coconut oils, scented with sweet Vanilla and Musk.'
+      ar: 'معطر شعر فاخر بزيت الأرغان وجوز الهند، يترك أثرا ناعما من الفانيلا والمسك.',
+      en: 'A luxurious hair mist with argan and coconut oils, softened by vanilla and musk.',
     },
     longDescription: {
-      ar: 'يرغب الجميع في الاحتفاظ برائحة جذابة للشعر تدوم طويلاً، وذلك أصبح سهلاً مع هيرميست مسك فانيلا من دهب للعطور. تركيبتنا الخاصة غنية بزيت الأرجان وزيت جوز الهند المغذي لحماية خصل الشعر وترطيبها.',
-      en: 'Keep your hair smelling attractive all day long with Musk Vanilla Hair Mist. Formulated with Argan oil and Coconut oil to nourish, protect, and add shine.'
+      ar: 'مسك فانيلا هير مست صمم للشعر الذي يحتاج رائحة دافئة ونظيفة طوال اليوم. تبدأ الرائحة بفانيلا كريمية هادئة، ثم تنعم بقلب زهري خفيف وقاعدة مسكية تلتصق بالشعر دون أن تكون حادة.',
+      en: 'Musk Vanilla Hair Mist was crafted for soft daily elegance. Creamy vanilla opens the scent, a gentle floral heart adds polish, and a musky base clings beautifully to hair without feeling heavy.',
     },
     fragranceNotes: {
-      top: ['الفانيليا / Vanilla', 'البرغموت / Bergamot'],
-      heart: ['الأوركيد / Orchid', 'الورد / Rose'],
-      base: ['المسك / Musk', 'جوز الهند / Coconut']
+      top: ['فانيلا', 'برغموت'],
+      heart: ['أوركيد', 'ورد أبيض'],
+      base: ['مسك', 'جوز الهند'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'moderate',
       bestSeason: ['spring', 'summer', 'autumn', 'winter'],
-      bestTime: 'all_day'
-    }
+      bestTime: 'all_day',
+    },
   },
   {
     id: 'hair-mist-pomegranate',
     slug: 'musk-pomegranate-hair-mist',
     sku: 'DAHAB-HM-PM02',
-    title: {
-      ar: 'هيرميست مسك رمان',
-      en: 'Musk Pomegranate Hair Mist'
-    },
-    price: 18.00,
-    volume: '50ml',
+    title: { ar: 'مسك رمان هير مست', en: 'Musk Pomegranate Hair Mist' },
+    price: 18,
+    volume: '50 ml',
     category: 'hair-mists',
     collection: 'hair-mists',
     stock: 8,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.pomegranate,
     shortDescription: {
-      ar: 'عطر للشعر برائحة الرمان المنعشة والمسك الفاخر مع زيوت الأرجان الطبيعية.',
-      en: 'Fruity and fresh pomegranate blended with premium musk and hair nourishing oils.'
+      ar: 'رمان منعش مع مسك نظيف وزيوت مغذية للشعر، مناسب للإطلالة اليومية.',
+      en: 'Fresh pomegranate, clean musk, and nourishing oils for everyday radiance.',
     },
     longDescription: {
-      ar: 'هيرميست مسك رمان يمنح شعرك حيوية لا مثيل لها بفضل نفحات الرمان الفاكهية المنعشة الممزوجة بالمسك النقي.',
-      en: 'Musk Pomegranate Hair Mist gives your hair unmatched vitality with fresh fruity pomegranate notes blended with pure musk.'
+      ar: 'رائحة فاكهية أنيقة تبدأ بالرمان والتوت، ثم تستقر على ياسمين ناعم ومسك شفاف. تركيبة خفيفة على الشعر تمنح إحساسا منعشا وراقيا من الصباح حتى المساء.',
+      en: 'A polished fruity scent opening with pomegranate and berries, settling into soft jasmine and transparent musk. Lightweight on hair and refined enough for day-to-night wear.',
     },
     fragranceNotes: {
-      top: ['الرمان / Pomegranate', 'التوت / Berries'],
-      heart: ['الياسمين / Jasmine', 'الورد الجوري / Rose'],
-      base: ['المسك / Musk', 'العنبر / Amber']
+      top: ['رمان', 'توت أحمر'],
+      heart: ['ياسمين', 'ورد'],
+      base: ['مسك', 'عنبر ناعم'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'moderate',
       bestSeason: ['spring', 'summer'],
-      bestTime: 'day'
-    }
+      bestTime: 'day',
+    },
   },
   {
     id: 'hair-mist-jasmine',
     slug: 'musk-jasmine-hair-mist',
     sku: 'DAHAB-HM-JS03',
-    title: {
-      ar: 'هيرميست مسك ياسمين',
-      en: 'Musk Jasmine Hair Mist'
-    },
-    price: 18.00,
-    volume: '50ml',
+    title: { ar: 'مسك ياسمين هير مست', en: 'Musk Jasmine Hair Mist' },
+    price: 18,
+    volume: '50 ml',
     category: 'hair-mists',
     collection: 'hair-mists',
     stock: 15,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.jasmine,
     shortDescription: {
-      ar: 'عبير الياسمين الشرقي الفواح مع مسك دهب النقي لحماية وتعطير الشعر.',
-      en: 'Rich oriental jasmine scent blended with white musk and organic hair oils.'
+      ar: 'ياسمين شرقي ناعم مع مسك أبيض وزيوت عناية تمنح الشعر لمعانا ورائحة راقية.',
+      en: 'Soft oriental jasmine with white musk and care oils for luminous scented hair.',
     },
     longDescription: {
-      ar: 'استمتعي بنفحات الياسمين الساحرة التي تملأ شعرك عطراً وأنوثة. تركيبتنا المغذية بزيت الأرجان وزيت جوز الهند تضمن بقاء شعرك رطباً ولامعاً وخالياً من التجعد.',
-      en: 'Enjoy the enchanting jasmine notes that fill your hair with elegance. Our nourishing formula with Argan and Coconut oils ensures your hair remains hydrated, shiny, and frizz-free.'
+      ar: 'هير مست بطابع أنثوي هادئ، يفتح بنفحات ياسمين وزهر البرتقال، ثم يصبح أكثر نعومة مع الغاردينيا والمسك الأبيض. اختيار فاخر لمن يحب الرائحة النظيفة ذات الحضور الزهري.',
+      en: 'A calm floral hair mist opening with jasmine and orange blossom, then softening through gardenia and white musk. Ideal for clean elegance with a floral signature.',
     },
     fragranceNotes: {
-      top: ['الياسمين / Jasmine', 'زهر البرتقال / Orange Blossom'],
-      heart: ['مسك الروم / Tuberose', 'الغاردينيا / Gardenia'],
-      base: ['المسك / Musk', 'الصندل / Sandalwood']
+      top: ['ياسمين', 'زهر البرتقال'],
+      heart: ['غاردينيا', 'مسك الروم'],
+      base: ['مسك أبيض', 'صندل'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'moderate',
       bestSeason: ['spring', 'summer', 'autumn'],
-      bestTime: 'all_day'
-    }
+      bestTime: 'all_day',
+    },
   },
   {
     id: 'hair-mist-powder',
     slug: 'musk-powder-hair-mist',
     sku: 'DAHAB-HM-PW04',
-    title: {
-      ar: 'هيرميست مسك باودر',
-      en: 'Musk Powder Hair Mist'
-    },
-    price: 18.00,
-    volume: '50ml',
+    title: { ar: 'مسك باودر هير مست', en: 'Musk Powder Hair Mist' },
+    price: 18,
+    volume: '50 ml',
     category: 'hair-mists',
     collection: 'hair-mists',
     stock: 5,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.powder,
     shortDescription: {
-      ar: 'رائحة النظافة والانتعاش مع هيرميست الباودر والمسك النقي وزيت الأرجان.',
-      en: 'The ultimate clean and powdery scent blended with pure musk and argan oil.'
+      ar: 'رائحة باودر نظيفة وباردة مع مسك ناعم، مثالية لمن يحب الفخامة الهادئة.',
+      en: 'Clean powder, cool freshness, and soft musk for quiet luxury.',
     },
     longDescription: {
-      ar: 'لمحبي روائح النظافة والانتعاش الباردة، نقدم هيرميست مسك باودر. يمنح شعرك إحساساً منعشاً يشبه النظافة بعد الاستحمام.',
-      en: 'For lovers of clean, fresh, and powdery scents, we offer Musk Powder Hair Mist. It gives your hair a fresh post-bath feeling.'
+      ar: 'مسك باودر يمنح الشعر إحساس النظافة بعد الاستحمام مع لمسة مخملية فاخرة. يبدأ بباودر خفيف وألدهيدات نظيفة، ثم يهدأ على سوسن ومسك ناعم قريب من البشرة.',
+      en: 'Musk Powder gives hair a fresh post-shower aura with a velvety finish. Airy powder and clean aldehydes settle into iris and intimate soft musk.',
     },
     fragranceNotes: {
-      top: ['الباودر / Powder', 'الألدهيدات / Aldehydes'],
-      heart: ['السوسن / Iris', 'البنفسج / Violet'],
-      base: ['المسك / Musk', 'الهيليوتروب / Heliotrope']
+      top: ['باودر', 'ألدهيدات'],
+      heart: ['سوسن', 'بنفسج'],
+      base: ['مسك', 'هيليوتروب'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'soft',
       bestSeason: ['spring', 'summer'],
-      bestTime: 'day'
-    }
+      bestTime: 'day',
+    },
   },
   {
     id: 'hair-mist-dahab',
     slug: 'musk-dahab-hair-mist',
     sku: 'DAHAB-HM-DH05',
-    title: {
-      ar: 'هيرميست مسك دهب',
-      en: 'Musk Dahab Hair Mist'
-    },
-    price: 20.00,
-    volume: '50ml',
+    title: { ar: 'مسك دهب هير مست', en: 'Musk Dahab Hair Mist' },
+    price: 20,
+    volume: '50 ml',
     category: 'hair-mists',
     collection: 'hair-mists',
     stock: 10,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.dahab,
     shortDescription: {
-      ar: 'العطر الخاص بهوية المحل، عبير شرقي فخم يجمع بين فخامة العود ودفء المسك الملكي.',
-      en: 'The signature boutique scent, a luxurious oriental blend of oud and royal musk.'
+      ar: 'التوقيع الخاص بدهب: عود ناعم، ورد، مسك ملكي، وحضور شرقي فاخر.',
+      en: 'Dahab signature: soft oud, rose, royal musk, and refined oriental presence.',
     },
     longDescription: {
-      ar: 'هيرميست مسك دهب هو فخر مجموعتنا والعطر الحصري الذي يعكس هوية متجر دهب للعطور. مزيج شرقي فخم وعميق يجمع بين فخامة دهن العود المعتدل وبتلات الورد.',
-      en: 'Musk Dahab Hair Mist is our signature product reflecting the luxurious heritage of Dahab Perfumes. A deep oriental blend of smooth oud wood, soft roses, and a base of rich royal musk.'
+      ar: 'مسك دهب هو الرائحة التي تلخص شخصية المعرض. عود معتدل وورد هادئ في المقدمة، ثم قلب دافئ من التوابل والباتشولي، وقاعدة مسكية عنبرية تبقى بوضوح على الشعر والملابس.',
+      en: 'Musk Dahab captures the boutique identity: smooth oud and soft rose, a warm spiced heart, and an amber-musk base that lingers on hair and fabric.',
     },
     fragranceNotes: {
-      top: ['العود / Oud', 'الورد / Rose'],
-      heart: ['التوابل / Spices', 'الباتشولي / Patchouli'],
-      base: ['المسك / Musk', 'العنبر / Amber', 'الصندل / Sandalwood']
+      top: ['عود ناعم', 'ورد'],
+      heart: ['توابل', 'باتشولي'],
+      base: ['مسك', 'عنبر', 'صندل'],
     },
     metrics: {
       longevity: 'eternal',
       sillage: 'heavy',
       bestSeason: ['autumn', 'winter'],
-      bestTime: 'night'
-    }
+      bestTime: 'night',
+    },
   },
   {
     id: 'private-eragon',
     slug: 'eragon-100ml',
     sku: 'DAHAB-PC-ER01',
-    title: {
-      ar: 'عطر إيراغون 100 مل',
-      en: 'Eragon Perfume 100ml'
-    },
-    price: 45.00,
-    compareAtPrice: 55.00,
-    volume: '100ml',
+    title: { ar: 'إيراغون 100 مل', en: 'Eragon Perfume 100 ml' },
+    price: 45,
+    compareAtPrice: 55,
+    volume: '100 ml',
     category: 'private-collection',
     collection: 'private-collection',
     stock: 3,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.eragon,
     shortDescription: {
-      ar: 'من المجموعات الخاصة لدهب للعطور، عبير ملكي فخم بزجاجة ذهبية فريدة وغطاء رأس الحصان.',
-      en: "From Dahab's Private Collection, a royal oriental masterpiece in a unique golden horse-head bottle."
+      ar: 'عطر خاص بطابع ملكي داكن يجمع العسل والتبغ والجلد والعود.',
+      en: 'A dark royal private blend of honey, tobacco, leather, and oud.',
     },
     longDescription: {
-      ar: 'عطر إيراغون (Eragon) هو التحفة الفنية لمجموعتنا الخاصة المستوحاة من فخامة عطور ديمارلي الفرنسية. يأتي العطر في زجاجة ذهبية براقة مطلية بالكامل وغطاء على شكل رأس حصان من المعدن الثقيل.',
-      en: 'Eragon is the masterpiece of our Private Collection inspired by the grandeur of French niche perfumery. Housed in a fully coated polished gold bottle with a heavy metallic horse-head cap.'
+      ar: 'إيراغون من المجموعة الخاصة لدهب، عطر مصمم للحضور الكبير. افتتاحية دافئة من القرفة والزعفران، قلب غني بالعسل والتبغ والجلد، وقاعدة عميقة من العود والعنبر والفانيلا.',
+      en: 'Eragon from the DAHAB Private Collection is built for grand presence. Warm cinnamon and saffron open the scent, honeyed tobacco and leather shape the heart, and oud, amber, and vanilla anchor the base.',
     },
     fragranceNotes: {
-      top: ['القرفة / Cinnamon', 'الكزبرة / Coriander', 'الزعفران / Saffron'],
-      heart: ['العسل / Honey', 'التبغ / Tobacco', 'الجلود / Leather'],
-      base: ['العود / Oud', 'العنبر / Amber', 'الفانيليا / Vanilla', 'الباتشولي / Patchouli']
+      top: ['قرفة', 'كزبرة', 'زعفران'],
+      heart: ['عسل', 'تبغ', 'جلد'],
+      base: ['عود', 'عنبر', 'فانيلا', 'باتشولي'],
     },
     metrics: {
       longevity: 'eternal',
       sillage: 'heavy',
       bestSeason: ['autumn', 'winter'],
-      bestTime: 'night'
-    }
+      bestTime: 'night',
+    },
   },
   {
     id: 'lattafa-adeeb',
     slug: 'lattafa-adeeb-80ml',
     sku: 'LATTAFA-AD01',
-    title: {
-      ar: 'لطافة أديب 80 مل',
-      en: 'Lattafa Adeeb 80ml'
-    },
-    price: 25.00,
-    volume: '80ml',
+    title: { ar: 'لطافة أديب 80 مل', en: 'Lattafa Adeeb 80 ml' },
+    price: 25,
+    volume: '80 ml',
     category: 'middle-eastern',
     collection: 'middle-eastern',
     stock: 4,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.adeeb,
     shortDescription: {
-      ar: 'عطر خشبي شرقي فاخر من دار لطافة الشهيرة يجمع التوابل والتبغ والخشب.',
-      en: 'Luxurious woody oriental fragrance from Lattafa featuring spices, tobacco, and wood.'
+      ar: 'خشبي شرقي فاخر من لطافة، غني بالتوابل والتبغ والصندل.',
+      en: 'A luxurious woody oriental by Lattafa with spices, tobacco, and sandalwood.',
     },
     longDescription: {
-      ar: 'عطر أديب من دار لطافة هو تحفة عطرية تجمع بين التقاليد الشرقية والعصر الغربي. يفتتح العطر بنكهة التوابل والتبغ ليمهد الطريق لقلب غني بالخشب والصندل.',
-      en: 'Adeeb by Lattafa is a rich fragrance that bridges Eastern traditions and Western elegance. Opening with spices and tobacco, leading to a heart of wood and sandalwood.'
+      ar: 'أديب عطر شرقي دافئ يوازن بين التوابل والتبغ والخشب. افتتاحية قوية، قلب صندلي أنيق، وقاعدة بخورية جلدية تناسب المناسبات المسائية.',
+      en: 'Adeeb is a warm oriental balancing spices, tobacco, and woods. A bold opening, elegant sandalwood heart, and incense-leather base make it ideal for evening wear.',
     },
     fragranceNotes: {
-      top: ['القرفة / Cinnamon', 'التبغ / Tobacco', 'القرنفل / Cloves'],
-      heart: ['الصندل / Sandalwood', 'الأرز / Cedarwood', 'الهيل / Cardamom'],
-      base: ['المسك / Musk', 'الجلد / Leather', 'البخور / Incense', 'الباتشولي / Patchouli']
+      top: ['قرفة', 'تبغ', 'قرنفل'],
+      heart: ['صندل', 'أرز', 'هيل'],
+      base: ['مسك', 'جلد', 'بخور', 'باتشولي'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'heavy',
       bestSeason: ['autumn', 'winter'],
-      bestTime: 'night'
-    }
+      bestTime: 'night',
+    },
   },
   {
     id: 'lattafa-qaaed',
     slug: 'lattafa-qaaed-100ml',
     sku: 'LATTAFA-QA02',
-    title: {
-      ar: 'لطافة قائد 100 مل',
-      en: 'Lattafa Qa\'aed 100ml'
-    },
-    price: 22.00,
-    volume: '100ml',
+    title: { ar: 'لطافة قائد 100 مل', en: "Lattafa Qa'aed 100 ml" },
+    price: 22,
+    volume: '100 ml',
     category: 'middle-eastern',
     collection: 'middle-eastern',
     stock: 6,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.qaaed,
     shortDescription: {
-      ar: 'عطر التوابل الحارة والجلود والعود في زجاجة ذهبية فاخرة من دار لطافة.',
-      en: 'Spicy, leather, and oud blend in a stunning gold textured bottle by Lattafa.'
+      ar: 'عطر ذهبي دافئ من التوابل والجلد والعود، ثابت وواضح.',
+      en: 'A warm golden blend of spice, leather, and oud with confident projection.',
     },
     longDescription: {
-      ar: 'قائد من لطافة هو عطر دافئ وتوابلي حار يفتتح بنفحات الهيل والقرفة. قلب العطر يحتوي على مزيج من الزعفران والقرنفل والجلود بينما تنتهي القاعدة بروائح العود والعنبر والفانيليا.',
-      en: 'Qa\'aed by Lattafa is a warm and spicy fragrance opening with cardamom and cinnamon. The heart is filled with saffron, cloves, and leather, while the base contains oud, amber, and vanilla.'
+      ar: 'قائد من لطافة يفتح بالهيل والقرفة ثم ينتقل إلى زعفران وجلدو قرنفل، قبل أن يستقر على عود وعنبر وفانيلا. رائحة شرقية واثقة لمن يحب الحضور الواضح.',
+      en: "Qa'aed by Lattafa opens with cardamom and cinnamon, moves through saffron, leather, and clove, then rests on oud, amber, and vanilla.",
     },
     fragranceNotes: {
-      top: ['الهيل / Cardamom', 'القرفة / Cinnamon', 'البرغموت / Bergamot'],
-      heart: ['الزعفران / Saffron', 'القرنفل / Cloves', 'الجلود / Leather'],
-      base: ['العود / Oud', 'العنبر / Amber', 'الفانيليا / Vanilla', 'الصندل / Sandalwood']
+      top: ['هيل', 'قرفة', 'برغموت'],
+      heart: ['زعفران', 'قرنفل', 'جلد'],
+      base: ['عود', 'عنبر', 'فانيلا', 'صندل'],
     },
     metrics: {
       longevity: 'long_lasting',
       sillage: 'heavy',
       bestSeason: ['autumn', 'winter'],
-      bestTime: 'night'
-    }
+      bestTime: 'night',
+    },
   },
   {
     id: 'arabian-oud-kalemat',
     slug: 'arabian-oud-kalemat-100ml',
     sku: 'ARABIAN-KL01',
-    title: {
-      ar: 'العربية للعود كلمات 100 مل',
-      en: 'Arabian Oud Kalemat 100ml'
-    },
-    price: 35.00,
-    compareAtPrice: 42.00,
-    volume: '100ml',
+    title: { ar: 'العربية للعود كلمات 100 مل', en: 'Arabian Oud Kalemat 100 ml' },
+    price: 35,
+    compareAtPrice: 42,
+    volume: '100 ml',
     category: 'middle-eastern',
     collection: 'middle-eastern',
     stock: 5,
     hidden: false,
     archived: false,
-    thumbnail: 'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&q=80&w=600',
+    thumbnail: productImages.kalemat,
     shortDescription: {
-      ar: 'العطر الحائز على جوائز عالمية، مزيج ساحر من العسل والعنبر والتوت البري.',
-      en: 'Award-winning legendary fragrance blending rich honey, amber, and blueberries.'
+      ar: 'رائحة عربية شهيرة تجمع العسل والعنبر والتوت والخشب الدافئ.',
+      en: 'A celebrated Arabic scent of honey, amber, berries, and warm woods.',
     },
     longDescription: {
-      ar: 'عطر كلمات الشهير من دار العربية للعود هو رمز للفخامة العربية المعاصرة وحائز على عدة جوائز عالمية. يتميز برائحته الفريدة الدافئة التي تجمع بين عسل النحل والتواريخ المجففة والتوت البري في الافتتاحية.',
-      en: 'Kalemat by Arabian Oud is an award-winning scent and a symbol of modern Arabic luxury. Known for its unique warm aroma blending wild honey, blueberries, and rosemary, settling into cashmere wood, amber, and rich tobacco leaves.'
+      ar: 'كلمات من العربية للعود عطر عربي معاصر ومحبوب. يبدأ بالعسل والتوت، يمر على أخشاب الكشمير وإكليل الجبل، ثم يستقر على العنبر والتبغ والمسك.',
+      en: 'Kalemat by Arabian Oud is a beloved modern Arabic fragrance. Honey and berries lead into cashmere woods and rosemary, then settle over amber, tobacco, and musk.',
     },
     fragranceNotes: {
-      top: ['التوت / Blueberries', 'العسل / Honey', 'اليانسون / Anise'],
-      heart: ['الكشمير / Cashmere Wood', 'إكليل الجبل / Rosemary', 'الأخشاب / Scented Woods'],
-      base: ['العنبر / Amber', 'التبغ / Tobacco', 'المسك / Musk']
+      top: ['توت', 'عسل', 'يانسون'],
+      heart: ['خشب الكشمير', 'إكليل الجبل', 'أخشاب عطرية'],
+      base: ['عنبر', 'تبغ', 'مسك'],
     },
     metrics: {
       longevity: 'eternal',
       sillage: 'heavy',
       bestSeason: ['autumn', 'winter'],
-      bestTime: 'all_day'
-    }
-  }
+      bestTime: 'all_day',
+    },
+  },
 ];

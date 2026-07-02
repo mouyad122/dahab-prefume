@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 
 export const LanguageContext = createContext();
 
@@ -9,13 +9,13 @@ const translations = {
     home: 'الرئيسية',
     shop: 'المتجر',
     collections: 'المجموعات',
-    about: 'من نحن',
-    contact: 'اتصل بنا',
+    about: 'عن دهب',
+    contact: 'تواصل معنا',
     storeLocation: 'موقع المعرض',
     reviews: 'آراء العملاء',
     faq: 'الأسئلة الشائعة',
     shipping: 'الشحن والتوصيل',
-    returns: 'سياسة الاستبدال',
+    returns: 'الاستبدال والإرجاع',
     privacy: 'سياسة الخصوصية',
     terms: 'الشروط والأحكام',
     wishlist: 'المفضلة',
@@ -23,24 +23,24 @@ const translations = {
     checkout: 'إتمام الطلب',
     admin: 'لوحة التحكم',
     backToShop: 'العودة للمتجر',
-    whatsappInquiry: 'استفسار عبر الواتساب',
-    addToCart: 'إضافة للسلة',
+    whatsappInquiry: 'طلب عبر واتساب',
+    addToCart: 'أضف للسلة',
     outOfStock: 'غير متوفر',
-    lowStock: 'كمية محدودة جداً',
+    lowStock: 'كمية محدودة',
     available: 'متوفر',
-    currency: 'دينار'
+    currency: 'دينار',
   },
   en: {
     home: 'Home',
     shop: 'Shop',
     collections: 'Collections',
-    about: 'About Us',
+    about: 'About',
     contact: 'Contact',
     storeLocation: 'Store Location',
     reviews: 'Reviews',
     faq: 'FAQ',
-    shipping: 'Shipping Info',
-    returns: 'Returns Policy',
+    shipping: 'Shipping',
+    returns: 'Returns',
     privacy: 'Privacy Policy',
     terms: 'Terms & Conditions',
     wishlist: 'Wishlist',
@@ -48,13 +48,13 @@ const translations = {
     checkout: 'Checkout',
     admin: 'Dashboard',
     backToShop: 'Back to Shop',
-    whatsappInquiry: 'WhatsApp Inquiry',
+    whatsappInquiry: 'Order on WhatsApp',
     addToCart: 'Add to Cart',
     outOfStock: 'Out of Stock',
     lowStock: 'Low Stock',
     available: 'Available',
-    currency: 'JOD'
-  }
+    currency: 'JOD',
+  },
 };
 
 export function LanguageProvider({ children }) {
@@ -63,7 +63,7 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     const savedLang = localStorage.getItem('dahab_lang');
-    if (savedLang && (savedLang === 'ar' || savedLang === 'en')) {
+    if (savedLang === 'ar' || savedLang === 'en') {
       setLanguage(savedLang);
     }
     setMounted(true);
@@ -73,19 +73,20 @@ export function LanguageProvider({ children }) {
     if (mounted) {
       localStorage.setItem('dahab_lang', language);
     }
-    const htmlElement = document.documentElement;
-    htmlElement.setAttribute('lang', language);
-    htmlElement.setAttribute('dir', 'ltr');
+
+    document.documentElement.setAttribute('lang', language);
+    document.documentElement.setAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
   }, [language, mounted]);
 
   const toggleLanguage = () => {
     setLanguage(prev => (prev === 'ar' ? 'en' : 'ar'));
   };
 
-  const t = (key) => {
+  const t = key => {
     if (typeof key === 'object' && key !== null) {
       return key[language] || key.en || '';
     }
+
     return translations[language]?.[key] || translations.en?.[key] || key;
   };
 

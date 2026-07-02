@@ -16,7 +16,7 @@ export default function JSONLD({ type, data }) {
       '@type': 'Organization',
       'name': 'DAHAB PERFUMES',
       'url': 'https://dahabperfume.com',
-      'logo': 'https://dahabperfume.com/images/logo.png', // Fallback or official logo
+      'logo': 'https://dahabperfume.com/brand/dahab-logo.png',
       'sameAs': [
         'https://www.instagram.com/dahabperfumes.jo/',
         'https://www.facebook.com/profile.php?id=61560946288673'
@@ -36,7 +36,7 @@ export default function JSONLD({ type, data }) {
       '@context': 'https://schema.org',
       '@type': 'PerfumeStore', // Specific LocalBusiness type
       'name': 'DAHAB PERFUMES',
-      'image': data?.image || 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=600',
+      'image': data?.image || 'https://dahabperfume.com/images/background.jpg',
       'priceRange': '$$',
       'telephone': '+962785050655',
       'address': {

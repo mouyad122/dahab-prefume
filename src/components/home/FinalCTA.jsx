@@ -1,66 +1,70 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { WhatsappLogo, ArrowUpRight } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
-import { ArrowUpRight, WhatsappLogo } from '@phosphor-icons/react';
+import { brandConfig } from '../../config/brand';
+
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
 
 export default function FinalCTA() {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
+  const [ref, visible] = useReveal();
 
-  const whatsappMessage = isAr 
-    ? 'مرحباً، أود استعراض الكتالوج الكامل والطلب مباشرة من دهب للعطور.' 
-    : 'Hello, I would like to review the catalog and place an order directly with Dahab.';
-  const whatsappUrl = `https://wa.me/962785050655?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappMsg = isAr
+    ? 'مرحبا، أريد الاستفسار عن عطور DAHAB PERFUMES.'
+    : 'Hello, I have an inquiry for DAHAB PERFUMES.';
+  const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(whatsappMsg)}`;
 
   return (
-    <section className="w-full bg-[var(--color-bg-secondary)] py-36 px-6 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] rounded-full bg-[var(--color-gold)]/[0.02] blur-[150px] pointer-events-none" />
-      
-      <div className="premium-container max-w-4xl flex flex-col items-center text-center gap-12 relative z-10">
-        
-        {/* Eyebrow badge */}
-        <span className="rounded-full px-3.5 py-1.5 text-[9px] uppercase tracking-[0.25em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
-          {isAr ? 'دهب للعطور ── الرائحة التي تنشر تأثيرك' : 'DAHAB PERFUMES ── Let your scent spread your influence'}
-        </span>
+    <section className="luxury-section relative overflow-hidden bg-[#040302] py-24 md:py-32" ref={ref}>
+      {/* Background glow & noise overlay */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(196,154,68,0.15)_0%,_transparent_70%)]" />
+        <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
+      </div>
 
-        {/* Title */}
-        <h2 className="font-display text-4xl md:text-6xl font-bold uppercase tracking-wider text-[var(--color-text-primary)] leading-tight max-w-2xl">
-          {isAr ? 'ابدأ رحلتك مع رائحة تترك أثراً' : 'Begin your journey with a scent that leaves a lasting impression'}
-        </h2>
-
-        {/* Supporting description */}
-        <p className="text-xs md:text-sm text-[var(--color-text-secondary)] font-light max-w-md leading-relaxed">
-          {isAr 
-            ? 'تصفح تشكيلتنا الكاملة الآن أو تواصل مباشرة مع مستشاري عطور دهب عبر الواتساب لتلبية طلباتك الخاصة.'
-            : 'Explore our complete curation online, or chat directly with our fragrance concierge on WhatsApp to fulfill custom orders.'
-          }
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-5 mt-6 w-full sm:w-auto items-center justify-center">
-          <Link 
-            href="/shop" 
-            className="group relative flex items-center justify-center gap-3 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[var(--color-gold-light)] hover:scale-105 active:scale-[0.98] w-full sm:w-auto shadow-md"
-          >
-            <span>{isAr ? 'المعرض العطري' : 'Shop Gallery'}</span>
-            <div className="w-5 h-5 rounded-full bg-black/10 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-[1px]">
-              <ArrowUpRight size={12} weight="bold" />
-            </div>
-          </Link>
-
-          <a 
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-center gap-3 border border-[var(--color-border-strong)] text-[var(--color-text-primary)] text-xs font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[var(--color-gold-dim)] hover:border-[var(--color-gold)] hover:scale-105 active:scale-[0.98] w-full sm:w-auto"
-          >
-            <WhatsappLogo size={18} className="text-[#25D366]" weight="bold" />
-            <span>{isAr ? 'تحدث مع كونسيرج دهب' : 'Chat with Concierge'}</span>
-          </a>
+      <div className="premium-container relative z-10 text-center">
+        <div className={`max-w-2xl mx-auto ${visible ? 'reveal-up' : 'opacity-0'}`}>
+          <h2 className={`font-display text-[var(--color-text-primary)] mb-8 ${isAr ? 'dir-ar' : 'dir-en'}`} style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', lineHeight: 1.1 }}>
+            {isAr ? 'هل أنت مستعد لاكتشاف عطرك المثالي؟' : 'Ready to discover your perfect scent?'}
+          </h2>
+          <p className={`text-[var(--color-text-secondary)] text-base md:text-lg mb-10 leading-relaxed ${isAr ? 'dir-ar' : 'dir-en'}`}>
+            {isAr 
+              ? 'دعنا نأخذك في رحلة عطرية لا تُنسى. تسوّق الآن أو تواصل معنا لمساعدتك في اختيار عطرك القادم.'
+              : 'Let us take you on an unforgettable fragrant journey. Shop now or contact us to help you choose your next signature scent.'
+            }
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <Link href="/shop" className="btn-primary w-full sm:w-auto px-8 py-3 text-sm">
+              <span className={isAr ? 'font-sans-ar' : ''}>{isAr ? 'تسوّق الآن' : 'Shop Now'}</span>
+              <ArrowUpRight size={18} weight="bold" />
+            </Link>
+            <a 
+              href={whatsappUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn-whatsapp w-full sm:w-auto px-8 py-3 text-sm bg-black/40 hover:bg-[#5ddb85]/20 backdrop-blur-sm"
+            >
+              <WhatsappLogo size={18} weight="bold" />
+              <span className={isAr ? 'font-sans-ar' : ''}>{isAr ? 'اطلب عبر واتساب' : 'Order on WhatsApp'}</span>
+            </a>
+          </div>
         </div>
-
       </div>
     </section>
   );

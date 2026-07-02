@@ -7,45 +7,70 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ============================================================
+// ORIGINAL PRODUCT MODELS
+// ============================================================
+
 model Product {
   id                    String             @id @default(uuid())
   sku                   String             @unique
   slug                  String             @unique
   name_ar               String
-  inspired_by           String
-  main_category         String
-  gender                String
-  season                String
-  fragrance_family_raw  String
-  short_description_ar  String
-  keywords_ar           String
-  image_filename        String
+  name_en               String?
+  inspired_by           String?
+  main_category         String             @default("general")
+  gender                String             @default("unisex")
+  season                String             @default("all")
+  fragrance_family_raw  String             @default("")
+  short_description_ar  String             @default("")
+  short_description_en  String?
+  long_description_ar   String?
+  long_description_en   String?
+  keywords_ar           String             @default("")
+  image_filename        String             @default("")
+  images_360            String?
+  media_display_type    String             @default("normal")
+  ai360_status          String             @default("idle")
+  ai360_quality         Int                @default(12)
+  ai360_background      String             @default("luxury_black_gold")
+  ai360_lighting        String             @default("soft_gold")
+  ai360_source_image    String?
+  ai360_reference_image String?
   needs_image           Boolean            @default(true)
-  visible_on_website    Boolean
-  featured_on_frontend  Boolean
-  uses_general_pricing  Boolean
+  visible_on_website    Boolean            @default(true)
+  featured_on_frontend  Boolean            @default(false)
+  uses_general_pricing  Boolean            @default(true)
   price_50ml_fils       Int?
   price_100ml_fils      Int?
   price_200ml_fils      Int?
+  stock                 Int                @default(0)
+  low_stock_threshold   Int                @default(5)
+  notes_top             String?
+  notes_heart           String?
+  notes_base            String?
   notes                 String?
-  research_confidence   String
+  research_confidence   String             @default("medium")
   needs_review          Boolean            @default(false)
-  source_excel_row      Int                @unique
+  source_excel_row      Int?               @unique
   created_at            DateTime           @default(now())
   updated_at            DateTime           @updatedAt
 
+  categoryId            String?
+  category              Category?          @relation(fields: [categoryId], references: [id])
   accords               ProductAccord[]
   family_tags           ProductFamilyTag[]
+  discounts             Discount[]
+  sale_items            SaleItem[]
 
   @@index([slug])
   @@index([sku])
-  @@index([source_excel_row])
   @@index([visible_on_website])
   @@index([featured_on_frontend])
   @@index([gender])
   @@index([season])
   @@index([main_category])
   @@index([needs_review])
+  @@index([categoryId])
 }
 
 model ProductAccord {
@@ -71,12 +96,200 @@ model ProductFamilyTag {
 }
 
 model GlobalPricingSettings {
-  id              String   @id @default(uuid())
-  price_50ml_fils Int
+  id               String   @id @default(uuid())
+  price_50ml_fils  Int
   price_100ml_fils Int
   price_200ml_fils Int
-  currency        String   @default("JOD")
-  active          Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  currency         String   @default("JOD")
+  active           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+// ============================================================
+// CATEGORIES
+// ============================================================
+
+model Category {
+  id             String    @id @default(uuid())
+  slug           String    @unique
+  name_ar        String
+  name_en        String
+  description_ar String?
+  description_en String?
+  image          String?
+  display_order  Int       @default(0)
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  products       Product[]
+
+  @@index([slug])
+  @@index([is_active])
+}
+
+// ============================================================
+// DISCOUNTS
+// ============================================================
+
+model Discount {
+  id               String    @id @default(uuid())
+  productId        String
+  discount_type    String    @default("percentage")
+  discount_value   Float
+  original_price   Int
+  discounted_price Int
+  starts_at        DateTime?
+  ends_at          DateTime?
+  is_active        Boolean   @default(true)
+  label_ar         String?
+  label_en         String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([is_active])
+}
+
+// ============================================================
+// EMPLOYEES & PERMISSIONS
+// ============================================================
+
+model Employee {
+  id            String               @id @default(uuid())
+  username      String               @unique
+  password_hash String
+  display_name  String
+  role          String               @default("employee")
+  is_active     Boolean              @default(true)
+  created_at    DateTime             @default(now())
+  updated_at    DateTime             @updatedAt
+
+  permissions   EmployeePermission?
+  sales         Sale[]
+  login_attempts LoginAttempt[]
+
+  @@index([username])
+  @@index([is_active])
+}
+
+model EmployeePermission {
+  id                   String   @id @default(uuid())
+  employeeId           String   @unique
+  can_access_counter   Boolean  @default(true)
+  can_view_invoices    Boolean  @default(true)
+  can_print_reports    Boolean  @default(true)
+  can_add_notes        Boolean  @default(true)
+  can_view_inventory   Boolean  @default(false)
+  can_manage_products  Boolean  @default(false)
+  can_manage_employees Boolean  @default(false)
+  can_view_accounting  Boolean  @default(false)
+  can_view_settings    Boolean  @default(false)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  employee             Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// SALES (POS)
+// ============================================================
+
+model Sale {
+  id              String     @id @default(uuid())
+  invoice_number  String     @unique
+  employeeId      String
+  subtotal        Int
+  discount_total  Int        @default(0)
+  total           Int
+  amount_received Int        @default(0)
+  change_amount   Int        @default(0)
+  payment_method  String     @default("cash")
+  status          String     @default("completed")
+  notes           String?
+  employee_note   String?
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+
+  employee        Employee   @relation(fields: [employeeId], references: [id])
+  items           SaleItem[]
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([created_at])
+  @@index([invoice_number])
+}
+
+model SaleItem {
+  id              String   @id @default(uuid())
+  saleId          String
+  productId       String?
+  product_name_ar String
+  product_name_en String?
+  product_sku     String
+  quantity        Int
+  unit_price      Int
+  total_price     Int
+  volume          String?
+
+  sale            Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product         Product? @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+// ============================================================
+// SITE SETTINGS
+// ============================================================
+
+model SiteSettings {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  value      String
+  value_type String   @default("string")
+  category   String   @default("general")
+  label_ar   String?
+  label_en   String?
+  updated_at DateTime @updatedAt
+
+  @@index([key])
+  @@index([category])
+}
+
+// ============================================================
+// SECURITY
+// ============================================================
+
+model LoginAttempt {
+  id          String    @id @default(uuid())
+  ip_address  String
+  username    String?
+  user_type   String    @default("admin")
+  success     Boolean   @default(false)
+  employeeId  String?
+  created_at  DateTime  @default(now())
+
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+
+  @@index([ip_address])
+  @@index([created_at])
+  @@index([user_type])
+}
+
+model SecurityEvent {
+  id          String    @id @default(uuid())
+  ip_address  String
+  event_type  String
+  details     String?
+  is_blocked  Boolean   @default(false)
+  expires_at  DateTime?
+  created_at  DateTime  @default(now())
+
+  @@index([ip_address])
+  @@index([is_blocked])
+  @@index([created_at])
 }

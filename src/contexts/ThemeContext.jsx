@@ -5,12 +5,12 @@ import React, { createContext, useState, useEffect } from 'react';
 export const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('dahab_theme');
-    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+    if (savedTheme === 'light' || savedTheme === 'dark') {
       setTheme(savedTheme);
     }
     setMounted(true);

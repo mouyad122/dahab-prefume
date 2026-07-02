@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, WhatsappLogo, Eye, ShoppingBag, Check } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
+import Button from '../ui/Button';
 
 export default function ProductCard({ product }) {
   const { language, t } = useContext(LanguageContext);
@@ -124,50 +125,52 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* CTAs */}
-        <div className="flex items-center gap-2.5 mt-5 w-full">
+        <div className="flex items-center gap-2 mt-5 w-full">
           {isOutOfStock ? (
             /* Out of stock: WhatsApp Inquiry only */
-            <a 
+            <Button 
               href={whatsappUrl}
               target="_blank" 
               rel="noopener noreferrer" 
-              className="btn-primary py-2.5 px-3 flex-1 flex items-center justify-center gap-1.5 text-[10px] tracking-wider bg-[#25D366] hover:bg-[#20ba59] border-none text-white focus-visible:outline-none"
+              variant="success"
+              className="flex-1 !py-2 !px-2 !text-[11px] font-sans-ar"
+              icon={WhatsappLogo}
             >
-              <WhatsappLogo size={14} weight="bold" />
-              <span>{isAr ? 'استفسار واتساب' : 'WhatsApp Inquiry'}</span>
-            </a>
+              {isAr ? 'استفسار واتساب' : 'WhatsApp Inquiry'}
+            </Button>
           ) : (
             <>
               {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                className={`py-2.5 px-3 flex-1 flex items-center justify-center gap-1.5 text-[10px] tracking-wider rounded-full font-bold uppercase transition-all duration-300 active:scale-95 cursor-pointer focus-visible:outline-none ${
+                className={`flex-1 h-[42px] flex items-center justify-center gap-2 rounded-md font-bold uppercase transition-all duration-300 active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] text-[11px] font-sans-ar tracking-wider ${
                   addedToCart
                     ? 'bg-emerald-500 text-white border border-emerald-500'
-                    : 'bg-[var(--color-gold)] text-black hover:bg-[var(--color-gold-light)]'
+                    : 'bg-[linear-gradient(135deg,#c5a049_0%,#ecd393_50%,#9e7929_100%)] text-[#040302] border border-[rgba(255,223,122,0.4)] shadow-[0_4px_20px_rgba(196,154,68,0.22)] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(196,154,68,0.42)]'
                 }`}
                 aria-label={isAr ? 'أضف للسلة' : 'Add to Cart'}
               >
                 {addedToCart ? (
                   <>
-                    <Check size={14} weight="bold" />
+                    <Check size={16} weight="bold" />
                     <span>{isAr ? 'تمت الإضافة' : 'Added'}</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingBag size={14} weight="bold" />
-                    <span>{isAr ? 'أضف للسلة' : 'Add to Cart'}</span>
+                    <ShoppingBag size={18} weight="bold" />
+                    <span>{isAr ? 'إضافة للسلة' : 'Add to Cart'}</span>
                   </>
                 )}
               </button>
 
               {/* View Product */}
-              <Link 
+              <Button 
                 href={`/products/${product.slug}`}
-                className="btn-secondary py-2.5 px-3 flex-1 text-center text-[10px] tracking-wider focus-visible:outline-none"
+                variant="secondary"
+                className="flex-1 !py-2 !px-2 !text-[11px] font-sans-ar"
               >
                 {isAr ? 'عرض العطر' : 'View Scent'}
-              </Link>
+              </Button>
             </>
           )}
         </div>

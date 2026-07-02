@@ -1,95 +1,137 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ArrowRight, ArrowLeft } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
+
+const COLLECTIONS = [
+  {
+    id: 'hair-mists',
+    slug: 'hair-mists',
+    name: { ar: 'مجموعة بخاخات الشعر', en: 'Hair Mists Collection' },
+    desc: { ar: 'خمسة عطور حصرية لشعر ناعم وعبق يدوم طوال اليوم', en: 'Five exclusive scents for soft, fragrant hair that lasts all day' },
+    count: 5,
+    image: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&q=80&w=600',
+    accent: 'rgba(196,154,68,0.12)',
+    tag: { ar: 'الأكثر مبيعاً', en: 'Best Seller' },
+  },
+  {
+    id: 'private-collection',
+    slug: 'private-collection',
+    name: { ar: 'المجموعة الخاصة', en: 'Private Collection' },
+    desc: { ar: 'عطور حصرية من أرقى دور العطور العالمية', en: 'Exclusive fragrances from the world\'s most prestigious houses' },
+    count: 12,
+    image: 'https://images.unsplash.com/photo-1547005327-4f5a2a60e93e?auto=format&fit=crop&q=80&w=600',
+    accent: 'rgba(90,52,26,0.18)',
+    tag: { ar: 'حصري', en: 'Exclusive' },
+  },
+  {
+    id: 'middle-eastern-houses',
+    slug: 'middle-eastern-houses',
+    name: { ar: 'دور الشرق الأوسط', en: 'Middle Eastern Houses' },
+    desc: { ar: 'أجمل العطور من دور الشرق الأوسط المرموقة', en: 'The finest scents from prestigious Middle Eastern fragrance houses' },
+    count: 8,
+    image: 'https://images.unsplash.com/photo-1526253038957-4f4673a87d77?auto=format&fit=crop&q=80&w=600',
+    accent: 'rgba(77,22,24,0.16)',
+    tag: { ar: 'تراث شرقي', en: 'Eastern Heritage' },
+  },
+];
+
+// Intersection Observer hook
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
 
 export default function FeaturedCollections() {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
-
-  const collections = [
-    {
-      slug: 'hair-mists',
-      titleAr: 'مجموعة معطرات الشعر',
-      titleEn: 'Hair Mists Collection',
-      descAr: 'معطرات شعر مغذية بزيت الأرجان الطبيعي، تمنح خصلاتك ثباتاً يدوم لأكثر من 48 ساعة.',
-      descEn: 'Nourishing mists enriched with Argan oil, offering 48+ hours of exceptional hair fragrance.',
-      image: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=600',
-    },
-    {
-      slug: 'private-collection',
-      titleAr: 'المجموعة الخاصة',
-      titleEn: 'Private Collection',
-      descAr: 'صيغ عطرية فريدة تم تركيبها يدوياً بتركيزات زيتية ملكية للمناسبات الفخمة.',
-      descEn: 'Exclusive custom formulations blended with high oil concentrations for grand presence.',
-      image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    },
-    {
-      slug: 'middle-eastern',
-      titleAr: 'العطور الشرقية',
-      titleEn: 'Middle Eastern Collection',
-      descAr: 'أعرق خلطات العود والتوابل والجلود من كبرى دور العطور العربية بفوحان استثنائي.',
-      descEn: 'Timeless blends of oud, amber, and spices from prominent Middle Eastern fragrance houses.',
-      image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
-    }
-  ];
+  const [ref, visible] = useReveal();
+  const Arrow = isAr ? ArrowLeft : ArrowRight;
 
   return (
-    <section className="w-full bg-[var(--color-bg-primary)] py-32 px-6 border-b border-[var(--color-border)]">
-      <div className="premium-container flex flex-col items-center gap-20">
-        {/* Section Title */}
-        <div className="text-center flex flex-col items-center gap-4">
-          <span className="rounded-full px-3.5 py-1 text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
-            {isAr ? 'التشكيلات الحصرية' : 'Exclusive Curations'}
+    <section className="luxury-section" ref={ref}>
+      <div className="premium-container">
+        {/* Header */}
+        <div className={`mb-12 flex flex-col items-center text-center gap-4 ${visible ? 'reveal-up' : 'opacity-0'}`}>
+          <span className="section-kicker">
+            {isAr ? 'تصفح مجموعاتنا' : 'Browse Our Collections'}
           </span>
-          <h2 className="font-display text-3xl md:text-5xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-            {isAr ? 'مجموعات دهب للعطور' : 'Dahab Fragrance Collections'}
+          <h2 className="font-display text-display-md text-[var(--color-text-primary)]">
+            {isAr ? 'اكتشف عالم دهب للعطور' : 'Discover the World of Dahab'}
           </h2>
-          <div className="w-12 h-[1px] bg-[var(--color-gold)]" />
+          <p className="max-w-lg text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            {isAr
+              ? 'ثلاث مجموعات فاخرة، كل واحدة حكاية عطرية متكاملة'
+              : 'Three luxury collections, each a complete fragrance story'}
+          </p>
         </div>
 
-        {/* Collections Grid - Double Bezel Card layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 w-full justify-center justify-items-center">
-          {collections.map((col, idx) => (
-            <div 
-              key={idx} 
-              className="rounded-[2.5rem] bg-black/5 dark:bg-white/5 p-2 ring-1 ring-black/5 dark:ring-white/10 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] hover:shadow-[0_15px_40px_rgba(201,155,54,0.04)]"
+        {/* Collection cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {COLLECTIONS.map((col, idx) => (
+            <Link
+              key={col.id}
+              href={`/collections/${col.slug}`}
+              className={`group relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-card)] transition-all duration-500 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-gold)] ${
+                visible ? 'reveal-up' : 'opacity-0'
+              }`}
+              style={{ animationDelay: `${idx * 0.12}s` }}
+              id={`collection-card-${col.slug}`}
             >
-              <div className="rounded-[calc(2.5rem-0.5rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] overflow-hidden p-6 flex flex-col justify-between h-full min-h-[480px]">
-                
-                {/* Visual Image container */}
-                <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)] mb-6 relative group">
-                  <img 
-                    src={col.image} 
-                    alt={isAr ? col.titleAr : col.titleEn} 
-                    className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
-                </div>
+              {/* Background accent */}
+              <div
+                className="absolute inset-0 z-0 transition-opacity duration-500"
+                style={{ background: `radial-gradient(circle at 50% 100%, ${col.accent} 0%, transparent 70%)` }}
+              />
 
-                {/* Text Context */}
-                <div className="flex flex-col gap-4 flex-grow text-center items-center px-2">
-                  <h3 className="font-display text-2xl font-bold text-[var(--color-text-primary)] tracking-wide">
-                    {isAr ? col.titleAr : col.titleEn}
-                  </h3>
-                  <p className="text-xs text-[var(--color-text-secondary)] font-light leading-relaxed max-w-xs">
-                    {isAr ? col.descAr : col.descEn}
-                  </p>
-                </div>
+              {/* Image */}
+              <div className="relative h-52 overflow-hidden">
+                <img
+                  src={col.image}
+                  alt={col.name[language]}
+                  className="w-full h-full object-cover opacity-75 transition-all duration-700 group-hover:scale-110 group-hover:opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-card)] via-transparent to-transparent" />
 
-                {/* Trailing action link */}
-                <div className="mt-8 text-center">
-                  <Link 
-                    href={`/collections/${col.slug}`} 
-                    className="inline-flex items-center text-[10px] font-bold text-[var(--color-gold)] uppercase tracking-[0.2em] border-b border-[var(--color-gold)]/20 pb-1 hover:text-[var(--color-gold-light)] hover:border-[var(--color-gold-light)] transition-all duration-300"
-                  >
-                    {isAr ? 'عرض المجموعة ──' : 'View Collection ──'}
-                  </Link>
+                {/* Tag badge */}
+                <div className="absolute top-3 left-3">
+                  <span className="badge-gold text-[0.62rem]">{col.tag[language]}</span>
                 </div>
-
               </div>
-            </div>
+
+              {/* Content */}
+              <div className={`relative z-10 p-5 ${isAr ? 'dir-ar' : 'dir-en'}`}>
+                <h3 className="font-display text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+                  {col.name[language]}
+                </h3>
+                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] mb-4">
+                  {col.desc[language]}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.72rem] text-[var(--color-text-muted)]">
+                    {col.count} {isAr ? 'منتج' : 'products'}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-[var(--color-gold)] text-sm font-bold transition-all duration-300 group-hover:gap-2.5">
+                    <span>{isAr ? 'استعرض' : 'Browse'}</span>
+                    <Arrow size={15} weight="bold" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hover border glow */}
+              <div className="absolute inset-0 rounded-[var(--radius-xl)] border border-[var(--color-gold)] opacity-0 transition-opacity duration-300 group-hover:opacity-20 pointer-events-none" />
+            </Link>
           ))}
         </div>
       </div>

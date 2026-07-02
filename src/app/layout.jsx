@@ -17,7 +17,7 @@ export const metadata = {
     siteName: 'DAHAB PERFUMES',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1200',
+        url: '/images/background.jpg',
         width: 1200,
         height: 630,
         alt: 'DAHAB PERFUMES Luxury Boutique',
@@ -29,13 +29,13 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'DAHAB PERFUMES | Luxury Fragrance Boutique',
     description: 'Hand-blended luxury niche fragrances and hair mists. Let your scent spread your influence.',
-    images: ['https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1200'],
+    images: ['/images/background.jpg'],
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar" dir="ltr">
+    <html lang="ar" dir="rtl">
       <body className="flex flex-col min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
         <Providers>
           <PublicLayoutWrapper>

@@ -1,134 +1,88 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Star } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
-import { Quotes, Star, ArrowUpRight } from '@phosphor-icons/react';
 
-/**
- * ReviewsPreview - Displays real customer reviews from Google Maps.
- * Supports isSubPage prop to hide headers when embedded in static review page.
- */
-export default function ReviewsPreview({ isSubPage = false }) {
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
+
+const REVIEWS = [
+  {
+    id: 1,
+    name: 'أحمد الزعبي',
+    text: {
+      ar: 'رائحة خيالية وتدوم طويلاً! عطر مسك الفانيليا من أفضل ما شممته.',
+      en: 'Incredible scent and very long lasting! Musk Vanilla is one of the best I have smelled.'
+    }
+  },
+  {
+    id: 2,
+    name: 'رنا العمري',
+    text: {
+      ar: 'المحل ممتاز والموظفين محترفين جداً، سعر ممتاز للجودة.',
+      en: 'Excellent store and very professional staff, amazing price for the quality.'
+    }
+  },
+  {
+    id: 3,
+    name: 'Sara M.',
+    text: {
+      ar: 'عطر أديب لطافة رائع جداً، ثابت ومميز للغاية.',
+      en: 'Lattafa Adeeb is absolutely stunning, long lasting and very unique scent.'
+    }
+  }
+];
+
+export default function ReviewsPreview() {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
-
-  const reviews = [
-    {
-      initials: 'AA',
-      name: 'abdullah almaredi',
-      metaAr: 'مراجعة واحدة · صورة واحدة',
-      metaEn: '1 review · 1 photo',
-      rating: 5,
-      dateAr: 'قبل 4 أسابيع',
-      dateEn: '4 weeks ago',
-      text: 'بصراحة و بدون مجاملة و مش اي كلام عطورهم اشي سفاااااح و بعطيك نسبة فوحان و ثبات على الملابس حتى بعد الغسيل ، و الشباب محترمين جداً و ذوووق ،  الله يباركلهم في تعبهم و مالهم يارب'
-    },
-    {
-      initials: 'LK',
-      name: 'Lujain Khalaileh',
-      metaAr: 'مراجعتان · صورة واحدة',
-      metaEn: '2 reviews · 1 photo',
-      rating: 5,
-      dateAr: 'قبل 3 أشهر',
-      dateEn: '3 months ago',
-      text: 'طبعا محل ذهب بوسط البلد قبال مطعم هاشم شو مااحكي ما بقدر اوصف الروائح يلي عندهم والثبات يلي بصنعوا فيه العطور شغلهم سفاح والزيوت والعطور يلي عندهم سفاحه واصليه وبعملوهم بصدق صراحه أنا بجيب منهم يلي اكثر من ٣ سنين من وقت ما اول مره جربت من عندهم'
-    },
-    {
-      initials: 'LS',
-      name: 'Layan Sbeitan',
-      metaAr: '3 مراجعات · صورتان',
-      metaEn: '3 reviews · 2 photos',
-      rating: 5,
-      dateAr: 'قبل 3 أشهر',
-      dateEn: '3 months ago',
-      text: 'العطور بتجنّن وثباتها ممتاز، وخدمة العملاء أكثر من رائعة تعامل راقي واهتمام بكل التفاصيل'
-    }
-  ];
+  const [ref, visible] = useReveal();
 
   return (
-    <section className={`w-full ${isSubPage ? 'bg-transparent py-10' : 'bg-[var(--color-bg-secondary)] py-32'} px-6 border-b border-[var(--color-border)] relative`}>
-      <div className="premium-container flex flex-col gap-20">
-        
-        {/* Section Header (Only visible if not subpage) */}
-        {!isSubPage && (
-          <div className="text-center flex flex-col items-center gap-4">
-            <span className="rounded-full px-3.5 py-1 text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
-              {isAr ? 'آراء وتجارب' : 'Google Reviews'}
-            </span>
-            <h2 className="font-display text-3xl md:text-5xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-              {isAr ? 'ماذا يقول عملاؤنا؟' : 'Client Testimonials'}
-            </h2>
-            <div className="w-12 h-[1px] bg-[var(--color-gold)]" />
-          </div>
-        )}
+    <section className="luxury-section bg-[var(--color-bg-secondary)]" ref={ref}>
+      <div className="premium-container">
+        <div className={`text-center mb-14 ${visible ? 'reveal-up' : 'opacity-0'}`}>
+          <span className="section-kicker mb-4 inline-block">
+            {isAr ? 'آراء العملاء' : 'Customer Reviews'}
+          </span>
+          <h2 className="font-display text-display-sm text-[var(--color-text-primary)]">
+            {isAr ? 'ماذا يقول عملاؤنا' : 'What Our Customers Say'}
+          </h2>
+        </div>
 
-        {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full justify-center justify-items-center">
-          {reviews.map((rev, idx) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {REVIEWS.map((review, idx) => (
             <div 
-              key={idx} 
-              className="rounded-[2.5rem] bg-black/5 dark:bg-white/5 p-2 ring-1 ring-black/5 dark:ring-white/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] h-full w-full max-w-sm"
+              key={review.id}
+              className={`glass-card p-8 flex flex-col items-center text-center ${visible ? 'reveal-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${idx * 0.15}s` }}
             >
-              <div className="rounded-[calc(2.5rem-0.5rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 shadow-main flex flex-col justify-between h-full min-h-[300px] relative">
-                
-                {/* Quote Icon watermark */}
-                <Quotes size={48} weight="fill" className="absolute top-6 right-6 text-zinc-900/10 pointer-events-none" />
-
-                {/* Rating stars & Google Maps tag */}
-                <div className="flex flex-col gap-2 mb-4">
-                  <div className="flex items-center gap-1">
-                    {[...Array(rev.rating)].map((_, sIdx) => (
-                      <Star key={sIdx} size={14} weight="fill" className="text-[var(--color-gold)]" />
-                    ))}
-                  </div>
-                  <span className="text-[9px] font-bold text-[var(--color-gold)] uppercase tracking-wider">
-                    {isAr ? 'مراجعة من Google Maps' : 'Google Maps Review'}
-                  </span>
-                </div>
-
-                {/* Content - Keep original Arabic review text as requested */}
-                <p className="text-xs text-[var(--color-text-secondary)] font-light leading-relaxed mb-6 flex-grow dir-auto text-start">
-                  "{rev.text}"
-                </p>
-
-                {/* Author Info */}
-                <div className="flex items-center justify-between gap-3 border-t border-[var(--color-border)] pt-4 w-full text-xs text-[var(--color-text-muted)]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-gold-dim)] border border-[var(--color-gold)]/20 flex items-center justify-center text-[10px] font-bold text-[var(--color-gold)]">
-                      {rev.initials}
-                    </div>
-                    <div className="flex flex-col text-start">
-                      <span className="text-xs font-semibold text-[var(--color-text-primary)]">
-                        {rev.name}
-                      </span>
-                      <span className="text-[9px] font-light">
-                        {isAr ? rev.metaAr : rev.metaEn}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-light italic whitespace-nowrap">
-                    {isAr ? rev.dateAr : rev.dateEn}
-                  </span>
-                </div>
-
+              <div className="flex items-center gap-1 text-[var(--color-gold)] mb-6">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Star key={star} size={18} weight="fill" />
+                ))}
+              </div>
+              <p className={`text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed mb-8 flex-1 ${isAr ? 'dir-ar' : 'dir-en'}`}>
+                "{review.text[language]}"
+              </p>
+              <div className="font-display text-[var(--color-gold-light)] font-semibold text-lg">
+                {review.name}
               </div>
             </div>
           ))}
         </div>
-
-        {/* View on Google Maps Link Button */}
-        <div className="w-full flex justify-center mt-4">
-          <a 
-            href="https://maps.app.goo.gl/WcHGzHu9WbFpwTAQ8"
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group flex items-center justify-center gap-2.5 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 active:scale-[0.98] shadow-md cursor-pointer"
-          >
-            <span>{isAr ? 'عرض التقييمات على Google Maps' : 'View on Google Maps'}</span>
-            <ArrowUpRight size={14} weight="bold" className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </a>
-        </div>
-
       </div>
     </section>
   );

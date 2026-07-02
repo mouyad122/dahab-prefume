@@ -1,46 +1,57 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
+import { prisma } from '../../../lib/prisma';
 import ProductDetailClient from './ProductDetailClient';
-import { initialProducts } from '../../../data/initialProducts';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = initialProducts.find(p => p.slug === slug);
+  const product = await prisma.product.findUnique({
+    where: { slug }
+  });
 
-  if (!product) {
-    return {
-      title: 'Fragrance Not Found | DAHAB PERFUMES',
-    };
-  }
+  if (!product) return { title: 'Product Not Found' };
 
   return {
-    title: `DAHAB PERFUMES | ${product.title.en} - ${product.title.ar}`,
-    description: product.shortDescription.en,
-    alternates: {
-      canonical: `/products/${slug}`,
-    },
-    openGraph: {
-      title: `DAHAB PERFUMES | ${product.title.en}`,
-      description: product.shortDescription.en,
-      url: `https://dahabperfume.com/products/${slug}`,
-      siteName: 'DAHAB PERFUMES',
-      images: [
-        {
-          url: product.thumbnail,
-          width: 600,
-          height: 600,
-          alt: product.title.en,
-        },
-      ],
-      type: 'music.song', // Generic custom og type, or website
-    },
+    title: `${product.name_ar} | DAHAB PERFUMES`,
+    description: product.short_description_ar,
   };
 }
 
-export default function ProductDetailPage() {
-  return <ProductDetailClient />;
-}
-export async function generateStaticParams() {
-  return initialProducts.map((product) => ({
-    slug: product.slug,
-  }));
+export const revalidate = 60;
+
+export default async function ProductPage({ params }) {
+  const { slug } = await params;
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      category: true
+    }
+  });
+
+  if (!product || !product.visible_on_website) {
+    notFound();
+  }
+
+  // Fetch some related products (same category)
+  const relatedProducts = await prisma.product.findMany({
+    where: {
+      categoryId: product.categoryId,
+      id: { not: product.id },
+      visible_on_website: true
+    },
+    take: 4,
+    select: {
+      id: true,
+      name_ar: true,
+      name_en: true,
+      slug: true,
+      price_50ml_fils: true,
+      price_100ml_fils: true,
+      price_200ml_fils: true,
+      images_360: true
+    }
+  });
+
+  return <ProductDetailClient product={product} relatedProducts={relatedProducts} />;
 }

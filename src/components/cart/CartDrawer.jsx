@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X, Trash, Plus, Minus, ShoppingBag, WhatsappLogo, ArrowRight } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
+import Button from '../ui/Button';
 
 export default function CartDrawer() {
   const { language, t } = useContext(LanguageContext);
@@ -209,23 +210,34 @@ export default function CartDrawer() {
             </p>
 
             {/* Checkout CTA */}
-            <Link
-              href="/checkout"
-              onClick={() => setCartOpen(false)}
-              className="group flex items-center justify-center gap-3 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full transition-all duration-300 hover:bg-[var(--color-gold-light)] hover:scale-[1.02] active:scale-[0.98]"
+            <Button
+              href={`https://wa.me/962785050655?text=${encodeURIComponent(
+                (isAr ? 'مرحباً، أود إتمام هذا الطلب من DAHAB PERFUMES:\n\n' : 'Hello, I would like to complete this order from DAHAB PERFUMES:\n\n') +
+                cartItems.map(item => `- ${item.quantity}x ${isAr ? item.title_ar || item.title : item.title_en || item.title} (${(item.price * item.quantity).toFixed(2)} JOD)`).join('\n') +
+                '\n\n' +
+                (isAr ? `الإجمالي الفرعي: ${subtotal.toFixed(2)} JOD` : `Subtotal: ${subtotal.toFixed(2)} JOD`) +
+                (isAr ? '\n\nيرجى تزويدي بتفاصيل التوصيل وإجمالي المبلغ النهائي.' : '\n\nPlease provide me with delivery details and the final total.')
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="primary"
+              className="w-full font-sans-ar uppercase tracking-[0.1em]"
+              icon={WhatsappLogo}
+              fullWidth
             >
-              <span>{isAr ? 'إتمام الطلب' : 'Proceed to Checkout'}</span>
-              <ArrowRight size={14} weight="bold" />
-            </Link>
+              {isAr ? 'إتمام الطلب عبر واتساب' : 'Checkout via WhatsApp'}
+            </Button>
 
             {/* View Full Cart */}
-            <Link
+            <Button
               href="/cart"
               onClick={() => setCartOpen(false)}
-              className="text-center text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors"
+              variant="ghost"
+              className="!py-2 !text-[11px] font-sans-ar"
+              fullWidth
             >
               {isAr ? 'عرض السلة الكاملة' : 'View Full Cart'}
-            </Link>
+            </Button>
           </div>
         )}
       </div>

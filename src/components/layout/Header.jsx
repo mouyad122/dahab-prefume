@@ -1,209 +1,121 @@
 'use client';
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  ShoppingBag, 
-  Heart,
-  Globe, 
-  Sun, 
-  Moon, 
-  List, 
-  X,
-  InstagramLogo,
-  FacebookLogo
-} from '@phosphor-icons/react';
+import { Globe, Heart, List, MapPin, ShoppingBag, WhatsappLogo, X } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
-import { ThemeContext } from '../../contexts/ThemeContext';
 import { useCartStore } from '../../stores/useCartStore';
 import { brandConfig } from '../../config/brand';
 
 export default function Header() {
-  const { language, toggleLanguage, t } = useContext(LanguageContext);
-  const { theme, toggleTheme } = useContext(ThemeContext);
-  const cartItems = useCartStore(state => state.cartItems);
-  const wishlist = useCartStore(state => state.wishlist);
-  const toggleCart = useCartStore(state => state.toggleCart);
-  
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, toggleLanguage } = useContext(LanguageContext);
+  const cartItems = useCartStore((state) => state.cartItems);
+  const wishlist = useCartStore((state) => state.wishlist);
+  const toggleCart = useCartStore((state) => state.toggleCart);
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const wishlistCount = wishlist.length;
   const isAr = language === 'ar';
-  const isLight = theme === 'light';
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(prev => !prev);
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 28);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  // Nav items definition
+  useEffect(() => setOpen(false), [pathname]);
+
   const navItems = [
-    { labelAr: 'الرئيسية', labelEn: 'Home', path: '/' },
-    { labelAr: 'المتجر', labelEn: 'Shop', path: '/shop' },
-    { labelAr: 'المجموعات', labelEn: 'Collections', path: '/collections' },
-    { labelAr: 'من نحن', labelEn: 'About Us', path: '/about' },
-    { labelAr: 'التقييمات', labelEn: 'Reviews', path: '/reviews' },
-    { labelAr: 'موقع المعرض', labelEn: 'Store Location', path: '/store-location' },
-    { labelAr: 'اتصل بنا', labelEn: 'Contact', path: '/contact' }
+    { label: isAr ? 'الرئيسية' : 'Home', path: '/' },
+    { label: isAr ? 'المتجر' : 'Shop', path: '/shop' },
+    { label: isAr ? 'المجموعات' : 'Collections', path: '/collections' },
+    { label: isAr ? 'عن دهب' : 'About', path: '/about' },
+    { label: isAr ? 'موقعنا' : 'Location', path: '/store-location' },
+    { label: isAr ? 'تواصل معنا' : 'Contact', path: '/contact' },
   ];
 
-  return (
-    <header className="w-full flex flex-col bg-[var(--color-bg-primary)]/90 backdrop-blur-md border-b border-[var(--color-border)] z-40 sticky top-0 transition-colors duration-300">
-      {/* ── TOP UTILITY BAR ── */}
-      <div className="w-full bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-6 py-2 flex items-center justify-between text-xs">
-        {/* Social Links */}
-        <div className="flex items-center gap-4">
-          <a 
-            href={brandConfig.instagram} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors py-1 px-1"
-            aria-label="Instagram"
-          >
-            <InstagramLogo size={16} />
-          </a>
-          <a 
-            href={brandConfig.facebook} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors py-1 px-1"
-            aria-label="Facebook"
-          >
-            <FacebookLogo size={16} />
-          </a>
-        </div>
+  const whatsappText = isAr
+    ? 'مرحبًا، أريد الاستفسار عن عطور DAHAB PERFUMES.'
+    : 'Hello, I would like to ask about DAHAB PERFUMES.';
+  const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(whatsappText)}`;
 
-        {/* Info & Lang Switcher */}
-        <div className="flex items-center gap-5">
-          <button 
-            onClick={toggleLanguage} 
-            className="flex items-center gap-1.5 cursor-pointer text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors py-1 focus-visible:outline-none"
-            aria-label={isAr ? 'Switch to English' : 'تغيير للغة العربية'}
-          >
-            <Globe size={14} />
-            <span className={isAr ? 'font-sans-en text-[10px] uppercase font-bold tracking-wider' : 'font-sans-ar text-[11px]'}>
-              {isAr ? 'English' : 'العربية'}
-            </span>
-          </button>
+  return (
+    <header className={`site-header ${scrolled ? 'site-header-scrolled' : ''}`}>
+      <div className="site-topbar">
+        <div className={`premium-container flex items-center justify-between gap-4 text-[0.72rem] ${isAr ? 'dir-ar' : 'dir-en'}`}>
+          <a href={brandConfig.googleMapsLink} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-gold-light)]">
+            <MapPin size={13} className="text-[var(--color-gold)]" />
+            <span>{brandConfig.address[language]}</span>
+          </a>
+          <span className="mx-auto sm:mx-0 text-[var(--color-gold-light)] font-semibold">
+            {brandConfig.tagline[language]}
+          </span>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-2 text-[#71d79a] hover:text-[#98efba]">
+            <WhatsappLogo size={14} weight="bold" />
+            <span>{brandConfig.phoneLocal}</span>
+          </a>
         </div>
       </div>
 
-      {/* ── MAIN NAVBAR ── */}
-      <div className="w-full max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-        
-        {/* Brand Name Logo (English Only) */}
-        <Link href="/" className="flex flex-col items-center focus-visible:outline-none">
-          <span className="font-display text-xl md:text-2xl font-bold tracking-[0.2em] text-[var(--color-gold)] leading-none transition-colors hover:text-[var(--color-gold-light)]">
-            DAHAB PERFUMES
-          </span>
-          <span className="text-[7px] uppercase tracking-[0.35em] text-[var(--color-text-secondary)] mt-1.5">
-            Downtown Amman
+      <div className="premium-container flex min-h-[74px] items-center justify-between gap-4">
+        <Link href="/" className="brand-lockup group flex items-center gap-3">
+          <img src="/brand/dahab-logo.png" alt="" aria-hidden="true" className="brand-logo-image brand-logo-image-header" />
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-[1.65rem] font-semibold tracking-[0.18em] text-[var(--color-gold-pale)]">DAHAB</span>
+            <span className="text-[0.58rem] font-bold tracking-[0.32em] text-[var(--color-text-muted)]">PERFUMES</span>
           </span>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-7 text-[11px] font-bold uppercase tracking-[0.2em] justify-center flex-grow">
-          {navItems.map((item, idx) => {
-            const isActive = pathname === item.path;
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+          {navItems.map((item) => {
+            const active = pathname === item.path;
             return (
-              <Link 
-                key={idx} 
-                href={item.path} 
-                className={`transition-colors py-2 px-1 focus-visible:outline-none hover:text-[var(--color-gold)] ${
-                  isActive ? 'text-[var(--color-gold)] border-b border-[var(--color-gold)]' : 'text-[var(--color-text-primary)]'
-                } ${isAr ? 'font-sans-ar text-[13px] tracking-normal font-medium' : 'font-sans-en'}`}
-              >
-                {isAr ? item.labelAr : item.labelEn}
+              <Link key={item.path} href={item.path} className={`nav-link ${active ? 'nav-link-active' : ''}`}>
+                {item.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* Action Controls (Theme, Wishlist, Cart, Mobile Menu trigger) */}
-        <div className="flex items-center gap-4">
-          {/* Theme Switcher */}
-          <button 
-            onClick={toggleTheme} 
-            className="p-2 cursor-pointer text-[var(--color-text-primary)] hover:text-[var(--color-gold)] transition-colors active:scale-95 focus-visible:outline-none"
-            aria-label={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          >
-            {isLight ? <Moon size={18} /> : <Sun size={18} />}
+        <div className="flex items-center gap-2">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex btn-whatsapp h-10 min-h-10 px-4 text-xs">
+            <WhatsappLogo size={16} weight="bold" />
+            <span>{isAr ? 'اطلب عبر واتساب' : 'WhatsApp'}</span>
+          </a>
+          <button type="button" onClick={toggleLanguage} className="icon-btn" aria-label={isAr ? 'Switch to English' : 'التبديل للعربية'}>
+            <Globe size={17} />
           </button>
-
-          {/* Wishlist Link */}
-          <Link 
-            href="/wishlist" 
-            className="p-2 relative text-[var(--color-text-primary)] hover:text-[var(--color-gold)] transition-colors active:scale-95 focus-visible:outline-none"
-            aria-label={t('wishlist')}
-          >
-            <Heart size={18} />
-            {wishlistCount > 0 && (
-              <span className="absolute top-0 right-0 bg-[var(--color-gold-dark)] text-[#FAFAF7] text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[var(--color-bg-primary)]">
-                {wishlistCount}
-              </span>
-            )}
+          <Link href="/wishlist" className="icon-btn relative" aria-label={isAr ? 'المفضلة' : 'Wishlist'}>
+            <Heart size={17} />
+            {wishlist.length > 0 && <span className="counter-badge">{wishlist.length}</span>}
           </Link>
-
-          {/* Cart Icon trigger */}
-          <button 
-            onClick={toggleCart} 
-            className="p-2 relative cursor-pointer text-[var(--color-text-primary)] hover:text-[var(--color-gold)] transition-colors active:scale-95 focus-visible:outline-none"
-            aria-label={t('cart')}
-          >
-            <ShoppingBag size={18} />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-[var(--color-gold)] text-[#000000] text-[8px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border border-[var(--color-bg-primary)]">
-                {cartCount}
-              </span>
-            )}
+          <button type="button" onClick={toggleCart} className="icon-btn relative" aria-label={isAr ? 'السلة' : 'Cart'}>
+            <ShoppingBag size={17} />
+            {cartCount > 0 && <span className="counter-badge">{cartCount}</span>}
           </button>
-
-          {/* Mobile Hamburguer Toggle */}
-          <button 
-            onClick={toggleMobileMenu} 
-            className="lg:hidden p-2 cursor-pointer text-[var(--color-text-primary)] hover:text-[var(--color-gold)] transition-colors active:scale-95 focus-visible:outline-none"
-            aria-label="Toggle Menu"
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X size={20} /> : <List size={20} />}
+          <button type="button" onClick={() => setOpen((value) => !value)} className="icon-btn lg:hidden" aria-label={open ? 'Close menu' : 'Open menu'}>
+            {open ? <X size={20} /> : <List size={20} />}
           </button>
         </div>
       </div>
 
-      {/* ── MOBILE MENU OVERLAY ── */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 top-[90px] z-50 bg-[var(--color-bg-primary)]/98 backdrop-blur-lg flex flex-col items-center justify-start py-12 px-6 overflow-y-auto transition-all duration-300">
-          <nav className="flex flex-col gap-6 text-center w-full max-w-sm">
-            {navItems.map((item, idx) => {
-              const isActive = pathname === item.path;
-              return (
-                <Link
-                  key={idx}
-                  href={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`text-lg transition-transform duration-300 hover:scale-105 active:scale-95 block py-3 border-b border-[var(--color-border)] ${
-                    isActive ? 'text-[var(--color-gold)] font-bold' : 'text-[var(--color-text-primary)]'
-                  } ${isAr ? 'font-sans-ar text-xl' : 'font-sans-en uppercase tracking-wider text-sm font-semibold'}`}
-                >
-                  {isAr ? item.labelAr : item.labelEn}
-                </Link>
-              );
-            })}
-          </nav>
-          
-          {/* Quick utility stats inside mobile drawer */}
-          <div className="mt-12 flex items-center gap-6 border-t border-[var(--color-border)] pt-8 w-full max-w-sm justify-center text-xs text-[var(--color-text-secondary)]">
-            <Link href="/wishlist" onClick={() => setMobileMenuOpen(false)} className="hover:text-[var(--color-gold)] transition-colors">
-              {t('wishlist')} ({wishlistCount})
-            </Link>
-            <span className="text-zinc-800">|</span>
-            <button onClick={() => { setMobileMenuOpen(false); toggleCart(); }} className="hover:text-[var(--color-gold)] transition-colors">
-              {t('cart')} ({cartCount})
-            </button>
+      {open && (
+        <nav className={`mobile-menu ${isAr ? 'dir-ar' : 'dir-en'}`}>
+          <div className="premium-container py-4">
+            {navItems.map((item) => (
+              <Link key={item.path} href={item.path} className={`mobile-nav-link ${pathname === item.path ? 'text-[var(--color-gold-light)]' : ''}`}>
+                {item.label}
+              </Link>
+            ))}
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-whatsapp mt-4 w-full">
+              <WhatsappLogo size={18} weight="bold" />
+              <span>{isAr ? 'تواصل مع الخبير' : 'Talk to a specialist'}</span>
+            </a>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   );

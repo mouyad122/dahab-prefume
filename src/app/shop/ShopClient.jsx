@@ -1,166 +1,135 @@
 'use client';
 
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { FadersHorizontal, MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
-import { initialProducts } from '../../data/initialProducts';
 import ProductCard from '../../components/product/ProductCard';
-import { MagnifyingGlass, Funnel, ArrowsDownUp } from '@phosphor-icons/react';
 
-export default function ShopClient() {
-  const { language, t } = useContext(LanguageContext);
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=700';
+
+function parseImages(value) {
+  try {
+    const parsed = value ? JSON.parse(value) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function productPrice(product) {
+  return product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0;
+}
+
+function formatJOD(fils) {
+  return `${(fils / 1000).toFixed(3)} JOD`;
+}
+
+export default function ShopClient({ initialProducts }) {
+  const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
 
-  // Filters state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('featured');
-  const [filteredProducts, setFilteredProducts] = useState(initialProducts);
+  const products = initialProducts || [];
+  const categories = useMemo(() => {
+    const map = new Map();
+    products.forEach((product) => {
+      if (product.category?.id) map.set(product.category.id, product.category);
+    });
+    return Array.from(map.values());
+  }, [products]);
 
-  // Filter Categories
-  const categories = [
-    { key: 'all', ar: 'كل المنتجات', en: 'All Products' },
-    { key: 'hair-mists', ar: 'معطرات الشعر', en: 'Hair Mists' },
-    { key: 'private-collection', ar: 'المجموعة الخاصة', en: 'Private Collection' },
-    { key: 'middle-eastern', ar: 'العطور الشرقية', en: 'Middle Eastern' }
-  ];
-
-  // Sorting Options
-  const sortOptions = [
-    { key: 'featured', ar: 'المنتجات المميزة', en: 'Featured' },
-    { key: 'newest', ar: 'الأحدث', en: 'Newest' },
-    { key: 'price-asc', ar: 'السعر من الأقل للأعلى', en: 'Price: Low to High' },
-    { key: 'price-desc', ar: 'السعر من الأعلى للأقل', en: 'Price: High to Low' }
-  ];
-
-  useEffect(() => {
-    let result = [...initialProducts];
-
-    // Filter by Category
-    if (selectedCategory !== 'all') {
-      result = result.filter(p => p.category === selectedCategory);
-    }
-
-    // Filter by Search Query
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        t(p.title).toLowerCase().includes(query) || 
-        t(p.shortDescription).toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort Products
-    if (sortBy === 'price-asc') {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price-desc') {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === 'newest') {
-      // Simulating newest by ID or SKU
-      result.sort((a, b) => b.sku.localeCompare(a.sku));
-    }
-
-    setFilteredProducts(result);
-  }, [selectedCategory, searchQuery, sortBy, language]);
+  const filtered = products.filter((product) => {
+    const query = search.trim().toLowerCase();
+    const name = `${product.name_ar || ''} ${product.name_en || ''}`.toLowerCase();
+    const matchesSearch = !query || name.includes(query);
+    const matchesCategory = category === 'all' || product.categoryId === category;
+    return matchesSearch && matchesCategory && product.visible_on_website !== false;
+  });
 
   return (
-    <div className="premium-container py-16 flex flex-col gap-12">
-      {/* Page Hero */}
-      <div className="text-center flex flex-col items-center gap-4">
-        <span className="rounded-full px-3.5 py-1 text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
-          {t('shop')}
-        </span>
-        <h1 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-          {isAr ? 'تسوّق عطور DAHAB PERFUMES' : 'Shop DAHAB PERFUMES Products'}
-        </h1>
-        <p className="text-xs text-[var(--color-text-secondary)] font-light max-w-md">
-          {isAr ? 'عطور نيش شرقية وفرنسية مميزة مصممة للتميز والتفرد بجمال الثبات.' : 'Discover curated niche perfumes and nourishing hair mists with extreme performance.'}
-        </p>
-      </div>
-
-      {/* Search, Filter, Sort Controls Panel */}
-      <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 rounded-[2rem] shadow-sm">
-        {/* Search Input */}
-        <div className="relative w-full md:max-w-xs">
-          <MagnifyingGlass size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
-          <input 
-            type="text" 
-            placeholder={isAr ? 'ابحث عن عطر...' : 'Search fragrance...'} 
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="form-input pl-10 text-xs bg-[var(--color-bg-primary)]"
-          />
-        </div>
-
-        {/* Category Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto py-1 justify-start md:justify-center no-scrollbar">
-          <Funnel size={14} className="text-[var(--color-gold)] hidden md:block" />
-          {categories.map(cat => (
-            <button
-              key={cat.key}
-              onClick={() => setSelectedCategory(cat.key)}
-              className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap transition-all duration-300 focus-visible:outline-none ${
-                selectedCategory === cat.key 
-                  ? 'bg-[var(--color-gold)] text-black' 
-                  : 'bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white'
-              }`}
-            >
-              {isAr ? cat.ar : cat.en}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort Controls */}
-        <div className="relative w-full md:w-auto flex items-center gap-2 justify-end">
-          <ArrowsDownUp size={14} className="text-zinc-500" />
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-xs rounded-full px-4 py-2 font-medium focus:outline-none focus:border-[var(--color-gold)] cursor-pointer"
-          >
-            {sortOptions.map(opt => (
-              <option key={opt.key} value={opt.key}>
-                {isAr ? opt.ar : opt.en}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Results Header */}
-      <div className="flex justify-between items-center text-xs text-[var(--color-text-secondary)] border-b border-[var(--color-border)] pb-4">
-        <span>
-          {isAr ? 'المنتجات المعروضة:' : 'Showing products:'} <strong className="text-[var(--color-text-primary)] font-bold">{filteredProducts.length}</strong>
-        </span>
-      </div>
-
-      {/* Empty State */}
-      {filteredProducts.length === 0 ? (
-        <div className="rounded-[2.5rem] bg-black/5 dark:bg-white/5 p-2 ring-1 ring-black/5 dark:ring-white/10 w-full max-w-lg mx-auto">
-          <div className="rounded-[calc(2.5rem-0.5rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-12 text-center flex flex-col items-center gap-4">
-            <span className="text-4xl">🔍</span>
-            <h3 className="font-display text-xl font-bold text-[var(--color-text-primary)]">
-              {isAr ? 'لم نجد أي نتائج تطابق بحثك' : 'No Fragrances Found'}
-            </h3>
-            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-              {isAr ? 'تأكد من كتابة الكلمات بشكل صحيح أو حاول إعادة تعيين الفلاتر.' : 'Try adjusting your search filters or clear inputs to see the full list.'}
-            </p>
-            <button 
-              onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSortBy('featured'); }}
-              className="btn-primary py-2 px-6 mt-2"
-            >
-              {isAr ? 'إعادة تعيين' : 'Clear Filters'}
-            </button>
+    <main className={`shop-page ${isAr ? 'dir-ar' : 'dir-en'}`}>
+      <section className="shop-hero">
+        <div className="premium-container">
+          <div className="shop-hero-inner">
+            <div>
+              <div className="eyebrow">
+                <Sparkle size={15} weight="fill" />
+                <span>{isAr ? 'مجموعة دهب الكاملة' : 'Dahab full collection'}</span>
+              </div>
+              <h1>{isAr ? 'تسوّق العطور بثقة ووضوح.' : 'Shop fragrance with clarity.'}</h1>
+              <p>
+                {isAr
+                  ? 'تصفّح العطور حسب المجموعة، اختر ما يناسب حضورك، واطلب مباشرة عبر واتساب أو من صفحة المنتج.'
+                  : 'Browse by collection, choose the scent that matches your presence, and order directly from the product page.'}
+              </p>
+            </div>
+            <div className="shop-count">
+              <strong>{filtered.length}</strong>
+              <span>{isAr ? 'منتج متاح' : 'available products'}</span>
+            </div>
           </div>
         </div>
-      ) : (
-        /* Product Grid using reusable ProductCard */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full justify-center justify-items-center">
-          {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+      </section>
+
+      <section className="premium-container shop-toolbar">
+        <div className="search-control">
+          <MagnifyingGlass size={19} />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={isAr ? 'ابحث عن اسم العطر' : 'Search by fragrance name'}
+          />
+        </div>
+        <div className="category-strip">
+          <button onClick={() => setCategory('all')} className={category === 'all' ? 'active' : ''}>
+            <FadersHorizontal size={15} />
+            {isAr ? 'الكل' : 'All'}
+          </button>
+          {categories.map((item) => (
+            <button key={item.id} onClick={() => setCategory(item.id)} className={category === item.id ? 'active' : ''}>
+              {isAr ? item.name_ar : item.name_en}
+            </button>
           ))}
         </div>
-      )}
-    </div>
+      </section>
+
+      <section className="premium-container pb-20">
+        {filtered.length === 0 ? (
+          <div className="empty-state">
+            <MagnifyingGlass size={42} />
+            <p>{isAr ? 'لم نجد منتجًا مطابقًا للبحث.' : 'No matching products found.'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filtered.map((product) => {
+              const image = product.image_filename || FALLBACK_IMAGE;
+              const title_ar = product.name_ar || '';
+              const title_en = product.name_en || '';
+              const categoryName = isAr ? product.category?.name_ar : product.category?.name_en;
+              
+              const mappedProduct = {
+                id: product.id,
+                title: isAr ? title_ar : title_en,
+                price: productPrice(product) / 1000,
+                compareAtPrice: null, // Assuming no compareAtPrice in DB model directly available here
+                stock: product.stock,
+                category: categoryName || (isAr ? 'عطور' : 'Perfumes'),
+                thumbnail: image,
+                slug: product.slug,
+                volume: '100ml' // Static fallback or parse if available
+              };
+
+              return (
+                <div key={product.id} className="h-full">
+                  <ProductCard product={mappedProduct} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }

@@ -1,93 +1,91 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Medal, ShieldCheck, Star, Clock } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
-import { Crown, Compass, Handshake, MapPin, ShoppingBag } from '@phosphor-icons/react';
+
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
 
 export default function WhyDahabSection() {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
+  const [ref, visible] = useReveal();
 
-  const advantages = [
+  const PILLARS = [
     {
-      icon: <Crown size={24} className="text-[var(--color-gold)]" />,
-      titleAr: 'ثبات وفوحان استثنائي',
-      titleEn: 'Exceptional Longevity',
-      descAr: 'نختار المكونات والزيوت العطرية النقية بعناية لضمان ثبات عطري يدوم لأيام على الملابس والشعر.',
-      descEn: 'We curate pure fragrance oils and premium bases, ensuring sillage that lingers beautifully for days.'
+      id: 1,
+      icon: Medal,
+      title: { ar: 'المنتجات المختارة بعناية', en: 'Handpicked Selection' },
+      desc: { ar: 'نختار كل عطر بعناية فائقة لنضمن لك تجربة عطرية لا مثيل لها.', en: 'We carefully select each fragrance to ensure an unparalleled scent experience.' }
     },
     {
-      icon: <Compass size={24} className="text-[var(--color-gold)]" />,
-      titleAr: 'خيارات ترضي جميع الأذواق',
-      titleEn: 'Curated Selections',
-      descAr: 'توليفات فريدة تجمع بين أصالة العطور الشرقية المعتدلة ونعومة العطور الفرنسية الباردة.',
-      descEn: 'Artfully designed olfactory profiles bridging rich Middle Eastern heritage with French elegance.'
+      id: 2,
+      icon: ShieldCheck,
+      title: { ar: 'أصالة ومصداقية', en: 'Authentic & Original' },
+      desc: { ar: 'ضمان ١٠٠٪ على أصالة جميع عطورنا ومصدرها الموثوق.', en: '100% guarantee on the authenticity and reliable sourcing of all our perfumes.' }
     },
     {
-      icon: <Handshake size={24} className="text-[var(--color-gold)]" />,
-      titleAr: 'خدمة كونسيرج مباشرة وراقية',
-      titleEn: 'Premium Helpline Care',
-      descAr: 'متابعة الطلبات وتأكيد الفواتير مباشرة وبشكل شخصي وراقٍ عبر الواتساب مع خبرائنا العطريين.',
-      descEn: 'Enjoy direct communication, order updates, and tailored concierge support via official WhatsApp.'
+      id: 3,
+      icon: Star,
+      title: { ar: 'إرشاد متخصص', en: 'Expert Guidance' },
+      desc: { ar: 'فريقنا خبير في مساعدتك لاكتشاف العطر الذي يعبر عن شخصيتك.', en: 'Our team is expert in helping you discover the fragrance that expresses your personality.' }
     },
     {
-      icon: <MapPin size={24} className="text-[var(--color-gold)]" />,
-      titleAr: 'موقعنا العريق في وسط البلد',
-      titleEn: 'Boutique Location',
-      descAr: 'معرضنا يقع في قلب عمان بوسط البلد، شارع الأمير محمد، لنبقى قريبين من زبائننا.',
-      descEn: 'Visit our welcoming physical boutique in the historic heart of Amman, Prince Mohammad Street.'
-    },
-    {
-      icon: <ShoppingBag size={24} className="text-[var(--color-gold)]" />,
-      titleAr: 'تجربة شراء سهلة كزائر',
-      titleEn: 'Elegant Shopper Experience',
-      descAr: 'بساطة مطلقة في الشراء دون الحاجة لإنشاء حساب أو إعلانات بريدية مزعجة.',
-      descEn: 'No tedious logins or spam emails. Complete checkout quickly as a guest and send to WhatsApp.'
+      id: 4,
+      icon: Clock,
+      title: { ar: 'منذ 2007', en: 'Since 2007' },
+      desc: { ar: 'خبرة تزيد عن 15 عاماً في سوق العطور الأردني.', en: 'Over 15 years of experience in the Jordanian perfume market.' }
     }
   ];
 
   return (
-    <section className="w-full bg-[var(--color-bg-primary)] py-32 px-6 border-b border-[var(--color-border)] relative">
-      <div className="premium-container flex flex-col gap-20">
-        
-        {/* Section Header */}
-        <div className="text-center flex flex-col items-center gap-4">
-          <span className="rounded-full px-3.5 py-1 text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
-            {isAr ? 'لماذا نختلف عن الآخرين' : 'Bespoke Experience'}
+    <section className="luxury-section relative bg-[#040302]" ref={ref}>
+      <div className="premium-container relative z-10">
+        <div className={`text-center mb-16 ${visible ? 'reveal-up' : 'opacity-0'}`}>
+          <span className="section-kicker mb-4 inline-block">
+            {isAr ? 'تميزنا' : 'Our Excellence'}
           </span>
-          <h2 className="font-display text-3xl md:text-5xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-            {isAr ? 'لماذا تختار دهب للعطور؟' : 'Why DAHAB PERFUMES?'}
+          <h2 className="font-display text-display-md text-[var(--color-text-primary)]">
+            {isAr ? 'لماذا دهب للعطور؟' : 'Why DAHAB PERFUMES?'}
           </h2>
-          <div className="w-12 h-[1px] bg-[var(--color-gold)]" />
         </div>
 
-        {/* Advantages Masonry/Grid - Nested Bezel Style */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 w-full justify-center justify-items-center">
-          {advantages.map((adv, idx) => (
-            <div 
-              key={idx} 
-              className="rounded-[2rem] bg-black/5 dark:bg-white/5 p-1.5 ring-1 ring-black/5 dark:ring-white/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] h-full"
-            >
-              <div className="rounded-[calc(2rem-0.375rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 flex flex-col gap-4 text-center items-center shadow-main h-full justify-start">
-                
-                {/* Icon wrapper */}
-                <div className="w-12 h-12 rounded-full bg-[var(--color-gold-dim)] border border-[var(--color-gold)]/10 flex items-center justify-center mb-2">
-                  {adv.icon}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10">
+          {PILLARS.map((pillar, idx) => {
+            const Icon = pillar.icon;
+            return (
+              <div 
+                key={pillar.id}
+                className={`glass-card p-8 md:p-10 flex flex-col md:flex-row gap-6 items-start ${isAr ? 'dir-ar' : 'dir-en'} ${visible ? 'reveal-up' : 'opacity-0'}`}
+                style={{ animationDelay: `${idx * 0.15}s` }}
+              >
+                <div className="shrink-0 p-4 rounded-full bg-[var(--color-gold-dim)] border border-[var(--color-border-strong)] text-[var(--color-gold)]">
+                  <Icon size={32} weight="duotone" />
                 </div>
-
-                <h3 className="font-display text-lg font-bold text-[var(--color-text-primary)] leading-tight">
-                  {isAr ? adv.titleAr : adv.titleEn}
-                </h3>
-
-                <p className="text-xs text-[var(--color-text-secondary)] font-light leading-relaxed">
-                  {isAr ? adv.descAr : adv.descEn}
-                </p>
-
+                <div>
+                  <h3 className="font-display text-xl text-[var(--color-text-primary)] mb-3 font-semibold">
+                    {pillar.title[language]}
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
+                    {pillar.desc[language]}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
       </div>
     </section>
   );

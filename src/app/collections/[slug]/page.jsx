@@ -1,55 +1,178 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
+import { prisma } from '../../../lib/prisma';
 import CollectionDetailClient from './CollectionDetailClient';
 
-const collectionsData = {
-  'hair-mists': {
-    title: { ar: 'معطرات الشعر', en: 'Hair Mists' },
-    desc: { ar: 'مجموعة معطرات شعر مغذية وغنية بزيت الأرجان لتمنحك ثباتاً يدوم طويلاً وفوحاناً جذاباً.', en: 'Nourishing hair mists enriched with Argan oil for long lasting scent and alluring sillage.' }
-  },
-  'private-collection': {
-    title: { ar: 'المجموعة الخاصة', en: 'Private Collection' },
-    desc: { ar: 'خلطات عطرية حصرية تم تركيبها يدوياً بتركيزات زيتية عالية لتلائم أفخم مناسباتك الخاصة.', en: 'Exclusive hand-blended scents with high oil concentrations tailored for your special occasions.' }
-  },
-  'middle-eastern': {
-    title: { ar: 'العطور الشرقية', en: 'Middle Eastern Collection' },
-    desc: { ar: 'أشهر عطور دور العطور الشرقية المتميزة بالثبات الفائق والفوحان العالي بلمسة تراثية.', en: 'Famous Middle Eastern scents renowned for high longevity and sillage.' }
-  }
-};
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const collection = collectionsData[slug];
+  const cleanSlug = slug.trim().toLowerCase();
+  const altSlug = cleanSlug.replace('-collection', '').replace('collection-', '');
 
-  if (!collection) {
-    return {
-      title: 'Collection Not Found | DAHAB PERFUMES',
-    };
+  const category = await prisma.category.findFirst({
+    where: {
+      OR: [
+        { slug: cleanSlug },
+        { slug: altSlug },
+        { slug: { contains: altSlug } }
+      ],
+      is_active: true
+    },
+    select: {
+      name_ar: true,
+      name_en: true,
+      description_ar: true,
+      description_en: true,
+    },
+  });
+
+  if (!category) {
+    return { title: 'المجموعة الخاصة | DAHAB PERFUMES' };
   }
 
   return {
-    title: `DAHAB PERFUMES | ${collection.title.en} - ${collection.title.ar}`,
-    description: collection.desc.en,
+    title: `${category.name_en || category.name_ar} | DAHAB PERFUMES`,
+    description: category.description_en || category.description_ar || '',
     alternates: {
       canonical: `/collections/${slug}`,
-    },
-    openGraph: {
-      title: `DAHAB PERFUMES | ${collection.title.en}`,
-      description: collection.desc.en,
-      url: `https://dahabperfume.com/collections/${slug}`,
-      siteName: 'DAHAB PERFUMES',
-      type: 'website',
     },
   };
 }
 
-export default function CollectionDetailPage() {
-  return <CollectionDetailClient />;
+export default async function CollectionDetailPage({ params }) {
+  const { slug } = await params;
+  const cleanSlug = slug.trim().toLowerCase();
+  const altSlug = cleanSlug.replace('-collection', '').replace('collection-', '');
+
+  let category = await prisma.category.findFirst({
+    where: {
+      OR: [
+        { slug: cleanSlug },
+        { slug: altSlug },
+        { slug: { contains: altSlug } }
+      ],
+      is_active: true
+    },
+    select: {
+      id: true,
+      slug: true,
+      name_ar: true,
+      name_en: true,
+      description_ar: true,
+      description_en: true,
+      image: true,
+    },
+  });
+
+  if (!category) {
+    category = await prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: { contains: altSlug } },
+          { name_en: { contains: altSlug } },
+          { name_ar: { contains: altSlug } }
+        ]
+      },
+      select: {
+        id: true,
+        slug: true,
+        name_ar: true,
+        name_en: true,
+        description_ar: true,
+        description_en: true,
+        image: true,
+      },
+    });
+  }
+
+  if (!category) {
+    try {
+      const isPrivate = cleanSlug.includes('private');
+      const isHair = cleanSlug.includes('hair');
+      const isEastern = cleanSlug.includes('eastern') || cleanSlug.includes('middle');
+
+      category = await prisma.category.create({
+        data: {
+          slug: cleanSlug,
+          name_ar: isPrivate ? 'المجموعة الخاصة (Private Collection)' : isHair ? 'معطرات الشعر (Hair Mists)' : isEastern ? 'العطور الشرقية والعود' : 'المجموعة الخاصة',
+          name_en: isPrivate ? 'Private Collection' : isHair ? 'Hair Mists' : isEastern ? 'Middle Eastern & Oud' : 'Private Collection',
+          description_ar: 'تشكيلة فاخرة وحصرية من أبدع عطور وخلطات DAHAB PERFUMES المميزة.',
+          description_en: 'An exclusive luxury fragrance collection from DAHAB PERFUMES.',
+          is_active: true,
+          display_order: 1
+        },
+        select: {
+          id: true,
+          slug: true,
+          name_ar: true,
+          name_en: true,
+          description_ar: true,
+          description_en: true,
+          image: true,
+        }
+      });
+    } catch (e) {
+      category = await prisma.category.findFirst({
+        where: { slug: cleanSlug },
+        select: {
+          id: true,
+          slug: true,
+          name_ar: true,
+          name_en: true,
+          description_ar: true,
+          description_en: true,
+          image: true,
+        }
+      });
+    }
+  }
+
+  if (!category) {
+    notFound();
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      OR: [
+        { categoryId: category.id },
+        { main_category: { contains: altSlug } },
+        { main_category: { contains: cleanSlug } }
+      ],
+      visible_on_website: true,
+    },
+    orderBy: { created_at: 'desc' },
+    select: {
+      id: true,
+      name_ar: true,
+      name_en: true,
+      slug: true,
+      stock: true,
+      images_360: true,
+      media_display_type: true,
+      price_50ml_fils: true,
+      price_100ml_fils: true,
+      price_200ml_fils: true,
+      category: {
+        select: { id: true, name_ar: true, name_en: true },
+      },
+    },
+  });
+
+  return <CollectionDetailClient category={category} products={products} />;
 }
 
 export async function generateStaticParams() {
-  return [
-    { slug: 'hair-mists' },
-    { slug: 'private-collection' },
-    { slug: 'middle-eastern' }
-  ];
+  const categories = await prisma.category.findMany({
+    where: { is_active: true },
+    select: { slug: true },
+  });
+
+  const slugs = new Set(categories.map((c) => c.slug));
+  slugs.add('private-collection');
+  slugs.add('private');
+  slugs.add('hair-mists');
+  slugs.add('middle-eastern');
+
+  return Array.from(slugs).map((s) => ({ slug: s }));
 }

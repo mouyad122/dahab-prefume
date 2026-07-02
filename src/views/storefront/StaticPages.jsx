@@ -109,10 +109,31 @@ export default function StaticPages() {
 
       {/* Double-Bezel Premium Enclosure */}
       <div className="rounded-[2rem] bg-black/5 dark:bg-white/5 p-2.5 ring-1 ring-black/5 dark:ring-white/10 max-w-3xl w-full mt-4 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.01]">
-        <div className="rounded-[calc(2rem-0.625rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 md:p-12 shadow-main text-start">
+        <div className="rounded-[calc(2rem-0.625rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 md:p-12 shadow-main text-start flex flex-col gap-6">
           <p className="text-sm md:text-base text-[var(--color-text-secondary)] font-light leading-relaxed dir-auto whitespace-pre-line">
             {content.desc}
           </p>
+          {(pathname === '/store-location' || pathname === '/contact') && (
+            <div className="mt-4 flex flex-col gap-4">
+              <div className="relative h-[250px] md:h-[350px] rounded-2xl overflow-hidden border border-[var(--color-border)]">
+                <iframe 
+                  src="https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                  className="w-full h-full border-0 grayscale invert contrast-[0.9] opacity-80 hover:grayscale-0 hover:invert-0 transition-all duration-500"
+                  allowFullScreen="" 
+                  loading="lazy"
+                  title="Dahab Perfumes Location Map"
+                />
+              </div>
+              <a 
+                href={brandConfig.googleMapsLink} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn-primary w-full text-center py-3.5 text-xs flex items-center justify-center gap-2"
+              >
+                <span>{isAr ? 'افتح الموقع الجغرافي في خرائط Google' : 'Open Location in Google Maps'}</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

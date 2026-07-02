@@ -1,314 +1,208 @@
 'use client';
 
 import React, { useContext, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { LanguageContext } from '../../../contexts/LanguageContext';
-import { useCartStore } from '../../../stores/useCartStore';
-import { initialProducts } from '../../../data/initialProducts';
-import ProductCard from '../../../components/product/ProductCard';
 import Link from 'next/link';
-import JSONLD from '../../../components/layout/JSONLD';
-import { 
-  WhatsappLogo, 
-  ShoppingBag, 
-  Wind, 
-  Truck, 
-  ArrowClockwise,
-  Hourglass,
-  Gauge,
-  Heart,
-  Plus,
-  Minus
-} from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Drop, MapPin, ShieldCheck, Sparkle, WhatsappLogo, ShoppingCart } from '@phosphor-icons/react';
+import { LanguageContext } from '../../../contexts/LanguageContext';
+import { brandConfig } from '../../../config/brand';
+import { useCartStore } from '../../../stores/useCartStore';
+import Button from '../../../components/ui/Button';
 
-export default function ProductDetailClient() {
-  const { slug } = useParams();
-  const { language, t } = useContext(LanguageContext);
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
+
+function formatJOD(fils) {
+  return `${(fils / 1000).toFixed(3)} JOD`;
+}
+
+export default function ProductDetailClient({ product }) {
+  const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
-
-  const product = initialProducts.find(p => p.slug === slug);
-  const wishlist = useCartStore(state => state.wishlist);
-  const toggleWishlist = useCartStore(state => state.toggleWishlist);
   const addToCart = useCartStore(state => state.addToCart);
+  
+  const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
+  const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
-  // Detail Page Local States
-  const [quantity, setQuantity] = useState(1);
-  const [addedNote, setAddedNote] = useState(false);
+  const image = product.image_filename || FALLBACK_IMAGE;
+  const name = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
+  const description = (isAr ? product.short_description_ar : product.short_description_en) || product.short_description_ar;
+  const story = (isAr ? product.long_description_ar : product.long_description_en) || product.long_description_ar;
+  const isOut = product.stock <= 0;
 
-  if (!product) {
-    return (
-      <div className="w-full max-w-7xl mx-auto px-6 py-28 text-center flex flex-col items-center justify-center">
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
-          {isAr ? 'العطر المطلوب غير متوفر' : 'Fragrance Not Found'}
-        </h2>
-        <Link href="/shop" className="btn-primary mt-6">{t('backToShop')}</Link>
-      </div>
-    );
-  }
+  // Determine available sizes and prices
+  const sizes = [];
+  if (product.price_50ml_fils) sizes.push({ key: '50ml', label: isAr ? '50 مل' : '50ml', price: product.price_50ml_fils });
+  if (product.price_100ml_fils) sizes.push({ key: '100ml', label: isAr ? '100 مل' : '100ml', price: product.price_100ml_fils });
+  if (product.price_200ml_fils) sizes.push({ key: '200ml', label: isAr ? '200 مل' : '200ml', price: product.price_200ml_fils });
 
-  const isWishlisted = wishlist.includes(product.id);
-  const isOutOfStock = product.stock === 0;
+  // Default to first available size
+  const [selectedSize, setSelectedSize] = useState(sizes[0]?.key || '100ml');
+  const activeSizeObj = sizes.find(s => s.key === selectedSize) || sizes[0];
+  const activePrice_fils = activeSizeObj ? activeSizeObj.price : 0;
 
-  // Related products (same category, excluding current product)
-  const relatedProducts = initialProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
+  const whatsappText = isAr
+    ? `مرحبًا، أريد طلب عطر ${name} (حجم: ${activeSizeObj?.label || ''}) - SKU: ${product.sku}`
+    : `Hello, I would like to order ${name} (Size: ${activeSizeObj?.label || ''}) - SKU: ${product.sku}`;
+  const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(whatsappText)}`;
 
   const handleAddToCart = () => {
-    if (isOutOfStock) return;
-    addToCart(product, quantity);
-    setAddedNote(true);
-    setTimeout(() => setAddedNote(false), 3000);
+    if (!activeSizeObj) return;
+    
+    const cartItem = {
+      id: `${product.id}-${selectedSize}`,
+      productId: product.id,
+      slug: product.slug,
+      title: product.name_ar, // Store title as AR for consistent order rendering
+      category: isAr ? product.category?.name_ar : product.category?.name_en,
+      volume: activeSizeObj.label,
+      price: parseFloat(activePrice_fils / 1000),
+      stock: product.stock || 99,
+      thumbnail: image
+    };
+    
+    addToCart(cartItem, 1);
   };
 
-  const handleQtyChange = (val) => {
-    const nextVal = Math.max(1, Math.min(val, product.stock));
-    setQuantity(nextVal);
-  };
-
-  const whatsappMessage = isAr 
-    ? `مرحباً، أود الاستفسار عن عطر: ${t(product.title)} بسعر ${product.price.toFixed(2)} دينار أردني.` 
-    : `Hello, I would like to ask about the fragrance: ${t(product.title)} priced at ${product.price.toFixed(2)} JOD.`;
-  const whatsappUrl = `https://wa.me/962785050655?text=${encodeURIComponent(whatsappMessage)}`;
-
-  // Translation helpers for metrics
-  const longevityLabel = {
-    eternal: { ar: 'أبدي (12+ ساعة)', en: 'Eternal (12+ hours)' },
-    long_lasting: { ar: 'طويل الأمد (8-12 ساعة)', en: 'Long-lasting (8-12 hours)' },
-    moderate: { ar: 'متوسط (4-8 ساعات)', en: 'Moderate (4-8 hours)' }
-  };
-
-  const sillageLabel = {
-    heavy: { ar: 'قوي وفواح جداً', en: 'Heavy & Bold' },
-    moderate: { ar: 'معتدل وجذاب', en: 'Moderate & Elegant' },
-    soft: { ar: 'ناعم وهادئ', en: 'Soft & Intimate' }
-  };
-
-  // Breadcrumb structure for SEO
-  const breadcrumbData = {
-    items: [
-      { name: isAr ? 'الرئيسية' : 'Home', link: '/' },
-      { name: isAr ? 'المتجر' : 'Shop', link: '/shop' },
-      { name: isAr ? product.title.ar : product.title.en, link: `/products/${product.slug}` }
-    ]
-  };
+  const notes = [
+    { label: isAr ? 'القمة' : 'Top', value: product.notes_top || product.notes || (isAr ? 'حمضيات، توابل ناعمة' : 'Citrus, soft spices') },
+    { label: isAr ? 'القلب' : 'Heart', value: product.notes_heart || (isAr ? 'زهور، عنبر، عود' : 'Florals, amber, oud') },
+    { label: isAr ? 'القاعدة' : 'Base', value: product.notes_base || (isAr ? 'مسك، أخشاب، باتشولي' : 'Musk, woods, patchouli') },
+  ];
 
   return (
-    <div className="premium-container py-16 flex flex-col gap-20">
-      <JSONLD type="product" data={product} />
-      <JSONLD type="breadcrumb" data={breadcrumbData} />
-      
-      {/* Back to Shop Link */}
-      <Link href="/shop" className="text-xs uppercase tracking-widest text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] self-start transition-colors">
-        ← {t('backToShop')}
-      </Link>
+    <main className={`product-page ${isAr ? 'dir-ar' : 'dir-en'}`}>
+      <div className="premium-container">
+        <Link href="/shop" className="product-back">
+          <BackIcon size={15} />
+          <span>{isAr ? 'العودة للمتجر' : 'Back to shop'}</span>
+        </Link>
 
-      {/* Main Product Frame - Double Bezel Card */}
-      <div className="rounded-[3rem] bg-black/5 dark:bg-white/5 p-2.5 ring-1 ring-black/5 dark:ring-white/10 w-full">
-        <div className="rounded-[calc(3rem-0.625rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 md:p-14 shadow-main grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          
-          {/* Left Column: Visual Gallery */}
-          <div className="w-full aspect-square rounded-2xl overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)] relative">
-            <img src={product.thumbnail} alt={t(product.title)} className="w-full h-full object-cover opacity-90" />
-            {product.compareAtPrice && (
-              <span className="absolute top-6 right-6 bg-[var(--color-gold)] text-black text-[10px] font-extrabold px-3.5 py-1.5 rounded-full uppercase tracking-wider">
-                {isAr ? 'خصم خاص' : 'Offer'}
-              </span>
-            )}
+        <section className="product-layout">
+          {/* Product Image */}
+          <div className="flex flex-col gap-4">
+            <div className="product-gallery-main relative border border-[var(--color-border)] rounded-3xl overflow-hidden bg-black/40 aspect-square">
+              <img src={image} alt={name} className="w-full h-full object-cover" />
+              {isOut && <span className="stock-pill large absolute top-4 right-4">{isAr ? 'نفذت الكمية' : 'Out of stock'}</span>}
+            </div>
           </div>
 
-          {/* Right Column: Complete Details & Specifications */}
-          <div className="flex flex-col gap-6 text-start">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[var(--color-gold)] bg-[var(--color-gold-dim)] px-3 py-1 rounded-full border border-[var(--color-gold)]/10 w-max">
-                {product.category}
-              </span>
-
-              {/* Wishlist Button toggle */}
-              <button 
-                onClick={() => toggleWishlist(product.id)}
-                className="w-10 h-10 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] hover:text-red-500 hover:border-red-500/20 active:scale-95 transition-all duration-300 cursor-pointer focus-visible:outline-none"
-                aria-label="Add to Wishlist"
-              >
-                <Heart size={18} weight={isWishlisted ? 'fill' : 'regular'} className={isWishlisted ? 'text-red-500' : ''} />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <h1 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-                {t(product.title)}
-              </h1>
-              <span className="text-[9px] text-[var(--color-text-muted)] tracking-wider uppercase font-light">
-                SKU: {product.sku} | Volume: {product.volume}
-              </span>
-            </div>
-
-            {/* Price Tags */}
-            <div className="flex items-center gap-4 py-3 border-y border-[var(--color-border)] w-max">
-              <span className="text-3xl font-bold text-[var(--color-text-primary)]">
-                {product.price.toFixed(2)} JOD
-              </span>
-              {product.compareAtPrice && (
-                <span className="text-sm line-through text-[var(--color-text-muted)] font-light">
-                  {product.compareAtPrice.toFixed(2)} JOD
-                </span>
-              )}
-            </div>
-
-            {/* Scent Description */}
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-bold">{isAr ? 'عن العطر' : 'Scent Overview'}</p>
-              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-light">
-                {t(product.longDescription)}
+          {/* Product Details */}
+          <div className="product-info flex flex-col gap-6 text-right">
+            <div>
+              <div className="eyebrow flex items-center gap-1.5 justify-end">
+                <Sparkle size={15} weight="fill" className="text-[var(--color-gold)]" />
+                <span>{product.category?.name_ar || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
+              </div>
+              <h1 className="text-3xl font-display font-bold mt-2 text-white">{name}</h1>
+              <p className="text-[var(--color-text-secondary)] mt-3 leading-relaxed">
+                {description || (isAr ? 'تركيبة عطرية مختارة بعناية لحضور واضح وثبات أنيق.' : 'A carefully curated fragrance with elegant presence and lasting character.')}
               </p>
             </div>
 
-            {/* Olfactory Notes Pyramid */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text-primary)] flex items-center gap-1.5 border-b border-[var(--color-border)] pb-2">
-                <Wind size={14} className="text-[var(--color-gold)]" />
-                <span>{isAr ? 'الهرم العطري والتكوين' : 'Olfactory Notes Pyramid'}</span>
-              </h3>
-              
-              <div className="grid grid-cols-3 gap-3 text-[10px] bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
-                <div className="flex flex-col gap-1 border-r border-[var(--color-border)] pr-2">
-                  <span className="text-zinc-500 font-bold uppercase tracking-wider">{isAr ? 'القمة العطرية' : 'Top Notes'}</span>
-                  <span className="text-zinc-300 font-light">{product.fragranceNotes.top.join(', ')}</span>
-                </div>
-                <div className="flex flex-col gap-1 border-r border-[var(--color-border)] px-2">
-                  <span className="text-zinc-500 font-bold uppercase tracking-wider">{isAr ? 'القلب العطري' : 'Heart Notes'}</span>
-                  <span className="text-zinc-300 font-light">{product.fragranceNotes.heart.join(', ')}</span>
-                </div>
-                <div className="flex flex-col gap-1 pl-2">
-                  <span className="text-zinc-500 font-bold uppercase tracking-wider">{isAr ? 'القاعدة العطرية' : 'Base Notes'}</span>
-                  <span className="text-zinc-300 font-light">{product.fragranceNotes.base.join(', ')}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Scent Performance Metrics */}
-            <div className="grid grid-cols-2 gap-4 bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)] text-xs text-[var(--color-text-secondary)] font-light">
-              <div className="flex items-center gap-2">
-                <Hourglass size={16} className="text-[var(--color-gold)]" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">{isAr ? 'الثبات' : 'Longevity'}</span>
-                  <span>{t(longevityLabel[product.metrics.longevity])}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Gauge size={16} className="text-[var(--color-gold)]" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">{isAr ? 'الفوحان' : 'Projection'}</span>
-                  <span>{t(sillageLabel[product.metrics.sillage])}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Stock status indicator */}
-            <div className="text-xs text-[var(--color-text-secondary)] font-light flex items-center gap-2">
-              <span className={`inline-block w-2.5 h-2.5 rounded-full ${isOutOfStock ? 'bg-red-500' : product.stock <= 4 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-              <span>
-                {isOutOfStock 
-                  ? (isAr ? 'غير متوفر حالياً في المخزن' : 'Out of stock') 
-                  : product.stock <= 4 
-                    ? (isAr ? 'كمية محدودة جداً متبقية!' : 'Very limited quantities left!') 
-                    : (isAr ? 'متوفر وجاهز للتسليم الفوري' : 'In stock, ready for delivery')
-                }
-              </span>
-            </div>
-
-            {/* Actions Block */}
-            <div className="flex flex-col gap-4 mt-2 w-full">
-              
-              {/* Quantity selector & Add to Cart row */}
-              {!isOutOfStock && (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-full px-4 py-3 shrink-0">
-                    <button 
-                      onClick={() => handleQtyChange(quantity - 1)}
-                      disabled={quantity <= 1}
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-500 hover:text-white disabled:opacity-40 transition-colors cursor-pointer"
-                    >
-                      <Minus size={12} weight="bold" />
-                    </button>
-                    <span className="text-xs font-semibold text-[var(--color-text-primary)] w-8 text-center select-none">
-                      {quantity}
-                    </span>
-                    <button 
-                      onClick={() => handleQtyChange(quantity + 1)}
-                      disabled={quantity >= product.stock}
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-500 hover:text-white disabled:opacity-40 transition-colors cursor-pointer"
-                    >
-                      <Plus size={12} weight="bold" />
-                    </button>
-                  </div>
-
-                  <button 
-                    onClick={handleAddToCart}
-                    className="flex-1 group relative flex items-center justify-center gap-3 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full transition-all duration-300 hover:bg-[var(--color-gold-light)] hover:scale-102 active:scale-[0.98] cursor-pointer shadow-md"
-                  >
-                    <ShoppingBag size={18} weight="bold" />
-                    <span>{t('addToCart')}</span>
-                  </button>
-                </div>
-              )}
-
-              {/* WhatsApp direct Inquiry */}
-              <a 
-                href={whatsappUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="group flex items-center justify-center gap-3 border border-[#25D366]/20 bg-[#25D366]/5 text-[#25D366] hover:bg-[#25D366]/10 text-xs font-bold uppercase tracking-[0.15em] px-8 py-4 rounded-full transition-all duration-300 hover:scale-102 active:scale-[0.98] w-full"
-              >
-                <WhatsappLogo size={18} weight="bold" />
-                <span>{isAr ? 'استفسار عبر واتساب' : 'WhatsApp Inquiry'}</span>
-              </a>
-              
-              {addedNote && (
-                <span className="text-[10px] text-emerald-500 font-bold text-center animate-fade-in block mt-1">
-                  {isAr ? 'تمت إضافة العطر بنجاح إلى سلة التسوق!' : 'Fragrance successfully added to your shopping cart!'}
+            {/* Size Selector */}
+            {sizes.length > 0 && (
+              <div className="border-t border-b border-[var(--color-border)] py-4 my-2">
+                <span className="text-xs text-[var(--color-text-muted)] font-bold mb-3 block">
+                  {isAr ? 'اختر الحجم:' : 'Select Size:'}
                 </span>
-              )}
+                <div className="flex gap-3 justify-end">
+                  {sizes.map(size => (
+                    <button
+                      key={size.key}
+                      onClick={() => setSelectedSize(size.key)}
+                      className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${
+                        selectedSize === size.key
+                          ? 'border-[var(--color-gold)] bg-[var(--color-gold-dim)] text-[var(--color-gold-light)]'
+                          : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white'
+                      }`}
+                    >
+                      {size.label} ({formatJOD(size.price)})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Purchase CTA Actions */}
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-[var(--color-border-subtle)]">
+                <span className="text-sm text-[var(--color-text-secondary)]">{isAr ? 'السعر الحالي' : 'Price'}</span>
+                <strong className="text-2xl font-mono text-[var(--color-gold-light)] font-bold">
+                  {formatJOD(activePrice_fils)}
+                </strong>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                {/* Add to Cart button */}
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={isOut}
+                  variant="primary"
+                  className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
+                  icon={ShoppingCart}
+                >
+                  {isAr ? 'إضافة إلى السلة' : 'Add to Cart'}
+                </Button>
+
+                {/* Direct Whatsapp button */}
+                <Button
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="success"
+                  className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
+                  icon={WhatsappLogo}
+                  disabled={isOut}
+                >
+                  {isAr ? 'اطلب سريعاً عبر واتساب' : 'Order via WhatsApp'}
+                </Button>
+              </div>
             </div>
 
-            {/* Shipping & Return Preview Details */}
-            <div className="grid grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-5 text-[10px] text-[var(--color-text-muted)] font-light mt-2">
-              <div className="flex items-start gap-2">
-                <Truck size={16} className="text-zinc-500" />
-                <p>{isAr ? 'توصيل خلال 24 - 48 ساعة لكافة محافظات الأردن.' : 'Local shipping in 24-48 business hours Jordan-wide.'}</p>
+            {/* Assurances */}
+            <div className="product-assurance border-t border-[var(--color-border)] pt-5 mt-2 flex flex-col gap-3.5 text-xs text-[var(--color-text-secondary)]">
+              <div className="flex items-center gap-3 justify-end">
+                <span>{isAr ? 'تجربة وتجربة العطر قبل الشراء متوفرة في معرضنا' : 'In-store testing available'}</span>
+                <ShieldCheck size={20} className="text-[var(--color-gold)]" weight="duotone" />
               </div>
-              <div className="flex items-start gap-2">
-                <ArrowClockwise size={16} className="text-zinc-500" />
-                <p>{isAr ? 'سياسة استبدال مرنة. افحص العطر مع المندوب قبل الدفع.' : 'Flexible exchange. Inspect the scent with the courier prior to payment.'}</p>
+              <div className="flex items-center gap-3 justify-end">
+                <span>{isAr ? 'مكان تواجدنا:' : 'Location:'} {brandConfig.address[language]}</span>
+                <MapPin size={20} className="text-[var(--color-gold)]" weight="duotone" />
               </div>
             </div>
-
           </div>
+        </section>
 
-        </div>
-      </div>
-
-      {/* Related Products Section */}
-      {relatedProducts.length > 0 && (
-        <div className="flex flex-col gap-10">
-          <div className="flex flex-col items-start gap-2 border-b border-[var(--color-border)] pb-4">
-            <span className="text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)]">
-              {isAr ? 'قد يعجبك أيضاً' : 'Olfactory Affinities'}
-            </span>
-            <h3 className="font-display text-2xl font-bold uppercase tracking-wider text-[var(--color-text-primary)]">
-              {isAr ? 'عطور مشابهة ومكملة' : 'Related Creations'}
-            </h3>
+        {/* Notes Story */}
+        <section className="product-story-grid mt-16 border-t border-[var(--color-border)] pt-12">
+          <div className="story-block text-right">
+            <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-2">{isAr ? 'قصة العطر' : 'Fragrance Story'}</span>
+            <h2 className="text-2xl font-display font-bold text-white mb-4">{isAr ? 'الأثر قبل التفاصيل.' : 'The impression before the details.'}</h2>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">{story || (isAr ? 'عطر مصمم ليحمل فخامة شرقية بلمسة عصرية، مناسب لمن يريد حضورًا هادئًا وواضحًا في الوقت نفسه.' : 'A scent designed around Eastern luxury with a modern restraint, made for a quiet yet unmistakable presence.')}</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-            {relatedProducts.map(relProduct => (
-              <ProductCard key={relProduct.id} product={relProduct} />
+          <div className="notes-panel flex flex-col gap-4 text-right bg-black/20 p-6 rounded-2xl border border-[var(--color-border-subtle)]">
+            {notes.map((note) => (
+              <div key={note.label} className="border-b border-[var(--color-border-subtle)] pb-3 last:border-0 last:pb-0">
+                <span className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">{note.label}</span>
+                <strong className="text-white font-medium">{note.value}</strong>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        </section>
 
-    </div>
+        <section className="product-final-cta text-center py-16 bg-black/10 rounded-3xl border border-[var(--color-border-subtle)] mt-16">
+          <h2 className="text-xl font-bold text-white mb-4">{isAr ? 'غير متأكد أن العطر مناسب لذوقك؟' : 'Not sure this is your scent?'}</h2>
+          <Button 
+            href={whatsappUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            variant="secondary"
+            className="!py-3 !px-8 !text-xs inline-flex items-center gap-2"
+          >
+            <span>{isAr ? 'استفسر من خبير العطور' : 'Ask a Dahab specialist'}</span>
+            <ArrowIcon size={15} />
+          </Button>
+        </section>
+      </div>
+    </main>
   );
 }

@@ -10,9 +10,9 @@ import CartHydrator from '../cart/CartHydrator';
 
 export default function PublicLayoutWrapper({ children }) {
   const pathname = usePathname();
-  const isAdmin = pathname && pathname.startsWith('/admin');
+  const isAdminOrPos = pathname && (pathname.startsWith('/admin') || pathname.startsWith('/pos'));
 
-  if (isAdmin) {
+  if (isAdminOrPos) {
     return <>{children}</>;
   }
 
