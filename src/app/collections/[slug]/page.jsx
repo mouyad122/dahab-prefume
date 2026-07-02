@@ -163,16 +163,25 @@ export default async function CollectionDetailPage({ params }) {
 }
 
 export async function generateStaticParams() {
-  const categories = await prisma.category.findMany({
-    where: { is_active: true },
-    select: { slug: true },
-  });
+  try {
+    const categories = await prisma.category.findMany({
+      where: { is_active: true },
+      select: { slug: true },
+    });
 
-  const slugs = new Set(categories.map((c) => c.slug));
-  slugs.add('private-collection');
-  slugs.add('private');
-  slugs.add('hair-mists');
-  slugs.add('middle-eastern');
+    const slugs = new Set(categories.map((c) => c.slug));
+    slugs.add('private-collection');
+    slugs.add('private');
+    slugs.add('hair-mists');
+    slugs.add('middle-eastern');
 
-  return Array.from(slugs).map((s) => ({ slug: s }));
+    return Array.from(slugs).map((s) => ({ slug: s }));
+  } catch (e) {
+    return [
+      { slug: 'private-collection' },
+      { slug: 'private' },
+      { slug: 'hair-mists' },
+      { slug: 'middle-eastern' },
+    ];
+  }
 }
