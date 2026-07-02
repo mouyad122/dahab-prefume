@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { prisma } from '../../../../../lib/prisma';
+import { createAdminSession, createEmployeeSession } from '../../../../../lib/session';
 import {
   checkBruteForce,
   isIpBlocked,
@@ -7,7 +10,6 @@ import {
   sanitize,
   getClientIp,
 } from '../../../../../lib/security';
-import { createAdminSession } from '../../../../../lib/session';
 
 export async function POST(request) {
   const ip = getClientIp(request);
@@ -76,10 +78,6 @@ export async function POST(request) {
     }
 
     // Check Employee Table
-    const bcrypt = (await import('bcryptjs')).default;
-    const { prisma } = await import('../../../../../lib/prisma');
-    const { createEmployeeSession } = await import('../../../../../lib/session');
-
     const employee = await prisma.employee.findUnique({
       where: { username },
       include: { permissions: true },
