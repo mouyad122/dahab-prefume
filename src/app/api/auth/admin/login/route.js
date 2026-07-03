@@ -78,29 +78,33 @@ export async function POST(request) {
     }
 
     // Check Employee Table
-    const employee = await prisma.employee.findUnique({
-      where: { username },
-      include: { permissions: true },
-    });
+    try {
+      const employee = await prisma.employee.findUnique({
+        where: { username },
+        include: { permissions: true },
+      });
 
-    if (employee && employee.is_active) {
-      const passwordMatch = await bcrypt.compare(password, employee.password_hash);
-      if (passwordMatch) {
-        await createEmployeeSession({
-          employeeId: employee.id,
-          username: employee.username,
-          displayName: employee.display_name,
-          role: employee.role,
-        });
-        await recordLoginAttempt({
-          ip,
-          username: employee.username,
-          userType: 'employee',
-          success: true,
-          employeeId: employee.id,
-        });
-        return NextResponse.json({ ok: true, isEmployee: true });
+      if (employee && employee.is_active) {
+        const passwordMatch = await bcrypt.compare(password, employee.password_hash);
+        if (passwordMatch) {
+          await createEmployeeSession({
+            employeeId: employee.id,
+            username: employee.username,
+            displayName: employee.display_name,
+            role: employee.role,
+          });
+          await recordLoginAttempt({
+            ip,
+            username: employee.username,
+            userType: 'employee',
+            success: true,
+            employeeId: employee.id,
+          });
+          return NextResponse.json({ ok: true, isEmployee: true });
+        }
       }
+    } catch (e) {
+      console.warn('Employee DB lookup skipped (DB uninitialized or read-only):', e.message);
     }
 
     // If both failed:

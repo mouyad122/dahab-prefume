@@ -28,72 +28,83 @@ export function rateLimit(ip, maxRequests = 10, windowMs = 60000) {
 
 // ─── BRUTE FORCE CHECK ──────────────────────────────────────────────────────
 export async function checkBruteForce(ip, userType = 'admin') {
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 5;
-  const since = new Date(Date.now() - windowMs);
+  try {
+    const windowMs = 15 * 60 * 1000; // 15 minutes
+    const maxAttempts = 5;
+    const since = new Date(Date.now() - windowMs);
 
-  const attempts = await prisma.loginAttempt.count({
-    where: {
-      ip_address: ip,
-      user_type: userType,
-      success: false,
-      created_at: { gte: since },
-    },
-  });
-
-  if (attempts >= maxAttempts) {
-    // Check if already flagged
-    const existing = await prisma.securityEvent.findFirst({
+    const attempts = await prisma.loginAttempt.count({
       where: {
         ip_address: ip,
-        event_type: 'brute_force_lockout',
-        is_blocked: true,
-        expires_at: { gt: new Date() },
+        user_type: userType,
+        success: false,
+        created_at: { gte: since },
       },
     });
 
-    if (!existing) {
-      // Create lockout event
-      await prisma.securityEvent.create({
-        data: {
+    if (attempts >= maxAttempts) {
+      const existing = await prisma.securityEvent.findFirst({
+        where: {
           ip_address: ip,
           event_type: 'brute_force_lockout',
-          details: `${attempts} failed login attempts in 15 minutes`,
           is_blocked: true,
-          expires_at: new Date(Date.now() + windowMs),
+          expires_at: { gt: new Date() },
         },
       });
+
+      if (!existing) {
+        await prisma.securityEvent.create({
+          data: {
+            ip_address: ip,
+            event_type: 'brute_force_lockout',
+            details: `${attempts} failed login attempts in 15 minutes`,
+            is_blocked: true,
+            expires_at: new Date(Date.now() + windowMs),
+          },
+        });
+      }
+
+      return { blocked: true, attemptsCount: attempts };
     }
 
-    return { blocked: true, attemptsCount: attempts };
+    return { blocked: false, attemptsCount: attempts };
+  } catch (e) {
+    console.warn('BruteForce check skipped (read-only storage):', e.message);
+    return { blocked: false, attemptsCount: 0 };
   }
-
-  return { blocked: false, attemptsCount: attempts };
 }
 
 // ─── CHECK IF IP IS BLOCKED ─────────────────────────────────────────────────
 export async function isIpBlocked(ip) {
-  const blocked = await prisma.securityEvent.findFirst({
-    where: {
-      ip_address: ip,
-      is_blocked: true,
-      expires_at: { gt: new Date() },
-    },
-  });
-  return !!blocked;
+  try {
+    const blocked = await prisma.securityEvent.findFirst({
+      where: {
+        ip_address: ip,
+        is_blocked: true,
+        expires_at: { gt: new Date() },
+      },
+    });
+    return !!blocked;
+  } catch {
+    return false;
+  }
 }
 
 // ─── RECORD LOGIN ATTEMPT ───────────────────────────────────────────────────
 export async function recordLoginAttempt({ ip, username, userType, success, employeeId }) {
-  await prisma.loginAttempt.create({
-    data: {
-      ip_address: ip,
-      username: username || null,
-      user_type: userType || 'admin',
-      success: !!success,
-      employeeId: employeeId || null,
-    },
-  });
+  try {
+    await prisma.loginAttempt.create({
+      data: {
+        ip_address: ip,
+        username: username || null,
+        user_type: userType || 'admin',
+        success: !!success,
+        employeeId: employeeId || null,
+      },
+    });
+  } catch (e) {
+    console.warn('Could not record login attempt (read-only filesystem or DB issue):', e.message);
+  }
 }
 
 // ─── XSS SANITIZATION ───────────────────────────────────────────────────────
