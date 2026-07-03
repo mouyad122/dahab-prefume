@@ -77,7 +77,6 @@ export default function AdminSidebar({ user, open, setOpen }) {
       section: 'المتجر', 
       items: [
         { path: '/admin/products', label: 'المنتجات', icon: Package, show: isSuperAdmin || perms.can_manage_products },
-        { path: '/admin/studio', label: 'ستوديو الذكاء الاصطناعي', icon: Sparkle, show: isSuperAdmin || perms.can_manage_products },
         { path: '/admin/categories', label: 'الأقسام', icon: Tag, show: isSuperAdmin || perms.can_manage_products },
         { path: '/admin/inventory', label: 'المخزون', icon: Warehouse, show: isSuperAdmin || perms.can_view_inventory || perms.can_manage_products },
         { path: '/admin/discounts', label: 'العروض والخصومات', icon: Percent, show: isSuperAdmin || perms.can_manage_products },

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 /**
  * POSIdleScreensaver
@@ -50,15 +51,16 @@ export default function POSIdleScreensaver({
       {/* Subtle gold particles / glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vmin] h-[60vmin] bg-[var(--color-gold)] opacity-5 rounded-full blur-[100px] pointer-events-none mix-blend-screen"></div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center gap-12 pointer-events-none">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-8 pointer-events-none">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-4">
-          <h1 className="font-display text-5xl md:text-7xl font-bold tracking-[0.2em] text-[var(--color-gold-light)] drop-shadow-[0_0_15px_rgba(214,184,120,0.3)]">
-            DAHAB
-          </h1>
-          <div className="text-xs md:text-sm font-bold tracking-[0.4em] text-[var(--color-text-muted)] uppercase">
-            PERFUMES
-          </div>
+        <div className="relative w-64 h-80 md:w-80 md:h-96">
+          <Image 
+            src="/images/pos-logo.jpg" 
+            alt="Dahab Perfumes" 
+            fill 
+            className="object-contain mix-blend-screen opacity-90 drop-shadow-[0_0_25px_rgba(214,184,120,0.15)]"
+            priority
+          />
         </div>
 
         {/* Clock */}

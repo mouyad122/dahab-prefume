@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Storefront, Receipt, FileText, SignOut } from '@phosphor-icons/react';
+import { Storefront, Receipt, FileText, SignOut, Gear } from '@phosphor-icons/react';
 import { usePosContext } from '../../contexts/PosContext';
 import LuxuryButton from '../ui/LuxuryButton';
 
@@ -41,6 +41,12 @@ export default function POSSidebar() {
       label: 'تقرير اليوم',
       icon: FileText,
       show: permissions?.can_print_reports
+    },
+    {
+      path: '/admin/settings',
+      label: 'الإعدادات',
+      icon: Gear,
+      show: permissions?.can_view_settings
     }
   ];
 
