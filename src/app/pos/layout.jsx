@@ -50,6 +50,15 @@ export default function PosLayout({ children }) {
     checkSession();
   }, [pathname, router]);
 
+  const isIdleEnabled = !loading && !!session && pathname !== '/pos/login' && posSettings?.pos_idle_enabled !== false && posSettings?.pos_idle_enabled !== 'false';
+  let idleTimeout = parseInt(posSettings?.pos_idle_timeout_minutes);
+  if (isNaN(idleTimeout) || idleTimeout < 1) idleTimeout = 4;
+  
+  const { isIdle, forceWake } = usePOSIdleTimer({
+    enabled: isIdleEnabled,
+    timeoutMinutes: idleTimeout
+  });
+
   // If on login page, render it directly without layout wrapper
   if (pathname === '/pos/login') {
     return children;
@@ -65,15 +74,6 @@ export default function PosLayout({ children }) {
   }
 
   if (!session) return null;
-
-  const isIdleEnabled = posSettings?.pos_idle_enabled !== false && posSettings?.pos_idle_enabled !== 'false';
-  let idleTimeout = parseInt(posSettings?.pos_idle_timeout_minutes);
-  if (isNaN(idleTimeout) || idleTimeout < 1) idleTimeout = 4;
-  
-  const { isIdle, forceWake } = usePOSIdleTimer({
-    enabled: isIdleEnabled,
-    timeoutMinutes: idleTimeout
-  });
 
   return (
     <PosProvider employee={session.employee} permissions={session.permissions}>
