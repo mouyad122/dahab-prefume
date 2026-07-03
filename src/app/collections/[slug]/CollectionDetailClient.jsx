@@ -17,7 +17,10 @@ function parseImages(value) {
 }
 
 function price(product) {
-  return product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0;
+  if (product.variants && product.variants.length > 0) {
+    return product.variants[0].price;
+  }
+  return 0;
 }
 
 function formatJOD(fils) {
@@ -68,27 +71,28 @@ export default function CollectionDetailClient({ category, products = [] }) {
             {products.map((product) => {
               const productName = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
               const image = parseImages(product.images_360)[0] || fallbackImage;
-              return (
-                <Link href={`/products/${product.slug}`} key={product.id} className="fragrance-card">
-                  <div className="fragrance-image">
-                    <img src={image} alt={productName} />
-                    {product.media_display_type === 'ai_360' && (
-                      <span className="media-pill">{isAr ? 'عرض 360' : '360 View'}</span>
-                    )}
-                    {product.stock <= 0 && (
-                      <span className="stock-pill">{isAr ? 'نفذت الكمية' : 'Out of stock'}</span>
-                    )}
-                  </div>
-                  <div className="fragrance-body">
-                    <span>{title}</span>
-                    <h2>{productName}</h2>
-                    <div>
-                      <strong>{formatJOD(price(product))}</strong>
-                      <small>{product.stock > 0 ? (isAr ? 'متوفر الآن' : 'Available now') : (isAr ? 'غير متوفر' : 'Unavailable')}</small>
+                const totalStock = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+                return (
+                  <Link href={`/products/${product.slug}`} key={product.id} className="fragrance-card">
+                    <div className="fragrance-image">
+                      <img src={image} alt={productName} />
+                      {product.media_display_type === 'ai_360' && (
+                        <span className="media-pill">{isAr ? 'عرض 360' : '360 View'}</span>
+                      )}
+                      {totalStock <= 0 && (
+                        <span className="stock-pill">{isAr ? 'نفذت الكمية' : 'Out of stock'}</span>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              );
+                    <div className="fragrance-body">
+                      <span>{title}</span>
+                      <h2>{productName}</h2>
+                      <div>
+                        <strong>{formatJOD(price(product))}</strong>
+                        <small>{totalStock > 0 ? (isAr ? 'متوفر الآن' : 'Available now') : (isAr ? 'غير متوفر' : 'Unavailable')}</small>
+                      </div>
+                    </div>
+                  </Link>
+                );
             })}
           </div>
         )}

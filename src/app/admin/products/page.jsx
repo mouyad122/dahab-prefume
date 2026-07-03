@@ -19,7 +19,10 @@ function formatJOD(fils) {
 }
 
 function getProductPrice(product) {
-  return product?.price_100ml_fils || product?.price_50ml_fils || product?.price_200ml_fils || 0;
+  if (product?.variants && product.variants.length > 0) {
+    return product.variants[0].price;
+  }
+  return 0;
 }
 
 export default function AdminProducts() {
@@ -41,19 +44,11 @@ export default function AdminProducts() {
   const [categoryId, setCategoryId] = useState('');
   const [gender, setGender] = useState('unisex');
   const [season, setSeason] = useState('all');
-  const [stock, setStock] = useState('0');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
   const [imageFilename, setImageFilename] = useState('');
 
-  // Volume availability checkboxes
-  const [has50ml, setHas50ml] = useState(false);
-  const [has100ml, setHas100ml] = useState(true);
-  const [has200ml, setHas200ml] = useState(false);
-
-  // Price inputs
-  const [price50ml, setPrice50ml] = useState('');
-  const [price100ml, setPrice100ml] = useState('');
-  const [price200ml, setPrice200ml] = useState('');
+  // Dynamic variants array: { volume, price, stock }
+  const [variants, setVariants] = useState([{ volume: '100', price: '', stock: '0' }]);
 
   const [shortDescriptionAr, setShortDescriptionAr] = useState('');
   const [shortDescriptionEn, setShortDescriptionEn] = useState('');
@@ -113,16 +108,10 @@ export default function AdminProducts() {
     setCategoryId(categories[0]?.id || '');
     setGender('unisex');
     setSeason('all');
-    setStock('0');
     setLowStockThreshold('5');
     setImageFilename('');
     
-    setHas50ml(false);
-    setHas100ml(true);
-    setHas200ml(false);
-    setPrice50ml('');
-    setPrice100ml('');
-    setPrice200ml('');
+    setVariants([{ volume: '100', price: '', stock: '0' }]);
 
     setShortDescriptionAr('');
     setShortDescriptionEn('');
@@ -142,17 +131,18 @@ export default function AdminProducts() {
     setCategoryId(product.categoryId || '');
     setGender(product.gender || 'unisex');
     setSeason(product.season || 'all');
-    setStock(String(product.stock || 0));
     setLowStockThreshold(String(product.low_stock_threshold || 5));
     setImageFilename(product.image_filename || '');
     
-    setHas50ml(!!product.price_50ml_fils);
-    setHas100ml(!!product.price_100ml_fils);
-    setHas200ml(!!product.price_200ml_fils);
-    
-    setPrice50ml(product.price_50ml_fils ? String(product.price_50ml_fils / 1000) : '');
-    setPrice100ml(product.price_100ml_fils ? String(product.price_100ml_fils / 1000) : '');
-    setPrice200ml(product.price_200ml_fils ? String(product.price_200ml_fils / 1000) : '');
+    if (product.variants && product.variants.length > 0) {
+      setVariants(product.variants.map(v => ({
+        volume: v.volume,
+        price: String(v.price / 1000),
+        stock: String(v.stock)
+      })));
+    } else {
+      setVariants([{ volume: '100', price: '', stock: '0' }]);
+    }
 
     setShortDescriptionAr(product.short_description_ar || '');
     setShortDescriptionEn(product.short_description_en || '');
@@ -166,6 +156,18 @@ export default function AdminProducts() {
     if (!nameAr) {
       alert('الرجاء تعبئة اسم المنتج بالعربي');
       return;
+    }
+
+    if (variants.length === 0) {
+      alert('الرجاء إضافة حجم واحد على الأقل للمنتج');
+      return;
+    }
+
+    for (const v of variants) {
+      if (!v.volume || !v.price) {
+        alert('الرجاء إدخال الحجم والسعر لجميع الأحجام المضافة');
+        return;
+      }
     }
 
     let finalSku = sku.trim();
@@ -193,11 +195,12 @@ export default function AdminProducts() {
       categoryId: categoryId || null,
       gender: gender,
       season: season,
-      stock: parseInt(stock, 10) || 0,
       low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
-      price_50ml_fils: has50ml && price50ml ? Math.round(parseFloat(price50ml) * 1000) : null,
-      price_100ml_fils: has100ml && price100ml ? Math.round(parseFloat(price100ml) * 1000) : null,
-      price_200ml_fils: has200ml && price200ml ? Math.round(parseFloat(price200ml) * 1000) : null,
+      variants: variants.map(v => ({
+        volume: v.volume.trim(),
+        price: Math.round(parseFloat(v.price) * 1000),
+        stock: parseInt(v.stock, 10) || 0
+      })),
       short_description_ar: shortDescriptionAr.trim() || null,
       short_description_en: shortDescriptionEn.trim() || null,
       image_filename: imageFilename.trim() || null,
@@ -329,17 +332,23 @@ export default function AdminProducts() {
                       </td>
                       <td className="py-3 px-5">
                         <div className="flex gap-1.5 flex-wrap">
-                          {product.price_50ml_fils && <span className="px-2 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] text-[0.65rem]">50ml</span>}
-                          {product.price_100ml_fils && <span className="px-2 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] text-[0.65rem]">100ml</span>}
-                          {product.price_200ml_fils && <span className="px-2 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] text-[0.65rem]">200ml</span>}
+                          {(product.variants || []).map(v => (
+                            <span key={v.id || v.volume} className="px-2 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] text-[0.65rem]">
+                              {v.volume}ml
+                            </span>
+                          ))}
                         </div>
                       </td>
                       <td className="py-3 px-5 font-mono text-[var(--color-gold-light)] font-bold">
                         {formatJOD(getProductPrice(product))}
                       </td>
                       <td className="py-3 px-5">
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${product.stock <= 5 ? 'bg-red-500/10 text-red-500' : 'bg-[#5ddb85]/10 text-[#5ddb85]'}`}>
-                          {product.stock} حبة
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                          (product.variants || []).some(v => v.stock <= (product.low_stock_threshold || 5))
+                            ? 'bg-red-500/10 text-red-500' 
+                            : 'bg-[#5ddb85]/10 text-[#5ddb85]'
+                        }`}>
+                          {(product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)} حبة
                         </span>
                       </td>
                       <td className="py-3 px-5">
@@ -500,109 +509,91 @@ export default function AdminProducts() {
                 />
               </div>
 
-              {/* Price & Volumes Selection with Checkboxes */}
+              {/* Dynamic Variants & Stock Management */}
               <div className="border-t border-[var(--color-border)] pt-4">
-                <label className="form-label border-b border-[var(--color-border-subtle)] pb-2 mb-3 block">
-                  الأحجام والأسعار المتوفرة
-                </label>
+                <div className="flex justify-between items-center border-b border-[var(--color-border-subtle)] pb-2 mb-3">
+                  <label className="form-label !mb-0 text-white font-bold">الأحجام، الأسعار، والمخزون</label>
+                  <LuxuryButton
+                    type="button"
+                    variant="secondary"
+                    className="!py-1 px-3 text-xs"
+                    onClick={() => setVariants([...variants, { volume: '', price: '', stock: '0' }])}
+                  >
+                    + إضافة حجم جديد
+                  </LuxuryButton>
+                </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  {/* Size 50ml */}
-                  <div className="p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20 flex flex-col gap-2">
-                    <label className="flex items-center gap-2.5 cursor-pointer font-bold">
-                      <input 
-                        type="checkbox"
-                        checked={has50ml}
-                        onChange={e => setHas50ml(e.target.checked)}
-                        className="rounded border-[var(--color-border)] text-[var(--color-gold)] focus:ring-[var(--color-gold)]"
-                      />
-                      <span>حجم 50 مل</span>
-                    </label>
-                    {has50ml && (
-                      <div className="mt-1">
-                        <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
-                        <input 
-                          type="number" 
-                          step="0.001"
-                          className="form-input py-1 text-white bg-black/30" 
-                          placeholder="0.000"
-                          value={price50ml}
-                          onChange={e => setPrice50ml(e.target.value)}
-                          required={has50ml}
-                        />
+                <div className="space-y-3">
+                  {variants.map((v, index) => (
+                    <div key={index} className="flex items-end gap-3 p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20">
+                      <div className="flex-1 grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">الحجم (مل)</label>
+                          <input
+                            type="text"
+                            className="form-input py-1.5 text-white bg-black/30"
+                            placeholder="مثال: 100"
+                            value={v.volume}
+                            onChange={e => {
+                              const newVariants = [...variants];
+                              newVariants[index].volume = e.target.value;
+                              setVariants(newVariants);
+                            }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
+                          <input
+                            type="number"
+                            step="0.001"
+                            className="form-input py-1.5 text-white bg-black/30"
+                            placeholder="0.000"
+                            value={v.price}
+                            onChange={e => {
+                              const newVariants = [...variants];
+                              newVariants[index].price = e.target.value;
+                              setVariants(newVariants);
+                            }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">المخزون (الكمية)</label>
+                          <input
+                            type="number"
+                            className="form-input py-1.5 text-white bg-black/30"
+                            placeholder="0"
+                            value={v.stock}
+                            onChange={e => {
+                              const newVariants = [...variants];
+                              newVariants[index].stock = e.target.value;
+                              setVariants(newVariants);
+                            }}
+                            required
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Size 100ml */}
-                  <div className="p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20 flex flex-col gap-2">
-                    <label className="flex items-center gap-2.5 cursor-pointer font-bold">
-                      <input 
-                        type="checkbox"
-                        checked={has100ml}
-                        onChange={e => setHas100ml(e.target.checked)}
-                        className="rounded border-[var(--color-border)] text-[var(--color-gold)] focus:ring-[var(--color-gold)]"
-                      />
-                      <span>حجم 100 مل</span>
-                    </label>
-                    {has100ml && (
-                      <div className="mt-1">
-                        <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
-                        <input 
-                          type="number" 
-                          step="0.001"
-                          className="form-input py-1 text-white bg-black/30" 
-                          placeholder="0.000"
-                          value={price100ml}
-                          onChange={e => setPrice100ml(e.target.value)}
-                          required={has100ml}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Size 200ml */}
-                  <div className="p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20 flex flex-col gap-2">
-                    <label className="flex items-center gap-2.5 cursor-pointer font-bold">
-                      <input 
-                        type="checkbox"
-                        checked={has200ml}
-                        onChange={e => setHas200ml(e.target.checked)}
-                        className="rounded border-[var(--color-border)] text-[var(--color-gold)] focus:ring-[var(--color-gold)]"
-                      />
-                      <span>حجم 200 مل</span>
-                    </label>
-                    {has200ml && (
-                      <div className="mt-1">
-                        <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
-                        <input 
-                          type="number" 
-                          step="0.001"
-                          className="form-input py-1 text-white bg-black/30" 
-                          placeholder="0.000"
-                          value={price200ml}
-                          onChange={e => setPrice200ml(e.target.value)}
-                          required={has200ml}
-                        />
-                      </div>
-                    )}
-                  </div>
+                      
+                      {variants.length > 1 && (
+                        <LuxuryButton
+                          type="button"
+                          variant="danger"
+                          className="!p-2.5 !w-10 !h-10 !min-h-0 !min-w-0"
+                          onClick={() => setVariants(variants.filter((_, idx) => idx !== index))}
+                        >
+                          <Trash size={16} />
+                        </LuxuryButton>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Stock Management */}
+              {/* Stock Threshold Warning */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-4">
                 <div>
-                  <label className="form-label">الكمية المتوفرة في المخزن (اختياري)</label>
-                  <input 
-                    type="number" 
-                    className="form-input text-white bg-black/30" 
-                    value={stock}
-                    onChange={e => setStock(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">حد تنبيه انخفاض المخزون (اختياري)</label>
+                  <label className="form-label">حد تنبيه انخفاض المخزون (موحد لجميع الأحجام)</label>
                   <input 
                     type="number" 
                     className="form-input text-white bg-black/30" 

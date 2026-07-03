@@ -17,6 +17,8 @@ export default function PosCounter() {
   const [lastInvoice, setLastInvoice] = useState(null);
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'cart'
 
+  const [selectedProductForSize, setSelectedProductForSize] = useState(null);
+
   // Focus ref for search
   const searchInputRef = useRef(null);
 
@@ -44,48 +46,80 @@ export default function PosCounter() {
 
   const formatJOD = (fils) => `${(fils / 1000).toFixed(3)} JOD`;
 
-  const addToCart = (product) => {
-    if (product.stock <= 0) return;
+  const addToCart = (product, sizeObj = null) => {
+    const vars = product.variants || [];
+    if (vars.length === 0) {
+      alert('هذا المنتج لا يحتوي على أحجام للبيع');
+      return;
+    }
     
-    const priceFils = product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0;
-    const vol = product.price_100ml_fils ? '100ml' : product.price_50ml_fils ? '50ml' : product.price_200ml_fils ? '200ml' : '100ml';
+    // If no size is pre-selected and there are multiple sizes, open the size selection modal
+    if (!sizeObj && vars.length > 1) {
+      setSelectedProductForSize(product);
+      return;
+    }
+    
+    // Use the single variant or the selected variant
+    const variant = sizeObj || vars[0];
+    
+    if (variant.stock <= 0) {
+      alert('عذراً، هذا الحجم نفذت كميته من المخزن');
+      return;
+    }
+    
+    const cartItemId = `${product.id}-${variant.volume}`;
+    const volLabel = `${variant.volume}ml`;
 
     setCartItems(prev => {
-      const existing = prev.find(item => item.productId === product.id && item.volume === vol);
+      const existing = prev.find(item => item.id === cartItemId);
       if (existing) {
-        if (existing.quantity >= product.stock) return prev; // Cannot add more than stock
+        if (existing.quantity >= variant.stock) {
+          alert('لا يمكن إضافة كمية أكبر من المخزون المتوفر');
+          return prev;
+        }
         return prev.map(item => 
-          item.productId === product.id && item.volume === vol
+          item.id === cartItemId
             ? { ...item, quantity: item.quantity + 1, subtotal_fils: (item.quantity + 1) * item.price_fils }
             : item
         );
       }
       return [...prev, {
+        id: cartItemId,
         productId: product.id,
-        name_ar: product.name_ar,
-        name_en: product.name_en,
+        name_ar: `${product.name_ar} (${volLabel})`,
+        name_en: product.name_en ? `${product.name_en} (${volLabel})` : null,
         sku: product.sku,
-        price_fils: priceFils,
+        price_fils: variant.price,
         quantity: 1,
-        volume: vol,
-        subtotal_fils: priceFils
+        volume: volLabel,
+        subtotal_fils: variant.price
       }];
     });
+    
+    setSelectedProductForSize(null);
   };
 
-  const updateQuantity = (productId, delta) => {
+  const updateQuantity = (itemId, delta) => {
     setCartItems(prev => prev.map(item => {
-      if (item.productId === productId) {
+      if (item.id === itemId) {
+        const product = products.find(p => p.id === item.productId);
+        const variant = product?.variants?.find(v => `${v.volume}ml` === item.volume);
+        const maxStock = variant ? variant.stock : 999;
+        
         const newQty = item.quantity + delta;
-        if (newQty <= 0) return item; // Don't delete on 0, use remove button
+        if (newQty <= 0) return item;
+        if (newQty > maxStock) {
+          alert('لا يمكن إضافة كمية أكبر من المخزون المتوفر');
+          return item;
+        }
         return { ...item, quantity: newQty, subtotal_fils: newQty * item.price_fils };
       }
       return item;
     }));
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item.productId !== productId));
+  const removeFromCart = (itemId) => {
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
   };
 
   const subtotal_fils = cartItems.reduce((acc, item) => acc + item.subtotal_fils, 0);
@@ -132,9 +166,18 @@ export default function PosCounter() {
         
         // Update local stock immediately for UI feeling
         setProducts(prev => prev.map(p => {
-          const cartItem = cartItems.find(ci => ci.productId === p.id);
-          if (cartItem) {
-            return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
+          const itemsForProduct = cartItems.filter(ci => ci.productId === p.id);
+          if (itemsForProduct.length > 0) {
+            return {
+              ...p,
+              variants: p.variants.map(v => {
+                const cartItem = itemsForProduct.find(ci => ci.volume === `${v.volume}ml`);
+                if (cartItem) {
+                  return { ...v, stock: Math.max(0, v.stock - cartItem.quantity) };
+                }
+                return v;
+              })
+            };
           }
           return p;
         }));
@@ -146,7 +189,7 @@ export default function PosCounter() {
         setSearchQuery('');
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`حدث خطأ أثناء حفظ الفاتورة: ${err.error || res.statusText || 'خطأ غير معروف'}`);
+        alert(`حدث خطأ أثناء حفظ الفاتورة: ${err.error || err.message || res.statusText || 'خطأ غير معروف'}`);
       }
     } catch (e) {
       alert(`خطأ في الاتصال بالخادم: ${e.message}`);
@@ -294,7 +337,11 @@ export default function PosCounter() {
         <div className="flex-1 overflow-y-auto p-4 pb-20 lg:pb-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(product => {
-              const outOfStock = product.stock <= 0;
+              const totalStock = (product.variants || []).reduce((acc, v) => acc + (v.stock || 0), 0);
+              const outOfStock = totalStock <= 0;
+              const defaultVariant = product.variants?.[0] || { price: 0, volume: '100' };
+              const multipleSizes = (product.variants || []).length > 1;
+
               return (
                 <button
                   key={product.id}
@@ -306,8 +353,6 @@ export default function PosCounter() {
                   <div className="w-full aspect-square rounded-md overflow-hidden bg-black/40 border border-[var(--color-border-subtle)] relative">
                     {product.image_filename ? (
                        <img src={product.image_filename} alt="" className="w-full h-full object-cover" />
-                    ) : product.images_360 && JSON.parse(product.images_360)[0] ? (
-                       <img src={JSON.parse(product.images_360)[0]} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)] text-xs">صورة</div>
                     )}
@@ -317,15 +362,15 @@ export default function PosCounter() {
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right w-full">
                     <div className="text-sm font-semibold text-[var(--color-text-primary)] line-clamp-2 leading-snug h-10">
                       {product.name_ar}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mb-1">
-                      {product.price_100ml_fils ? '100ml' : product.price_50ml_fils ? '50ml' : '200ml'} | Stock: {product.stock}
+                      {multipleSizes ? 'أحجام متعددة' : `${defaultVariant.volume}ml`} | المخزون: {totalStock}
                     </div>
                     <div className="text-[var(--color-gold-light)] font-bold text-sm">
-                      {formatJOD(product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0)}
+                      {multipleSizes ? 'أسعار متعددة' : formatJOD(defaultVariant.price)}
                     </div>
                   </div>
                 </button>
@@ -484,6 +529,46 @@ export default function PosCounter() {
           <span className="text-xs">السلة</span>
         </LuxuryButton>
       </div>
+
+      {/* Size Selection Modal */}
+      {selectedProductForSize && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass-card w-full max-w-sm p-6 border border-[var(--color-border-strong)] flex flex-col gap-4 bg-[var(--color-bg-surface)] text-white text-right dir-rtl">
+            <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
+              <h2 className="font-display text-lg font-bold text-[var(--color-gold-light)]">
+                اختر حجم العبوة لـ {selectedProductForSize.name_ar}
+              </h2>
+              <LuxuryButton variant="icon" className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-white border-none rounded-full" onClick={() => setSelectedProductForSize(null)}>
+                <X size={20} />
+              </LuxuryButton>
+            </div>
+            
+            <div className="flex flex-col gap-2 mt-2">
+              {(selectedProductForSize.variants || []).map((v) => {
+                const itemOutOfStock = v.stock <= 0;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => addToCart(selectedProductForSize, v)}
+                    disabled={itemOutOfStock}
+                    className={`flex justify-between items-center p-3 rounded-lg border text-right transition-colors ${
+                      itemOutOfStock 
+                        ? 'border-red-500/20 bg-red-500/5 text-red-400 opacity-60 cursor-not-allowed'
+                        : 'border-[var(--color-border-subtle)] bg-black/30 hover:bg-black/50 text-white'
+                    }`}
+                  >
+                    <span className="font-bold">{v.volume} مل</span>
+                    <div className="flex gap-4 items-center">
+                      <span className="text-xs text-[var(--color-text-muted)]">المخزون: {v.stock}</span>
+                      <span className="font-bold text-[var(--color-gold-light)]">{formatJOD(v.price)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,17 +21,20 @@ export default async function ShopPage() {
         name_ar: true,
         name_en: true,
         slug: true,
-        price_50ml_fils: true,
-        price_100ml_fils: true,
-        price_200ml_fils: true,
-        stock: true,
-        images_360: true,
-        media_display_type: true,
+        image_filename: true,
         categoryId: true,
         category: {
           select: { id: true, name_ar: true, name_en: true },
         },
         visible_on_website: true,
+        variants: {
+          select: {
+            id: true,
+            volume: true,
+            price: true,
+            stock: true
+          }
+        }
       },
     });
   } catch (error) {

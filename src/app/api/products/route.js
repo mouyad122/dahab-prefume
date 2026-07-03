@@ -36,20 +36,7 @@ const publicProductSelect = {
   short_description_ar: true,
   short_description_en: true,
   image_filename: true,
-  images_360: true,
-  media_display_type: true,
-  ai360_status: true,
-  ai360_quality: true,
-  ai360_background: true,
-  ai360_lighting: true,
-  ai360_source_image: true,
-  ai360_reference_image: true,
   featured_on_frontend: true,
-  uses_general_pricing: true,
-  price_50ml_fils: true,
-  price_100ml_fils: true,
-  price_200ml_fils: true,
-  stock: true,
   low_stock_threshold: true,
   notes_top: true,
   notes_heart: true,
@@ -68,6 +55,14 @@ const publicProductSelect = {
     orderBy: { position: 'asc' },
   },
   family_tags: true,
+  variants: {
+    select: {
+      id: true,
+      volume: true,
+      price: true,
+      stock: true
+    }
+  },
   created_at: true,
   updated_at: true,
 };
@@ -151,9 +146,7 @@ export async function GET(request) {
   }
 }
 
-// ─── POST /api/products — Admin only ─────────────────────────────────────────
 // Full product creation matching schema fields.
-// images_360 is stored as a JSON string of a filename array.
 export async function POST(request) {
   try {
     // ── Auth ─────────────────────────────────────────────────────────────────
@@ -186,22 +179,9 @@ export async function POST(request) {
       long_description_en,
       keywords_ar,
       image_filename,
-      images_360,          // array of filenames OR already a JSON string
-      media_display_type,
-      ai360_status,
-      ai360_quality,
-      ai360_background,
-      ai360_lighting,
-      ai360_source_image,
-      ai360_reference_image,
       needs_image,
       visible_on_website,
       featured_on_frontend,
-      uses_general_pricing,
-      price_50ml_fils,
-      price_100ml_fils,
-      price_200ml_fils,
-      stock,
       low_stock_threshold,
       notes_top,
       notes_heart,
@@ -211,6 +191,7 @@ export async function POST(request) {
       needs_review,
       source_excel_row,
       categoryId,
+      variants, // array of { volume, price, stock }
     } = body;
 
     // ── Required field validation ─────────────────────────────────────────────
@@ -245,52 +226,10 @@ export async function POST(request) {
       }
     }
 
-    // ── Validate price fields (must be non-negative integers if provided) ──────
-    const validateFils = (val, fieldName) => {
-      if (val === undefined || val === null) return null;
-      const n = parseInt(val, 10);
-      if (!Number.isInteger(n) || n < 0) {
-        throw new Error(`${fieldName} must be a non-negative integer (fils)`);
-      }
-      return n;
-    };
-
-    let p50, p100, p200;
-    try {
-      p50  = validateFils(price_50ml_fils,  'price_50ml_fils');
-      p100 = validateFils(price_100ml_fils, 'price_100ml_fils');
-      p200 = validateFils(price_200ml_fils, 'price_200ml_fils');
-    } catch (validationError) {
-      return Response.json({ error: validationError.message }, { status: 400 });
+    // ── Validate variants array if provided ───────────────────────────────────
+    if (variants && !Array.isArray(variants)) {
+      return Response.json({ error: 'variants must be an array' }, { status: 400 });
     }
-
-    // ── Serialize images_360 ───────────────────────────────────────────────────
-    let images360Str = null;
-    if (images_360 !== undefined && images_360 !== null) {
-      if (Array.isArray(images_360)) {
-        images360Str = JSON.stringify(images_360);
-      } else if (typeof images_360 === 'string') {
-        // Validate it's valid JSON
-        try {
-          JSON.parse(images_360);
-          images360Str = images_360;
-        } catch {
-          return Response.json({ error: 'images_360 must be an array or valid JSON string' }, { status: 400 });
-        }
-      } else {
-        return Response.json({ error: 'images_360 must be an array or JSON string' }, { status: 400 });
-      }
-    }
-
-    const mediaType = ['normal', 'gallery', 'ai_360', 'real_3d'].includes(media_display_type)
-      ? media_display_type
-      : undefined;
-    const aiStatus = ['idle', 'draft', 'generating', 'ready', 'approved', 'failed'].includes(ai360_status)
-      ? ai360_status
-      : undefined;
-    const aiQuality = [12, 24, 36].includes(parseInt(ai360_quality, 10))
-      ? parseInt(ai360_quality, 10)
-      : undefined;
 
     // ── Build create data ──────────────────────────────────────────────────────
     const data = {
@@ -309,22 +248,9 @@ export async function POST(request) {
       ...(long_description_en    !== undefined && { long_description_en: long_description_en ? String(long_description_en) : null }),
       ...(keywords_ar            !== undefined && { keywords_ar: String(keywords_ar) }),
       ...(image_filename         !== undefined && { image_filename: String(image_filename) }),
-      ...(images360Str           !== null      && { images_360: images360Str }),
-      ...(mediaType              !== undefined && { media_display_type: mediaType }),
-      ...(aiStatus               !== undefined && { ai360_status: aiStatus }),
-      ...(aiQuality              !== undefined && { ai360_quality: aiQuality }),
-      ...(ai360_background       !== undefined && { ai360_background: String(ai360_background) }),
-      ...(ai360_lighting         !== undefined && { ai360_lighting: String(ai360_lighting) }),
-      ...(ai360_source_image     !== undefined && { ai360_source_image: ai360_source_image ? String(ai360_source_image) : null }),
-      ...(ai360_reference_image  !== undefined && { ai360_reference_image: ai360_reference_image ? String(ai360_reference_image) : null }),
       ...(needs_image            !== undefined && { needs_image: Boolean(needs_image) }),
       ...(visible_on_website     !== undefined && { visible_on_website: Boolean(visible_on_website) }),
       ...(featured_on_frontend   !== undefined && { featured_on_frontend: Boolean(featured_on_frontend) }),
-      ...(uses_general_pricing   !== undefined && { uses_general_pricing: Boolean(uses_general_pricing) }),
-      ...(p50  !== null && { price_50ml_fils: p50 }),
-      ...(p100 !== null && { price_100ml_fils: p100 }),
-      ...(p200 !== null && { price_200ml_fils: p200 }),
-      ...(stock                  !== undefined && { stock: parseInt(stock, 10) || 0 }),
       ...(low_stock_threshold    !== undefined && { low_stock_threshold: parseInt(low_stock_threshold, 10) || 5 }),
       ...(notes_top              !== undefined && { notes_top: notes_top ? String(notes_top) : null }),
       ...(notes_heart            !== undefined && { notes_heart: notes_heart ? String(notes_heart) : null }),
@@ -334,6 +260,13 @@ export async function POST(request) {
       ...(needs_review           !== undefined && { needs_review: Boolean(needs_review) }),
       ...(source_excel_row       !== undefined && source_excel_row !== null && { source_excel_row: parseInt(source_excel_row, 10) }),
       ...(categoryId             !== undefined && categoryId !== null && { categoryId }),
+      variants: {
+        create: (variants || []).map(v => ({
+          volume: String(v.volume).trim(),
+          price: parseInt(v.price, 10) || 0,
+          stock: parseInt(v.stock, 10) || 0
+        }))
+      }
     };
 
     // ── Create product ────────────────────────────────────────────────────────
@@ -344,6 +277,7 @@ export async function POST(request) {
         accords: true,
         family_tags: true,
         discounts: { where: { is_active: true }, take: 1 },
+        variants: true,
       },
     });
 

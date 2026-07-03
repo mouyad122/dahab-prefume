@@ -32,7 +32,9 @@ export default function AdminDashboard() {
         if (prodRes.ok) {
           const pData = await prodRes.json();
           const products = pData.products || [];
-          const lowStock = products.filter(p => p.stock <= (p.low_stock_threshold || 5)).length;
+           const lowStock = products.filter(p => 
+             (p.variants || []).some(v => v.stock <= (p.low_stock_threshold || 5))
+           ).length;
           setProductsData({
             total_products: products.length,
             low_stock: lowStock

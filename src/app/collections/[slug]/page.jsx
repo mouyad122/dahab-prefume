@@ -147,15 +147,18 @@ export default async function CollectionDetailPage({ params }) {
       name_ar: true,
       name_en: true,
       slug: true,
-      stock: true,
-      images_360: true,
-      media_display_type: true,
-      price_50ml_fils: true,
-      price_100ml_fils: true,
-      price_200ml_fils: true,
+      image_filename: true,
       category: {
         select: { id: true, name_ar: true, name_en: true },
       },
+      variants: {
+        select: {
+          id: true,
+          volume: true,
+          price: true,
+          stock: true
+        }
+      }
     },
   });
 

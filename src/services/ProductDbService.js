@@ -27,40 +27,36 @@ export class ProductDbService {
     return {
       accords: { orderBy: { position: 'asc' } },
       family_tags: true,
+      variants: true,
     };
   }
 
   /**
    * Resolve the final prices for a product.
-   * If the product uses general pricing, fetch from GlobalPricingSettings.
-   * Otherwise, use the product's custom price fields.
+   * Dynamically maps variants into the sizes structure.
    *
-   * @param {Object} product - Raw Prisma product row.
-   * @param {Object|null} globalPricing - Cached GlobalPricingSettings (optional).
+   * @param {Object} product - Raw Prisma product row with variants.
    * @returns {{ currency: string, sizes: Object }}
    */
-  static _resolveProductPrices(product, globalPricing = null) {
-    let p50, p100, p200;
+  static _resolveProductPrices(product) {
+    const currency = 'JOD';
+    const sizes = {};
 
-    if (product.uses_general_pricing && globalPricing) {
-      p50 = globalPricing.price_50ml_fils;
-      p100 = globalPricing.price_100ml_fils;
-      p200 = globalPricing.price_200ml_fils;
-    } else {
-      p50 = product.price_50ml_fils;
-      p100 = product.price_100ml_fils;
-      p200 = product.price_200ml_fils;
+    if (product.variants && product.variants.length > 0) {
+      for (const variant of product.variants) {
+        const key = `${variant.volume}ml`;
+        sizes[key] = {
+          fils: variant.price,
+          jod: variant.price / 1000,
+          stock: variant.stock,
+          id: variant.id
+        };
+      }
     }
-
-    const currency = globalPricing?.currency || 'JOD';
 
     return {
       currency,
-      sizes: {
-        '50ml': { fils: p50 ?? 0, jod: (p50 ?? 0) / 1000 },
-        '100ml': { fils: p100 ?? 0, jod: (p100 ?? 0) / 1000 },
-        '200ml': { fils: p200 ?? 0, jod: (p200 ?? 0) / 1000 },
-      },
+      sizes,
     };
   }
 
@@ -69,17 +65,16 @@ export class ProductDbService {
    *
    * FORBIDDEN public fields (never leaked):
    *   id, inspired_by, notes, research_confidence,
-   *   source_excel_row, needs_review, created_at, updated_at,
-   *   price_50ml_fils, price_100ml_fils, price_200ml_fils
+   *   source_excel_row, needs_review, created_at, updated_at
    *
    * @param {Object} product - Raw Prisma product with relations.
-   * @param {Object|null} globalPricing - Cached GlobalPricingSettings.
+   * @param {Object|null} globalPricing - Deprecated parameter (kept for compat).
    * @returns {Object} Public-safe product object.
    */
   static toPublicSafe(product, globalPricing = null) {
     if (!product) return null;
 
-    const prices = this._resolveProductPrices(product, globalPricing);
+    const prices = this._resolveProductPrices(product);
 
     return {
       sku: product.sku,
@@ -101,7 +96,6 @@ export class ProductDbService {
       needs_image: product.needs_image,
       visible_on_website: product.visible_on_website,
       featured_on_frontend: product.featured_on_frontend,
-      uses_general_pricing: product.uses_general_pricing,
       prices,
     };
   }

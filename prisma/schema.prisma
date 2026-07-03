@@ -29,22 +29,9 @@ model Product {
   long_description_en   String?
   keywords_ar           String             @default("")
   image_filename        String             @default("")
-  images_360            String?
-  media_display_type    String             @default("normal")
-  ai360_status          String             @default("idle")
-  ai360_quality         Int                @default(12)
-  ai360_background      String             @default("luxury_black_gold")
-  ai360_lighting        String             @default("soft_gold")
-  ai360_source_image    String?
-  ai360_reference_image String?
   needs_image           Boolean            @default(true)
   visible_on_website    Boolean            @default(true)
   featured_on_frontend  Boolean            @default(false)
-  uses_general_pricing  Boolean            @default(true)
-  price_50ml_fils       Int?
-  price_100ml_fils      Int?
-  price_200ml_fils      Int?
-  stock                 Int                @default(0)
   low_stock_threshold   Int                @default(5)
   notes_top             String?
   notes_heart           String?

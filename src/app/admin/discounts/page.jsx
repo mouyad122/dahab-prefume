@@ -59,8 +59,8 @@ export default function AdminDiscounts() {
     const product = products.find(p => p.id === selectedProductId);
     if (!product) return;
 
-    // Get original price (100ml or general)
-    const originalPrice = product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0;
+    // Get original price (from first variant)
+    const originalPrice = product.variants?.[0]?.price || 0;
 
     const payload = {
       productId: selectedProductId,
@@ -222,7 +222,7 @@ export default function AdminDiscounts() {
                 >
                   <option value="">-- اختر المنتج --</option>
                   {products.map(p => (
-                    <option key={p.id} value={p.id}>{p.name_ar} ({formatJOD(p.price_100ml_fils || p.price_50ml_fils || p.price_200ml_fils || 0)})</option>
+                    <option key={p.id} value={p.id}>{p.name_ar} ({formatJOD(p.variants?.[0]?.price || 0)})</option>
                   ))}
                 </select>
               </div>

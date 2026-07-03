@@ -26,13 +26,18 @@ export default function ProductDetailClient({ product }) {
   const name = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
   const description = (isAr ? product.short_description_ar : product.short_description_en) || product.short_description_ar;
   const story = (isAr ? product.long_description_ar : product.long_description_en) || product.long_description_ar;
-  const isOut = product.stock <= 0;
 
-  // Determine available sizes and prices
-  const sizes = [];
-  if (product.price_50ml_fils) sizes.push({ key: '50ml', label: isAr ? '50 مل' : '50ml', price: product.price_50ml_fils });
-  if (product.price_100ml_fils) sizes.push({ key: '100ml', label: isAr ? '100 مل' : '100ml', price: product.price_100ml_fils });
-  if (product.price_200ml_fils) sizes.push({ key: '200ml', label: isAr ? '200 مل' : '200ml', price: product.price_200ml_fils });
+  // Determine available sizes and prices dynamically
+  const sizes = Object.entries(product.prices?.sizes || {}).map(([key, value]) => ({
+    key, // "50ml", "100ml", "60ml", "1000ml", etc.
+    label: isAr ? `${key.replace('ml', '')} مل` : key,
+    price: value.fils,
+    stock: value.stock,
+    id: value.id
+  }));
+
+  const totalStock = sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
+  const isOut = totalStock <= 0;
 
   // Default to first available size
   const [selectedSize, setSelectedSize] = useState(sizes[0]?.key || '100ml');
@@ -55,7 +60,7 @@ export default function ProductDetailClient({ product }) {
       category: isAr ? product.category?.name_ar : product.category?.name_en,
       volume: activeSizeObj.label,
       price: parseFloat(activePrice_fils / 1000),
-      stock: product.stock || 99,
+      stock: activeSizeObj.stock || 99,
       thumbnail: image
     };
     

@@ -233,17 +233,22 @@ export async function POST(request) {
             },
           });
 
-          // Deduct stock for each item that has a productId
+          // Deduct stock for each item's specific variant volume
           for (const item of items) {
-            if (item.productId) {
-              const product = await tx.product.findUnique({
-                where: { id: item.productId },
-                select: { stock: true },
+            if (item.productId && item.volume) {
+              const volClean = String(item.volume).replace('ml', '').trim();
+              const variant = await tx.productVariant.findUnique({
+                where: {
+                  productId_volume: {
+                    productId: item.productId,
+                    volume: volClean
+                  }
+                }
               });
-              if (product) {
-                await tx.product.update({
-                  where: { id: item.productId },
-                  data: { stock: Math.max(0, product.stock - item.quantity) },
+              if (variant) {
+                await tx.productVariant.update({
+                  where: { id: variant.id },
+                  data: { stock: Math.max(0, variant.stock - item.quantity) },
                 });
               }
             }

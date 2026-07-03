@@ -25,7 +25,8 @@ export default async function ProductPage({ params }) {
   const product = await prisma.product.findUnique({
     where: { slug },
     include: {
-      category: true
+      category: true,
+      variants: true
     }
   });
 
@@ -46,10 +47,15 @@ export default async function ProductPage({ params }) {
       name_ar: true,
       name_en: true,
       slug: true,
-      price_50ml_fils: true,
-      price_100ml_fils: true,
-      price_200ml_fils: true,
-      images_360: true
+      image_filename: true,
+      variants: {
+        select: {
+          id: true,
+          volume: true,
+          price: true,
+          stock: true
+        }
+      }
     }
   });
 

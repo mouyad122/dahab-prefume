@@ -22,11 +22,14 @@ export async function GET(request, { params }) {
             image_filename: true,
             gender: true,
             featured_on_frontend: true,
-            uses_general_pricing: true,
-            price_50ml_fils: true,
-            price_100ml_fils: true,
-            price_200ml_fils: true,
-            stock: true,
+            variants: {
+              select: {
+                id: true,
+                volume: true,
+                price: true,
+                stock: true
+              }
+            },
             discounts: {
               where: {
                 is_active: true,

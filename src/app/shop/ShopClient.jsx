@@ -19,7 +19,10 @@ function parseImages(value) {
 }
 
 function productPrice(product) {
-  return product.price_100ml_fils || product.price_50ml_fils || product.price_200ml_fils || 0;
+  if (product.variants && product.variants.length > 0) {
+    return product.variants[0].price;
+  }
+  return 0;
 }
 
 function formatJOD(fils) {
@@ -124,11 +127,11 @@ export default function ShopClient({ initialProducts }) {
                 title: isAr ? title_ar : title_en,
                 price: productPrice(product) / 1000,
                 compareAtPrice: null, // Assuming no compareAtPrice in DB model directly available here
-                stock: product.stock,
+                stock: (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0),
                 category: categoryName || (isAr ? 'عطور' : 'Perfumes'),
                 thumbnail: image,
                 slug: product.slug,
-                volume: '100ml' // Static fallback or parse if available
+                volume: product.variants?.[0] ? `${product.variants[0].volume}ml` : '100ml'
               };
 
               return (

@@ -95,20 +95,24 @@ export default function AdminInventory() {
               </thead>
               <tbody className="divide-y divide-[var(--color-border-subtle)]">
                 {filtered.map(product => {
-                  const isLow = product.stock <= (product.low_stock_threshold || 5);
-                  const isOut = product.stock === 0;
+                  const totalStock = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+                  const isLow = (product.variants || []).some(v => v.stock <= (product.low_stock_threshold || 5));
+                  const isOut = totalStock === 0;
                   
                   return (
                     <tr key={product.id} className="hover:bg-[var(--color-bg-surface)] transition-colors">
                       <td className="py-3 px-5">
                         <div className="font-bold text-[var(--color-text-primary)]">{product.name_ar}</div>
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
+                          {(product.variants || []).map(v => `${v.volume}ml: ${v.stock} حبة`).join(' | ')}
+                        </div>
                       </td>
                       <td className="py-3 px-5 font-mono text-xs text-[var(--color-text-secondary)]">
                         {product.sku}
                       </td>
                       <td className="py-3 px-5 text-center">
                         <span className={`font-mono font-bold text-lg ${isOut ? 'text-red-400' : isLow ? 'text-orange-400' : 'text-[#5ddb85]'}`}>
-                          {product.stock}
+                          {totalStock}
                         </span>
                       </td>
                       <td className="py-3 px-5 text-center text-[var(--color-text-muted)] font-mono">

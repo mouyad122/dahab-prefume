@@ -27,6 +27,7 @@ const fullProductInclude = {
     orderBy: { created_at: 'desc' },
     take: 1,
   },
+  variants: true,
 };
 
 // ─── GET /api/products/[id] — Public ─────────────────────────────────────────
@@ -97,22 +98,9 @@ export async function PUT(request, { params }) {
       long_description_en,
       keywords_ar,
       image_filename,
-      images_360,
-      media_display_type,
-      ai360_status,
-      ai360_quality,
-      ai360_background,
-      ai360_lighting,
-      ai360_source_image,
-      ai360_reference_image,
       needs_image,
       visible_on_website,
       featured_on_frontend,
-      uses_general_pricing,
-      price_50ml_fils,
-      price_100ml_fils,
-      price_200ml_fils,
-      stock,
       low_stock_threshold,
       notes_top,
       notes_heart,
@@ -122,6 +110,7 @@ export async function PUT(request, { params }) {
       needs_review,
       source_excel_row,
       categoryId,
+      variants, // array of { volume, price, stock }
     } = body;
 
     const data = {};
@@ -174,29 +163,6 @@ export async function PUT(request, { params }) {
     if (long_description_en  !== undefined) data.long_description_en  = long_description_en ? String(long_description_en) : null;
     if (keywords_ar          !== undefined) data.keywords_ar          = String(keywords_ar);
     if (image_filename       !== undefined) data.image_filename       = String(image_filename);
-    if (media_display_type   !== undefined) {
-      if (!['normal', 'gallery', 'ai_360', 'real_3d'].includes(media_display_type)) {
-        return Response.json({ error: 'media_display_type is invalid' }, { status: 400 });
-      }
-      data.media_display_type = media_display_type;
-    }
-    if (ai360_status         !== undefined) {
-      if (!['idle', 'draft', 'generating', 'ready', 'approved', 'failed'].includes(ai360_status)) {
-        return Response.json({ error: 'ai360_status is invalid' }, { status: 400 });
-      }
-      data.ai360_status = ai360_status;
-    }
-    if (ai360_quality        !== undefined) {
-      const q = parseInt(ai360_quality, 10);
-      if (![12, 24, 36].includes(q)) {
-        return Response.json({ error: 'ai360_quality must be 12, 24, or 36' }, { status: 400 });
-      }
-      data.ai360_quality = q;
-    }
-    if (ai360_background     !== undefined) data.ai360_background     = String(ai360_background);
-    if (ai360_lighting       !== undefined) data.ai360_lighting       = String(ai360_lighting);
-    if (ai360_source_image   !== undefined) data.ai360_source_image   = ai360_source_image ? String(ai360_source_image) : null;
-    if (ai360_reference_image !== undefined) data.ai360_reference_image = ai360_reference_image ? String(ai360_reference_image) : null;
     if (notes_top            !== undefined) data.notes_top            = notes_top ? String(notes_top) : null;
     if (notes_heart          !== undefined) data.notes_heart          = notes_heart ? String(notes_heart) : null;
     if (notes_base           !== undefined) data.notes_base           = notes_base ? String(notes_base) : null;
@@ -207,31 +173,26 @@ export async function PUT(request, { params }) {
     if (needs_image          !== undefined) data.needs_image          = Boolean(needs_image);
     if (visible_on_website   !== undefined) data.visible_on_website   = Boolean(visible_on_website);
     if (featured_on_frontend !== undefined) data.featured_on_frontend = Boolean(featured_on_frontend);
-    if (uses_general_pricing !== undefined) data.uses_general_pricing = Boolean(uses_general_pricing);
     if (needs_review         !== undefined) data.needs_review         = Boolean(needs_review);
 
-    // ── Integer / fils fields ─────────────────────────────────────────────────
-    const setFils = (val, fieldName) => {
-      if (val === undefined) return;
-      if (val === null) { data[fieldName] = null; return; }
-      const n = parseInt(val, 10);
-      if (!Number.isInteger(n) || n < 0) {
-        throw new Error(`${fieldName} must be a non-negative integer (fils)`);
-      }
-      data[fieldName] = n;
-    };
-
-    try {
-      setFils(price_50ml_fils,  'price_50ml_fils');
-      setFils(price_100ml_fils, 'price_100ml_fils');
-      setFils(price_200ml_fils, 'price_200ml_fils');
-    } catch (e) {
-      return Response.json({ error: e.message }, { status: 400 });
-    }
-
-    if (stock              !== undefined) data.stock              = Math.max(0, parseInt(stock, 10) || 0);
+    // ── Integer / threshold fields ────────────────────────────────────────────
     if (low_stock_threshold !== undefined) data.low_stock_threshold = Math.max(0, parseInt(low_stock_threshold, 10) || 5);
     if (source_excel_row   !== undefined) data.source_excel_row   = source_excel_row !== null ? parseInt(source_excel_row, 10) : null;
+
+    // ── Variants relation update ──────────────────────────────────────────────
+    if (variants !== undefined) {
+      if (!Array.isArray(variants)) {
+        return Response.json({ error: 'variants must be an array' }, { status: 400 });
+      }
+      data.variants = {
+        deleteMany: {},
+        create: variants.map(v => ({
+          volume: String(v.volume).trim(),
+          price: parseInt(v.price, 10) || 0,
+          stock: parseInt(v.stock, 10) || 0
+        }))
+      };
+    }
 
     // ── images_360 (array → JSON string) ──────────────────────────────────────
     if (images_360 !== undefined) {
