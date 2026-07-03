@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Coins, Receipt, Package, WarningCircle, ArrowRight } from '@phosphor-icons/react';
+import { Coins, Receipt, Package, WarningCircle, ArrowLeft } from '@phosphor-icons/react';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-[var(--color-text-primary)]">أحدث المبيعات</h3>
           <Link href="/admin/sales" className="text-sm text-[var(--color-gold)] hover:text-[var(--color-gold-light)] flex items-center gap-1">
             <span>عرض الكل</span>
-            <ArrowRight size={14} />
+            <ArrowLeft size={14} />
           </Link>
         </div>
         
