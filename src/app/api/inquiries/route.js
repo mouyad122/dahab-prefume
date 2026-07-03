@@ -11,34 +11,22 @@ const VALID_INQUIRY_TYPES = [
   'استفسار عام'
 ];
 
-// Simple in-memory rate limiting map (IP -> timestamp[])
-const rateLimitMap = new Map();
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxRequests = 10; // Max 10 requests per 15 minutes per IP
-
-  const userRequests = rateLimitMap.get(ip) || [];
-  const validRequests = userRequests.filter(timestamp => now - timestamp < windowMs);
-
-  if (validRequests.length >= maxRequests) {
-    return true;
-  }
-
-  validRequests.push(now);
-  rateLimitMap.set(ip, validRequests);
-  return false;
-}
+import { rateLimit } from '../../../lib/redis';
 
 // ─── POST /api/inquiries (Public Submission) ─────────────────────────────────
 export async function POST(request) {
   try {
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
     
-    if (isRateLimited(ip)) {
+    // Rate limit window: 15 minutes
+    const rateLimitWindow = 15 * 60;
+    const maxRequests = 5; // Stricter limit: 5 requests per 15 mins
+
+    // IP-based Rate Limiting
+    const isIpAllowed = await rateLimit(`rate_limit:inquiry:ip:${ip}`, maxRequests, rateLimitWindow);
+    if (!isIpAllowed) {
       return NextResponse.json(
-        { error: 'لقد تجاوزت حد الإرسال المسموح به. يرجى المحاولة بعد بضع دقائق.' },
+        { error: 'لقد قمت بإرسال عدة استفسارات خلال فترة قصيرة. يرجى المحاولة لاحقًا.' },
         { status: 429 }
       );
     }
@@ -59,6 +47,18 @@ export async function POST(request) {
 
     if (!phone || phone.length < 7 || phone.length > 25) {
       return NextResponse.json({ error: 'يرجى إدخال رقم هاتف صحيح' }, { status: 400 });
+    }
+
+    // Phone-based Rate Limiting (normalized)
+    const normalizedPhone = phone.replace(/\D/g, '');
+    if (normalizedPhone) {
+      const isPhoneAllowed = await rateLimit(`rate_limit:inquiry:phone:${normalizedPhone}`, maxRequests, rateLimitWindow);
+      if (!isPhoneAllowed) {
+        return NextResponse.json(
+          { error: 'لقد قمت بإرسال عدة استفسارات خلال فترة قصيرة. يرجى المحاولة لاحقًا.' },
+          { status: 429 }
+        );
+      }
     }
 
     if (!message || message.length < 3 || message.length > 2000) {

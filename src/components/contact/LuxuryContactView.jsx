@@ -12,7 +12,8 @@ import {
   PaperPlaneTilt,
   Compass,
   Package,
-  Headset
+  Headset,
+  WarningCircle
 } from '@phosphor-icons/react';
 import { brandConfig } from '../../config/brand';
 import LuxuryButton from '../ui/LuxuryButton';
@@ -36,6 +37,7 @@ export default function LuxuryContactView() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [popupBlockedUrl, setPopupBlockedUrl] = useState(null);
 
   const validate = () => {
     const errs = {};
@@ -61,6 +63,7 @@ export default function LuxuryContactView() {
     if (!validate()) return;
 
     setSubmitting(true);
+    setPopupBlockedUrl(null);
 
     try {
       // 1. Send data to backend API to save in DB for Admin Management
@@ -83,8 +86,12 @@ export default function LuxuryContactView() {
       const waUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${waMessage}`;
       
       setTimeout(() => {
-        window.open(waUrl, '_blank');
-      }, 600);
+        const newWindow = window.open(waUrl, '_blank');
+        // Check if popup was blocked
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          setPopupBlockedUrl(waUrl);
+        }
+      }, 100);
 
     } catch (err) {
       setErrors({ server: err.message || 'حدث خطأ، يمكنك التواصل معنا مباشرة عبر الواتساب' });
@@ -263,224 +270,237 @@ export default function LuxuryContactView() {
           </div>
         </section>
 
-        {/* 3. LUXURY INQUIRY FORM SECTION */}
-        <section id="luxury-contact-form" className="py-8 mb-20 scroll-mt-28">
-          <div className="max-w-3xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative rounded-3xl bg-gradient-to-b from-[#16161c]/90 to-[#0e0e12]/90 backdrop-blur-2xl border border-[#c5a25d]/30 p-8 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
-            >
-              {/* Top Accent Line */}
-              <div className="absolute top-0 right-1/2 translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#c5a25d] to-transparent" />
+        {/* 3. MAIN CONTACT SECTION (2-COLUMN: FORM & HELP PANEL) */}
+        <section id="luxury-contact-form" className="mb-20 scroll-mt-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            
+            {/* Right Column: Inquiry Form (First on mobile, Right on desktop in RTL) */}
+            <div className="lg:col-span-7">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="relative rounded-3xl bg-gradient-to-b from-[#16161c]/90 to-[#0e0e12]/90 backdrop-blur-2xl border border-[#c5a25d]/30 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
+              >
+                <div className="absolute top-0 right-1/2 translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#c5a25d] to-transparent" />
 
-              <div className="text-center mb-10">
-                <h2 className="text-2xl md:text-4xl font-bold font-serif text-white mb-3">
-                  نموذج التواصل والاستفسار
-                </h2>
-                <p className="text-sm text-gray-400 font-light max-w-lg mx-auto">
-                  قم بتعبئة البيانات أدناه وسنقوم بتسجيل استفسارك وتحويلك فوراً للواتساب لتوفير استجابة سريعة.
-                </p>
-              </div>
-
-              {submittedSuccess ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#25D366]/10 border border-[#25D366]/40 rounded-2xl p-8 text-center"
-                >
-                  <div className="w-16 h-16 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center mx-auto mb-4 text-[#25D366]">
-                    <CheckCircle size={36} weight="fill" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">تم تسجيل استفسارك بنجاح!</h3>
-                  <p className="text-sm text-gray-300 mb-6 font-light">
-                    يتم الآن فتح تطبيق الواتساب لإكمال التواصل المباشر مع فريق الدعم...
+                <div className="mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-3">
+                    نموذج التواصل والاستفسار
+                  </h2>
+                  <p className="text-sm text-gray-400 font-light">
+                    قم بتعبئة البيانات وسنقوم بتسجيل استفسارك وتحويلك فوراً للواتساب لتوفير استجابة سريعة.
                   </p>
-                  <LuxuryButton
-                    variant="outline"
-                    onClick={() => {
-                      setSubmittedSuccess(false);
-                      setFormData({ name: '', phone: '', type: 'استفسار عن عطر', message: '' });
-                    }}
-                    className="text-xs"
+                </div>
+
+                {submittedSuccess ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-[#25D366]/10 border border-[#25D366]/40 rounded-2xl p-8 text-center"
                   >
-                    إرسال استفسار آخر
-                  </LuxuryButton>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-
-                  {errors.server && (
-                    <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-medium">
-                      {errors.server}
+                    <div className="w-16 h-16 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 flex items-center justify-center mx-auto mb-4 text-[#25D366]">
+                      <CheckCircle size={36} weight="fill" />
                     </div>
-                  )}
+                    <h3 className="text-xl font-bold text-white mb-2">تم تسجيل استفسارك بنجاح!</h3>
+                    
+                    {!popupBlockedUrl ? (
+                      <p className="text-sm text-gray-300 mb-6 font-light">
+                        يتم الآن فتح تطبيق الواتساب لإكمال التواصل المباشر مع فريق الدعم...
+                      </p>
+                    ) : (
+                      <div className="mb-6">
+                        <p className="text-sm text-yellow-400 mb-4 font-light flex items-center justify-center gap-2">
+                          <WarningCircle size={18} /> متصفحك يمنع فتح النوافذ المنبثقة.
+                        </p>
+                        <LuxuryButton
+                          href={popupBlockedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="whatsapp"
+                          className="w-full text-sm shadow-[0_0_15px_rgba(37,211,102,0.3)] animate-pulse"
+                          iconLeft={WhatsappLogo}
+                        >
+                          اضغط هنا لفتح واتساب
+                        </LuxuryButton>
+                      </div>
+                    )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Full Name */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-2">
-                        الاسم الكامل <span className="text-[#c5a25d]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="أدخل اسمك الكريم"
-                        className={`w-full bg-[#0a0a0c]/80 border ${errors.name ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all`}
-                      />
-                      {errors.name && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.name}</p>}
-                    </div>
+                    <LuxuryButton
+                      variant="outline"
+                      onClick={() => {
+                        setSubmittedSuccess(false);
+                        setPopupBlockedUrl(null);
+                        setFormData({ name: '', phone: '', type: 'استفسار عن عطر', message: '' });
+                      }}
+                      className="text-xs mt-4 w-full"
+                    >
+                      إرسال استفسار آخر
+                    </LuxuryButton>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Phone Number */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-300 mb-2">
-                        رقم الهاتف <span className="text-[#c5a25d]">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="07 8505 0655"
-                        dir="ltr"
-                        className={`w-full bg-[#0a0a0c]/80 border ${errors.phone ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all text-right`}
-                      />
-                      {errors.phone && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.phone}</p>}
-                    </div>
-                  </div>
+                    {errors.server && (
+                      <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-medium">
+                        {errors.server}
+                      </div>
+                    )}
 
-                  {/* Inquiry Type Dropdown */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-2">
-                      نوع الاستفسار <span className="text-[#c5a25d]">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full bg-[#0a0a0c]/80 border border-[#c5a25d]/20 focus:border-[#c5a25d] rounded-xl px-4 py-3.5 text-sm text-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all cursor-pointer"
-                      >
-                        {INQUIRY_TYPES.map((t) => (
-                          <option key={t.value} value={t.value} className="bg-[#121216] text-white">
-                            {t.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#c5a25d]">
-                        ▼
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Full Name */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-300 mb-2">
+                          الاسم الكامل <span className="text-[#c5a25d]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="أدخل اسمك الكريم"
+                          className={`w-full bg-[#0a0a0c]/80 border ${errors.name ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all`}
+                        />
+                        {errors.name && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.name}</p>}
+                      </div>
+
+                      {/* Phone Number */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-300 mb-2">
+                          رقم الهاتف <span className="text-[#c5a25d]">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="07 8505 0655"
+                          dir="ltr"
+                          className={`w-full bg-[#0a0a0c]/80 border ${errors.phone ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all text-right`}
+                        />
+                        {errors.phone && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.phone}</p>}
                       </div>
                     </div>
+
+                    {/* Inquiry Type Dropdown */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-300 mb-2">
+                        نوع الاستفسار <span className="text-[#c5a25d]">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={formData.type}
+                          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                          className="w-full bg-[#0a0a0c]/80 border border-[#c5a25d]/20 focus:border-[#c5a25d] rounded-xl px-4 py-3.5 text-sm text-white appearance-none focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all cursor-pointer"
+                        >
+                          {INQUIRY_TYPES.map((t) => (
+                            <option key={t.value} value={t.value} className="bg-[#121216] text-white">
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#c5a25d]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Message Field */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-300 mb-2">
+                        الرسالة أو تفاصيل الطلب <span className="text-[#c5a25d]">*</span>
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        placeholder="اكتب رسالتك أو استفسارك هنا بكل تفصيل..."
+                        className={`w-full bg-[#0a0a0c]/80 border ${errors.message ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all resize-none`}
+                      />
+                      {errors.message && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.message}</p>}
+                    </div>
+
+                    {/* Submit Button */}
+                    <LuxuryButton
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      loading={submitting}
+                      iconLeft={WhatsappLogo}
+                    >
+                      إرسال وفتح واتساب
+                    </LuxuryButton>
+
+                    <p className="text-[11px] text-center text-gray-500 font-light mt-4">
+                      🔒 جميع بياناتك محمية ومشفرة وفق أعلى معايير الخصوصية لدار دهب للعطور.
+                    </p>
+                  </form>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Left Column: Help Panel (Below on mobile, Left on desktop in RTL) */}
+            <div className="lg:col-span-5 flex flex-col justify-center">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="text-2xl md:text-3xl font-bold font-serif text-white mb-6">
+                  كيف يمكننا مساعدتك؟
+                </h2>
+                <p className="text-sm text-gray-400 font-light mb-8 leading-relaxed">
+                  نقدم خدمات استشارية ومتابعة مخصصة تضمن حصولك على أقصى درجات الرفاهية في عالم العطور.
+                </p>
+
+                <div className="space-y-4">
+                  {/* Help Card 1 */}
+                  <div className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/10 rounded-2xl p-5 flex items-start gap-4 hover:border-[#c5a25d]/30 transition-all">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d]">
+                      <Compass size={24} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white mb-1 font-serif">اختيار العطر المناسب</h3>
+                      <p className="text-xs text-gray-400 font-light leading-relaxed">
+                        نساعدك في اكتشاف العطر الذي يعبر عن شخصيتك بين تشكيلة النيش والمسك والزيوت الفاخرة.
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Message Field */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-2">
-                      الرسالة أو تفاصيل الطلب <span className="text-[#c5a25d]">*</span>
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      placeholder="اكتب رسالتك أو استفسارك هنا بكل تفصيل..."
-                      className={`w-full bg-[#0a0a0c]/80 border ${errors.message ? 'border-red-500' : 'border-[#c5a25d]/20 focus:border-[#c5a25d]'} rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c5a25d] transition-all resize-none`}
-                    />
-                    {errors.message && <p className="text-xs text-red-400 mt-1.5 font-light">{errors.message}</p>}
+                  {/* Help Card 2 */}
+                  <div className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/10 rounded-2xl p-5 flex items-start gap-4 hover:border-[#c5a25d]/30 transition-all">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d]">
+                      <Package size={24} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white mb-1 font-serif">توفر المنتجات</h3>
+                      <p className="text-xs text-gray-400 font-light leading-relaxed">
+                        تأكد فوراً من توفر الأحجام والتركيزات المطلوبة لعطرك المفضل في المعرض قبل تقديم الطلب.
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Submit Button */}
-                  <LuxuryButton
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    loading={submitting}
-                    iconLeft={WhatsappLogo}
-                  >
-                    إرسال واستمرار عبر الواتساب
-                  </LuxuryButton>
-
-                  <p className="text-[11px] text-center text-gray-500 font-light mt-4">
-                    🔒 جميع بياناتك محمية ومشفرة وفق أعلى معايير الخصوصية لدار دهب للعطور.
-                  </p>
-                </form>
-              )}
-            </motion.div>
+                  {/* Help Card 3 */}
+                  <div className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/10 rounded-2xl p-5 flex items-start gap-4 hover:border-[#c5a25d]/30 transition-all">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d]">
+                      <Headset size={24} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white mb-1 font-serif">متابعة الطلبات</h3>
+                      <p className="text-xs text-gray-400 font-light leading-relaxed">
+                        تتبع حالة طلبك والتوصيل السريع لكافة المحافظات بالتنسيق المباشر مع فريق المتابعة.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            
           </div>
         </section>
 
-        {/* 4. "HOW CAN WE HELP YOU?" SECTION (3 PREMIUM CARDS) */}
-        <section className="py-12 mb-20 border-t border-[#c5a25d]/10">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-bold font-serif text-white mb-3">
-              كيف يمكننا مساعدتك؟
-            </h2>
-            <p className="text-sm text-gray-400 font-light max-w-xl mx-auto">
-              خدمات استشارية ومتابعة مخصصة تضمن حصولك على أقصى درجات الرفاهية في عالم العطور.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-            {/* Help Card 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              whileHover={{ y: -5 }}
-              className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/20 rounded-2xl p-8 text-center flex flex-col items-center shadow-lg hover:border-[#c5a25d]/50 transition-all"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d] mb-6">
-                <Compass size={30} weight="duotone" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3 font-serif">اختيار العطر المناسب</h3>
-              <p className="text-sm text-gray-400 font-light leading-relaxed">
-                نساعدك في اكتشاف العطر الذي يعبر عن شخصيتك ويعكس حضورك الفريد بين تشكيلة النيش والمسك وسكبات الزيوت الفاخرة.
-              </p>
-            </motion.div>
-
-            {/* Help Card 2 */}
-            <motion.div
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              whileHover={{ y: -5 }}
-              className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/20 rounded-2xl p-8 text-center flex flex-col items-center shadow-lg hover:border-[#c5a25d]/50 transition-all"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d] mb-6">
-                <Package size={30} weight="duotone" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3 font-serif">الاستفسار عن توفر المنتجات</h3>
-              <p className="text-sm text-gray-400 font-light leading-relaxed">
-                تأكد فوراً من توفر الأحجام والتركيزات المطلوبة لعطرك المفضل في المعرض قبل تقديم الطلب.
-              </p>
-            </motion.div>
-
-            {/* Help Card 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              whileHover={{ y: -5 }}
-              className="bg-[#121216]/60 backdrop-blur-md border border-[#c5a25d]/20 rounded-2xl p-8 text-center flex flex-col items-center shadow-lg hover:border-[#c5a25d]/50 transition-all"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#c5a25d]/10 border border-[#c5a25d]/30 flex items-center justify-center text-[#c5a25d] mb-6">
-                <Headset size={30} weight="duotone" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3 font-serif">متابعة الطلبات</h3>
-              <p className="text-sm text-gray-400 font-light leading-relaxed">
-                تتبع حالة طلبك والتوصيل السريع لكافة محافظات المملكة الهاشمية بالتنسيق المباشر مع فريق المتابعة.
-              </p>
-            </motion.div>
-
-          </div>
-        </section>
-
-        {/* 5. FINAL WHATSAPP CTA SECTION */}
+        {/* 4. FINAL WHATSAPP CTA SECTION */}
         <section className="py-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
