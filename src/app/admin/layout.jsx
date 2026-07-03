@@ -41,7 +41,55 @@ export default function AdminLayout({ children }) {
           throw new Error('Not authenticated');
         }
         const data = await res.json();
-        setUser(data.user);
+        const curUser = data.user;
+
+        // Enforce permissions for non-superadmins (employees)
+        if (curUser && !curUser.isSuperAdmin) {
+          const perms = curUser.permissions || {};
+          
+          if (pathname.startsWith('/admin/settings') && !perms.can_view_settings) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/employees') && !perms.can_manage_employees) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/products') && !perms.can_manage_products) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/inventory') && !perms.can_view_inventory) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/discounts') && !perms.can_manage_products) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/sales') && !perms.can_view_invoices) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/reports') && !perms.can_print_reports) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/inquiries') && !perms.can_view_settings && !perms.can_manage_products) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/security') && !perms.can_view_settings) {
+            router.push('/admin/dashboard');
+            return;
+          }
+          if (pathname.startsWith('/admin/cash-reconciliation') && !perms.can_view_accounting) {
+            router.push('/admin/dashboard');
+            return;
+          }
+        }
+
+        setUser(curUser);
       } catch (e) {
         router.push('/admin/login');
       } finally {
@@ -49,7 +97,7 @@ export default function AdminLayout({ children }) {
       }
     };
     checkSession();
-  }, [isLoginPage, router]);
+  }, [isLoginPage, router, pathname]);
 
   if (isLoginPage) {
     return children;

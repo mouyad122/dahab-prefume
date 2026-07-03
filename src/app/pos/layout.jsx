@@ -38,8 +38,31 @@ export default function PosLayout({ children }) {
 
         
         // Check permissions against route
-        if (pathname.includes('/pos/counter') && !data.permissions?.can_access_counter) {
-          router.push('/pos/invoices');
+        const perms = data.permissions || {};
+        if (pathname === '/pos/counter' && !perms.can_access_counter) {
+          if (perms.can_view_invoices) {
+            router.push('/pos/invoices');
+          } else if (perms.can_print_reports) {
+            router.push('/pos/report');
+          } else {
+            router.push('/pos/login');
+          }
+        } else if (pathname === '/pos/invoices' && !perms.can_view_invoices) {
+          if (perms.can_access_counter) {
+            router.push('/pos/counter');
+          } else if (perms.can_print_reports) {
+            router.push('/pos/report');
+          } else {
+            router.push('/pos/login');
+          }
+        } else if (pathname === '/pos/report' && !perms.can_print_reports) {
+          if (perms.can_access_counter) {
+            router.push('/pos/counter');
+          } else if (perms.can_view_invoices) {
+            router.push('/pos/invoices');
+          } else {
+            router.push('/pos/login');
+          }
         }
       } catch (e) {
         router.push('/pos/login');

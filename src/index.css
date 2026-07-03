@@ -39,6 +39,35 @@
   --color-bronze:  #482e18;
   --color-smoke:   rgba(235, 210, 160, 0.05);
 
+  /* ── Semantic Colors (Status) ── */
+  --color-success:        #4ade80;
+  --color-success-dim:    rgba(74, 222, 128, 0.10);
+  --color-success-border: rgba(74, 222, 128, 0.25);
+  --color-success-dark:   #16a34a;
+
+  --color-error:          #f87171;
+  --color-error-dim:      rgba(248, 113, 113, 0.10);
+  --color-error-border:   rgba(248, 113, 113, 0.25);
+  --color-error-dark:     #b91c1c;
+
+  --color-warning:        #fbbf24;
+  --color-warning-dim:    rgba(251, 191, 36, 0.10);
+  --color-warning-border: rgba(251, 191, 36, 0.25);
+  --color-warning-dark:   #92400e;
+
+  --color-info:           #60a5fa;
+  --color-info-dim:       rgba(96, 165, 250, 0.10);
+  --color-info-border:    rgba(96, 165, 250, 0.25);
+  --color-info-dark:      #1d4ed8;
+
+  /* ── Admin Layout ── */
+  --admin-sidebar-width:   260px;
+  --admin-header-height:   57px;
+  --color-text-inverse:    #040302;
+
+  /* ── POS Numeric Display ── */
+  --font-pos-numeric: 'Outfit', monospace;
+
   /* Typography */
   --font-display:  'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-sans-en:  'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -707,11 +736,62 @@ button, input, select, textarea { font: inherit; }
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.change-positive { color: #5de89a; }
-.change-negative { color: #f97171; }
+.change-positive { color: var(--color-success); }
+.change-negative { color: var(--color-error); }
+
+/* ── Semantic Badge Utilities ── */
+.badge-success-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-success-dim);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.badge-error-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-error-dim);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.badge-warning-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-warning-dim);
+  border: 1px solid var(--color-warning-border);
+  color: var(--color-warning);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.badge-info-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-info-dim);
+  border: 1px solid var(--color-info-border);
+  color: var(--color-info);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
 
 /* ═══════════════════════════════════════════════════════════
    PRINT STYLES — PDF REPORTS
+   White background, black text, logo, printable from any device
    ═══════════════════════════════════════════════════════════ */
 @media print {
   * {
@@ -720,57 +800,132 @@ button, input, select, textarea { font: inherit; }
     color-adjust: exact !important;
   }
 
-  body {
-    background: white !important;
-    color: #1a1208 !important;
-    font-family: 'Times New Roman', Times, serif;
+  /* Force white page with black text for all print jobs */
+  html, body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111111 !important;
+    font-family: 'Cairo', Arial, Tahoma, sans-serif !important;
     font-size: 11pt;
-    line-height: 1.5;
+    line-height: 1.6;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .no-print, .admin-sidebar, header, nav, .btn-primary, .btn-secondary { display: none !important; }
+  /* Hide all interactive / UI chrome */
+  .no-print,
+  .admin-sidebar,
+  .admin-content > div:first-child,
+  header, nav, footer,
+  .btn-primary, .btn-secondary, .btn-ghost,
+  button:not(.print-action),
+  [role="navigation"],
+  .site-header {
+    display: none !important;
+  }
 
   .print-only { display: block !important; }
 
+  /* ── Report page container ── */
   .print-report {
     max-width: 100%;
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    background: #ffffff !important;
+    color: #111111 !important;
   }
 
+  /* ── Report header — logo + brand name + report title ── */
   .print-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 3px solid #c49a44;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+    background: #ffffff !important;
+  }
+
+  .print-logo {
+    width: 54px;
+    height: 66px;
+    object-fit: contain;
+    flex-shrink: 0;
+    /* visible on white background */
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  .print-brand-block {
+    flex: 1;
+    text-align: right;
+  }
+
+  .print-brand-name {
+    font-size: 20pt;
+    font-weight: 900;
+    color: #8a6222 !important;
+    letter-spacing: 0.15em;
+    line-height: 1;
+    font-family: 'Times New Roman', serif !important;
+  }
+
+  .print-brand-subtitle {
+    font-size: 8pt;
+    color: #666666 !important;
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  .print-report-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1a1208 !important;
+    margin-top: 6px;
+  }
+
+  .print-report-meta {
+    font-size: 8.5pt;
+    color: #555555 !important;
+    margin-top: 2px;
+  }
+
+  /* ── Centered header (legacy / receipt) ── */
+  .print-header-centered {
     text-align: center;
     border-bottom: 2px solid #c49a44;
     padding-bottom: 12px;
     margin-bottom: 20px;
+    background: #ffffff !important;
   }
-
-  .print-header h1 {
-    font-size: 22pt;
-    color: #8a6222;
+  .print-header-centered h1 {
+    font-size: 20pt;
+    color: #8a6222 !important;
     letter-spacing: 0.2em;
     font-weight: 700;
   }
-
-  .print-header p {
+  .print-header-centered p {
     font-size: 9pt;
-    color: #666;
+    color: #666666 !important;
   }
 
+  /* ── Data table ── */
   .print-table {
     width: 100%;
     border-collapse: collapse;
     margin-block: 16px;
     font-size: 9pt;
+    color: #111111 !important;
+    background: #ffffff !important;
   }
 
   .print-table th {
     background: #f6efe0 !important;
-    color: #1a1208;
-    padding: 6px 10px;
+    color: #1a1208 !important;
+    padding: 7px 10px;
     text-align: right;
     font-weight: 700;
-    border: 1px solid #ddd;
+    border: 1px solid #ccbbaa;
     font-size: 8pt;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -778,23 +933,42 @@ button, input, select, textarea { font: inherit; }
 
   .print-table td {
     padding: 6px 10px;
-    border: 1px solid #eee;
+    border: 1px solid #ddccbb;
     vertical-align: top;
     font-size: 9pt;
+    color: #111111 !important;
+    background: #ffffff !important;
   }
 
-  .print-table tr:nth-child(even) td { background: #fdf8f0 !important; }
+  .print-table tr:nth-child(even) td {
+    background: #fdf8f0 !important;
+  }
 
+  /* ── Summary box ── */
   .print-summary-box {
     border: 2px solid #c49a44;
     border-radius: 4px;
     padding: 12px 16px;
     margin-top: 16px;
     background: #fdf8f0 !important;
+    color: #111111 !important;
   }
 
+  .print-summary-box strong {
+    color: #1a1208 !important;
+  }
+
+  /* ── KPI inline values ── */
+  .print-kpi-value {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #8a6222 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+
+  /* ── Signature area ── */
   .print-signature-area {
-    margin-top: 40px;
+    margin-top: 48px;
     display: flex;
     justify-content: space-between;
     gap: 40px;
@@ -802,58 +976,71 @@ button, input, select, textarea { font: inherit; }
 
   .print-signature-line {
     flex: 1;
-    border-top: 1px solid #999;
+    border-top: 1px solid #999999;
     padding-top: 6px;
     font-size: 8pt;
-    color: #666;
+    color: #555555 !important;
     text-align: center;
   }
 
+  /* ── Page break helpers ── */
   .print-invoice-separator {
     page-break-after: always;
-    border-top: 1px dashed #ccc;
+    border-top: 1px dashed #ccbbaa;
     margin-block: 24px;
   }
+  .print-page-break { page-break-before: always; }
+  .print-no-break    { page-break-inside: avoid; }
 
-  /* POS Receipt 80mm roll size overrides */
+  /* ── POS Receipt — 80mm thermal roll ── */
   .print-receipt {
     width: 80mm;
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
     font-size: 10pt;
     font-family: monospace;
-    color: #000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
   }
   .print-receipt * {
-    color: #000 !important;
+    color: #000000 !important;
+    background: transparent !important;
   }
   .print-receipt .print-header {
-    border-bottom: 1px dashed #000;
+    border-bottom: 1px dashed #000000;
+    text-align: center;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
   }
   .print-receipt .print-header h1 {
     font-size: 14pt;
-    color: #000 !important;
+    color: #000000 !important;
+    letter-spacing: 0.1em;
   }
-  .print-receipt table th, .print-receipt table td {
+  .print-receipt table th,
+  .print-receipt table td {
     border: none;
     background: transparent !important;
-    padding: 4px 0;
+    padding: 3px 0;
     font-size: 9pt;
+    color: #000000 !important;
   }
   .print-receipt table th {
-    border-bottom: 1px dashed #000;
+    border-bottom: 1px dashed #000000;
     font-weight: bold;
     text-align: left;
   }
   .print-receipt table td {
-    border-bottom: 1px dotted #ccc;
+    border-bottom: 1px dotted #aaaaaa;
   }
 
   @page {
-    margin: 1cm;
+    margin: 1.2cm 1cm;
+    background: #ffffff;
   }
-
-  @page :first { margin-top: 1cm; }
+  @page :first {
+    margin-top: 1cm;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

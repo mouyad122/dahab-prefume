@@ -206,12 +206,24 @@ export default function AdminReports() {
 
             {/* Hidden Print Layout */}
             <div className="hidden print-only print-report" dir="rtl">
+              {/* ── Print Header: Logo + Brand + Report Info ── */}
               <div className="print-header">
-                <h1>DAHAB PERFUMES</h1>
-                <p>تقرير مبيعات المحل العام</p>
-                <p>الموظف المختار: {selectedEmployeeId === 'all' ? 'الكل' : employees.find(e => e.id === selectedEmployeeId)?.display_name}</p>
-                <p>الفترة: {period === 'today' ? 'اليوم' : period === 'yesterday' ? 'الأمس' : period === 'this_week' ? 'هذا الأسبوع' : 'هذا الشهر'}</p>
-                <p>تاريخ الطباعة: {new Date().toLocaleString('ar-JO')}</p>
+                <img
+                  src="/brand/dahab-logo.png"
+                  alt="DAHAB PERFUMES"
+                  className="print-logo"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+                <div className="print-brand-block">
+                  <div className="print-brand-name">DAHAB PERFUMES</div>
+                  <div className="print-brand-subtitle">دهب للعطور — وسط عمّان</div>
+                  <div className="print-report-title">تقرير المبيعات</div>
+                  <div className="print-report-meta">
+                    الموظف: {selectedEmployeeId === 'all' ? 'جميع الموظفين' : employees.find(e => e.id === selectedEmployeeId)?.display_name} &nbsp;|&nbsp;
+                    الفترة: {period === 'today' ? 'اليوم' : period === 'yesterday' ? 'الأمس' : period === 'this_week' ? 'هذا الأسبوع' : 'هذا الشهر'} &nbsp;|&nbsp;
+                    طُبع: {new Date().toLocaleString('ar-JO')}
+                  </div>
+                </div>
               </div>
               
               <div className="print-summary-box mb-6">
