@@ -309,7 +309,7 @@ export default function AdminProducts() {
                   <th className="py-3 px-5 font-bold w-24">إجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border-subtle)] text-white">
+              <tbody className="divide-y divide-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
                 {filteredProducts.map((product) => {
                   const image = product.image_filename || '';
                   return (
@@ -343,11 +343,7 @@ export default function AdminProducts() {
                         {formatJOD(getProductPrice(product))}
                       </td>
                       <td className="py-3 px-5">
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                          (product.variants || []).some(v => v.stock <= (product.low_stock_threshold || 5))
-                            ? 'bg-red-500/10 text-red-500' 
-                            : 'bg-[#5ddb85]/10 text-[#5ddb85]'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${(product.variants || []).some(v => v.stock <= (product.low_stock_threshold || 5)) ? 'bg-[var(--color-error-dim)] text-[var(--color-error)] border border-[var(--color-error-border)]' : 'bg-[var(--color-success-dim)] text-[var(--color-success)] border border-[var(--color-success-border)]'}`}>
                           {(product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)} حبة
                         </span>
                       </td>

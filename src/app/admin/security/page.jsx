@@ -26,7 +26,7 @@ export default function AdminSecurity() {
             مراقبة محاولات الدخول وحماية النظام من الهجمات
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#5ddb85] bg-[#5ddb85]/10 px-3 py-1.5 rounded-full border border-[#5ddb85]/30">
+        <div className="flex items-center gap-2 text-xs text-[var(--color-success)] bg-[var(--color-success-dim)] px-3 py-1.5 rounded-full border border-[var(--color-success-border)]">
           <ShieldCheck size={16} weight="fill" />
           <span>نظام الحماية مفعل</span>
         </div>
@@ -34,7 +34,7 @@ export default function AdminSecurity() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
         <div className="glass-card p-4 border border-[var(--color-border)] rounded-xl flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+          <div className="w-10 h-10 rounded-full bg-[var(--color-info-dim)] flex items-center justify-center text-[var(--color-info)]">
             <ShieldCheck size={20} weight="fill" />
           </div>
           <div>
@@ -43,7 +43,7 @@ export default function AdminSecurity() {
           </div>
         </div>
         <div className="glass-card p-4 border border-[var(--color-border)] rounded-xl flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+          <div className="w-10 h-10 rounded-full bg-[var(--color-warning-dim)] flex items-center justify-center text-[var(--color-warning)]">
             <ShieldWarning size={20} weight="fill" />
           </div>
           <div>
@@ -52,12 +52,12 @@ export default function AdminSecurity() {
           </div>
         </div>
         <div className="glass-card p-4 border border-[var(--color-border)] rounded-xl flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+          <div className="w-10 h-10 rounded-full bg-[var(--color-error-dim)] flex items-center justify-center text-[var(--color-error)]">
             <Prohibit size={20} weight="fill" />
           </div>
           <div>
-            <div className="text-xl font-bold font-mono text-red-400">1</div>
-            <div className="text-xs text-[var(--color-text-muted)]">IPs محظورة حالياً</div>
+            <div className="text-xl font-bold font-mono text-[var(--color-error)]">1</div>
+            <div className="text-xs text-[var(--color-text-muted)]">IPs محظورة حاليا̂</div>
           </div>
         </div>
       </div>
@@ -98,9 +98,9 @@ export default function AdminSecurity() {
               {logs.filter(l => activeTab === 'attempts' ? true : l.type === 'blocked_ip').map(log => (
                 <tr key={log.id} className="hover:bg-[var(--color-bg-surface)] transition-colors group">
                   <td className="py-3 px-5">
-                    {log.type === 'success_login' && <span className="flex items-center gap-1 text-xs text-[#5ddb85]"><ShieldCheck size={14} /> دخول ناجح</span>}
-                    {log.type === 'failed_login' && <span className="flex items-center gap-1 text-xs text-orange-400"><ShieldWarning size={14} /> محاولة فاشلة</span>}
-                    {log.type === 'blocked_ip' && <span className="flex items-center gap-1 text-xs text-red-400"><Prohibit size={14} /> حظر IP</span>}
+                    {log.type === 'success_login' && <span className="flex items-center gap-1 text-xs text-[var(--color-success)]"><ShieldCheck size={14} /> دخول ناجح</span>}
+                    {log.type === 'failed_login' && <span className="flex items-center gap-1 text-xs text-[var(--color-warning)]"><ShieldWarning size={14} /> محاولة فاشلة</span>}
+                    {log.type === 'blocked_ip' && <span className="flex items-center gap-1 text-xs text-[var(--color-error)]"><Prohibit size={14} /> حظر IP</span>}
                   </td>
                   <td className="py-3 px-5 text-[var(--color-text-secondary)]">
                     <div className="flex items-center gap-1 dir-en justify-end">
@@ -114,7 +114,7 @@ export default function AdminSecurity() {
                   </td>
                   <td className="py-3 px-5 text-[var(--color-text-muted)]">
                     {log.type === 'blocked_ip' ? (
-                      <span className="text-red-400 text-xs">{log.reason}</span>
+                      <span className="text-[var(--color-error)] text-xs">{log.reason}</span>
                     ) : (
                       <span className="font-mono text-[var(--color-gold-light)]">{log.user}</span>
                     )}

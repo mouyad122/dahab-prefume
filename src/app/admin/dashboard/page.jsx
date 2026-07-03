@@ -99,38 +99,38 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="admin-stat-card border-l-4 border-l-[#5ddb85]">
+        <div className="admin-stat-card border-l-4 border-l-[var(--color-success)]"> 
           <div className="flex justify-between items-start mb-4">
             <div className="text-[0.75rem] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">فواتير اليوم</div>
-            <div className="p-2 rounded bg-[#5ddb85]/10 text-[#5ddb85]">
+            <div className="p-2 rounded bg-[var(--color-success-dim)] text-[var(--color-success)]">
               <Receipt size={20} />
             </div>
           </div>
-          <div className="text-2xl font-display font-bold text-white">
+          <div className="text-2xl font-display font-bold text-[var(--color-text-primary)]">
             {salesData.total_invoices}
           </div>
         </div>
 
-        <div className="admin-stat-card border-l-4 border-l-[#a07cf0]">
+        <div className="admin-stat-card border-l-4 border-l-[var(--color-info)]">
           <div className="flex justify-between items-start mb-4">
             <div className="text-[0.75rem] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">إجمالي المنتجات</div>
-            <div className="p-2 rounded bg-[#a07cf0]/10 text-[#a07cf0]">
+            <div className="p-2 rounded bg-[var(--color-info-dim)] text-[var(--color-info)]">
               <Package size={20} />
             </div>
           </div>
-          <div className="text-2xl font-display font-bold text-white">
+          <div className="text-2xl font-display font-bold text-[var(--color-text-primary)]">
             {productsData.total_products}
           </div>
         </div>
 
-        <div className="admin-stat-card border-l-4 border-l-[#f97171]">
+        <div className="admin-stat-card border-l-4 border-l-[var(--color-error)]">
           <div className="flex justify-between items-start mb-4">
             <div className="text-[0.75rem] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">نواقص المخزون</div>
-            <div className="p-2 rounded bg-[#f97171]/10 text-[#f97171]">
+            <div className="p-2 rounded bg-[var(--color-error-dim)] text-[var(--color-error)]">
               <WarningCircle size={20} />
             </div>
           </div>
-          <div className="text-2xl font-display font-bold text-[#f97171]">
+          <div className="text-2xl font-display font-bold text-[var(--color-error)]">
             {productsData.low_stock}
           </div>
         </div>

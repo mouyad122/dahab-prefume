@@ -110,7 +110,7 @@ export default function AdminSales() {
                       {sale.employee?.display_name || 'غير معروف'}
                     </td>
                     <td className="py-3 px-5">
-                      <span className={`px-2 py-0.5 rounded text-[0.65rem] ${sale.payment_method === 'cash' ? 'bg-[#5ddb85]/10 text-[#5ddb85]' : 'bg-[#a07cf0]/10 text-[#a07cf0]'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[0.65rem] ${sale.payment_method === 'cash' ? 'bg-[var(--color-success-dim)] text-[var(--color-success)]' : 'bg-[var(--color-info-dim)] text-[var(--color-info)]'}`}>
                         {sale.payment_method === 'cash' ? 'نقدي' : 'بطاقة ائتمان'}
                       </span>
                     </td>
@@ -119,9 +119,9 @@ export default function AdminSales() {
                     </td>
                     <td className="py-3 px-5">
                       {sale.status === 'completed' ? (
-                        <span className="text-xs text-[#5ddb85]">مكتملة</span>
+                        <span className="text-xs text-[var(--color-success)]">مكتملة</span>
                       ) : (
-                        <span className="text-xs text-red-400">ملغاة</span>
+                        <span className="text-xs text-[var(--color-error)]">ملغاة</span>
                       )}
                     </td>
                     <td className="py-3 px-5 text-left">
