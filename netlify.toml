@@ -2,5 +2,8 @@
   command = "npx prisma generate && npx prisma db push --accept-data-loss && npm run build"
   publish = ".next"
 
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
