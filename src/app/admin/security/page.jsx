@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck, ShieldWarning, Prohibit, Clock, MapPin } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminSecurity() {
   const [activeTab, setActiveTab] = useState('attempts');
@@ -65,18 +66,20 @@ export default function AdminSecurity() {
         
         {/* Tabs */}
         <div className="flex border-b border-[var(--color-border)]">
-          <button 
-            className={`px-6 py-3 text-sm font-bold transition-colors ${activeTab === 'attempts' ? 'text-[var(--color-gold-light)] border-b-2 border-[var(--color-gold)] bg-[var(--color-bg-surface)]' : 'text-[var(--color-text-secondary)] hover:text-white'}`}
+          <LuxuryButton 
+            variant="ghost"
+            className={`px-6 py-3 text-sm font-bold transition-colors !rounded-none !border-x-0 !border-t-0 ${activeTab === 'attempts' ? 'text-[var(--color-gold-light)] !border-b-2 !border-[var(--color-gold)] bg-[var(--color-bg-surface)]' : 'text-[var(--color-text-secondary)] hover:!text-white !border-b-transparent'}`}
             onClick={() => setActiveTab('attempts')}
           >
             سجل النشاطات
-          </button>
-          <button 
-            className={`px-6 py-3 text-sm font-bold transition-colors ${activeTab === 'blocked' ? 'text-red-400 border-b-2 border-red-500 bg-red-500/5' : 'text-[var(--color-text-secondary)] hover:text-white'}`}
+          </LuxuryButton>
+          <LuxuryButton 
+            variant="ghost"
+            className={`px-6 py-3 text-sm font-bold transition-colors !rounded-none !border-x-0 !border-t-0 ${activeTab === 'blocked' ? 'text-red-400 !border-b-2 !border-red-500 bg-red-500/5' : 'text-[var(--color-text-secondary)] hover:!text-white !border-b-transparent'}`}
             onClick={() => setActiveTab('blocked')}
           >
             عناوين IP المحظورة
-          </button>
+          </LuxuryButton>
         </div>
 
         <div className="flex-1 overflow-auto">
@@ -123,9 +126,9 @@ export default function AdminSecurity() {
                   </td>
                   <td className="py-3 px-5">
                     {log.type === 'blocked_ip' && (
-                      <button className="btn-secondary py-1 px-3 text-xs flex items-center gap-1 hover:border-green-500 hover:text-green-500">
-                        <span>إلغاء الحظر</span>
-                      </button>
+                      <LuxuryButton variant="secondary" className="!py-1 px-3 text-xs hover:!border-green-500 hover:!text-green-500">
+                        إلغاء الحظر
+                      </LuxuryButton>
                     )}
                   </td>
                 </tr>

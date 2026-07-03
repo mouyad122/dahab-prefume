@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PosProvider } from '../../contexts/PosContext';
 import POSSidebar from '../../components/pos/POSSidebar';
+import { usePOSIdleTimer } from '../../hooks/usePOSIdleTimer';
+import POSIdleScreensaver from '../../components/pos/POSIdleScreensaver';
 
 export default function PosLayout({ children }) {
   const [session, setSession] = useState(null);
+  const [posSettings, setPosSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -14,12 +17,25 @@ export default function PosLayout({ children }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch('/api/auth/employee/me');
+        const [res, settingsRes] = await Promise.all([
+          fetch('/api/auth/employee/me'),
+          fetch('/api/settings')
+        ]);
+        
         if (!res.ok) {
           throw new Error('Not authenticated');
         }
+        
         const data = await res.json();
         setSession(data);
+        
+        try {
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            setPosSettings(settingsData?.pos || {});
+          }
+        } catch(e) {}
+
         
         // Check permissions against route
         if (pathname.includes('/pos/counter') && !data.permissions?.can_access_counter) {
@@ -50,8 +66,24 @@ export default function PosLayout({ children }) {
 
   if (!session) return null;
 
+  const isIdleEnabled = posSettings?.pos_idle_enabled !== false && posSettings?.pos_idle_enabled !== 'false';
+  let idleTimeout = parseInt(posSettings?.pos_idle_timeout_minutes);
+  if (isNaN(idleTimeout) || idleTimeout < 1) idleTimeout = 4;
+  
+  const { isIdle, forceWake } = usePOSIdleTimer({
+    enabled: isIdleEnabled,
+    timeoutMinutes: idleTimeout
+  });
+
   return (
     <PosProvider employee={session.employee} permissions={session.permissions}>
+      {isIdle && (
+        <POSIdleScreensaver 
+          onWake={forceWake} 
+          showClock={posSettings?.pos_idle_show_clock !== false && posSettings?.pos_idle_show_clock !== 'false'}
+          requirePin={posSettings?.pos_idle_require_pin === true || posSettings?.pos_idle_require_pin === 'true'}
+        />
+      )}
       <div className="flex bg-[var(--color-bg-primary)] min-h-screen text-[var(--color-text-primary)]">
         <POSSidebar />
         <div className="flex-1 flex flex-col h-screen overflow-hidden">

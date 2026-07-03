@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Globe } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,13 +111,15 @@ export default function AdminLogin() {
             />
           </div>
           
-          <button 
+          <LuxuryButton 
             type="submit" 
-            className="btn-primary mt-2 w-full h-12 text-sm uppercase tracking-widest font-bold shadow-[var(--shadow-gold)]"
+            variant="primary"
+            className="mt-2 w-full h-12 text-sm uppercase tracking-widest font-bold shadow-[var(--shadow-gold)]"
             disabled={loading}
+            loading={loading}
           >
-            {loading ? <div className="spinner mx-auto"></div> : 'Secure Login'}
-          </button>
+            Secure Login
+          </LuxuryButton>
         </form>
 
       </div>

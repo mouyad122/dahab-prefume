@@ -5,6 +5,7 @@ import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
 import Link from 'next/link';
 import { Trash, Plus, Minus, WhatsappLogo, ArrowUpRight, ShoppingBag, ArrowLeft } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 export default function Cart() {
   const { language, t } = useContext(LanguageContext);
@@ -60,9 +61,9 @@ export default function Cart() {
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed max-w-[280px]">
               {isAr ? 'اكتشف عطورنا الفخمة والخلطات النادرة وأضفها إلى السلة لبدء رحلتك.' : 'Explore our collection of fine fragrances to start your journey.'}
             </p>
-            <Link href="/shop" className="btn-primary py-3 px-8 mt-2">
+            <LuxuryButton href="/shop" variant="primary" className="py-3 px-8 mt-2">
               {t('backToShop')}
-            </Link>
+            </LuxuryButton>
           </div>
         </div>
       ) : (
@@ -102,6 +103,7 @@ export default function Cart() {
                   {/* Quantity controls */}
                   <div className="flex items-center gap-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-full px-3 py-2">
                     <button 
+                      type="button"
                       onClick={() => updateQty(item.id, item.quantity - 1, item.stock)}
                       disabled={item.quantity <= 1}
                       className="w-6 h-6 rounded-full flex items-center justify-center text-zinc-500 hover:text-[var(--color-text-primary)] disabled:opacity-40 disabled:hover:text-zinc-500 transition-colors cursor-pointer"
@@ -113,6 +115,7 @@ export default function Cart() {
                       {item.quantity}
                     </span>
                     <button 
+                      type="button"
                       onClick={() => updateQty(item.id, item.quantity + 1, item.stock)}
                       disabled={item.quantity >= item.stock}
                       className="w-6 h-6 rounded-full flex items-center justify-center text-zinc-500 hover:text-[var(--color-text-primary)] disabled:opacity-40 disabled:hover:text-zinc-500 transition-colors cursor-pointer"
@@ -133,13 +136,14 @@ export default function Cart() {
                   </div>
 
                   {/* Remove action */}
-                  <button 
+                  <LuxuryButton 
+                    variant="icon"
                     onClick={() => removeFromCart(item.id)}
-                    className="p-2.5 rounded-full border border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all active:scale-95 cursor-pointer"
+                    className="!p-2.5 !w-auto !h-auto !min-h-0 !min-w-0 border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all active:scale-95 cursor-pointer rounded-full"
                     aria-label={isAr ? 'حذف المنتج' : 'Remove item'}
                   >
                     <Trash size={14} />
-                  </button>
+                  </LuxuryButton>
 
                 </div>
               </div>
@@ -147,17 +151,22 @@ export default function Cart() {
 
             {/* Cart Actions row */}
             <div className="flex flex-wrap justify-between items-center px-2 mt-2 gap-4">
-              <button 
+              <LuxuryButton 
                 onClick={clearCart}
-                className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
+                variant="ghost"
+                className="!text-[10px] font-bold !text-red-500 hover:!text-red-600 uppercase tracking-wider"
+                iconLeft={Trash}
               >
-                <Trash size={14} />
-                <span>{isAr ? 'تفريغ السلة بالكامل' : 'Clear All Items'}</span>
-              </button>
-              <Link href="/shop" className="text-[10px] font-bold text-[var(--color-gold)] hover:text-[var(--color-gold-light)] uppercase tracking-wider flex items-center gap-1.5 transition-colors">
-                <ArrowLeft size={12} weight="bold" />
-                <span>{isAr ? 'متابعة التسوق' : 'Continue Shopping'}</span>
-              </Link>
+                {isAr ? 'تفريغ السلة بالكامل' : 'Clear All Items'}
+              </LuxuryButton>
+              <LuxuryButton 
+                href="/shop" 
+                variant="ghost"
+                className="!text-[10px] font-bold !text-[var(--color-gold)] hover:!text-[var(--color-gold-light)] uppercase tracking-wider"
+                iconLeft={ArrowLeft}
+              >
+                {isAr ? 'متابعة التسوق' : 'Continue Shopping'}
+              </LuxuryButton>
             </div>
           </div>
 
@@ -197,23 +206,25 @@ export default function Cart() {
 
               {/* Primary Actions */}
               <div className="flex flex-col gap-3 mt-2">
-                <Link 
+                <LuxuryButton 
                   href="/checkout"
-                  className="group relative flex items-center justify-center gap-3 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full transition-all duration-300 hover:bg-[var(--color-gold-light)] hover:scale-[1.02] active:scale-[0.98]"
+                  variant="primary"
+                  className="text-xs uppercase tracking-[0.15em] !py-4 rounded-full font-bold"
+                  iconRight={ArrowUpRight}
                 >
-                  <span>{isAr ? 'إتمام الطلب وتأكيده' : 'Proceed to Checkout'}</span>
-                  <ArrowUpRight size={14} weight="bold" />
-                </Link>
+                  {isAr ? 'إتمام الطلب وتأكيده' : 'Proceed to Checkout'}
+                </LuxuryButton>
 
-                <a 
+                <LuxuryButton 
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 border border-[var(--color-border-strong)] text-[var(--color-text-primary)] text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full hover:bg-[var(--color-gold-dim)] hover:border-[var(--color-gold)] transition-all duration-300"
+                  variant="outline"
+                  className="text-xs uppercase tracking-[0.15em] !py-4 rounded-full font-bold"
+                  iconLeft={(props) => <WhatsappLogo size={16} className="text-[#25D366]" weight="bold" {...props} />}
                 >
-                  <WhatsappLogo size={16} className="text-[#25D366]" weight="bold" />
-                  <span>{isAr ? 'مساعدة عبر واتساب' : 'WhatsApp Support'}</span>
-                </a>
+                  {isAr ? 'مساعدة عبر واتساب' : 'WhatsApp Support'}
+                </LuxuryButton>
               </div>
 
             </div>

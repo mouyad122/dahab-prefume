@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash, CheckCircle, Percent, X } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminDiscounts() {
   const [discounts, setDiscounts] = useState([]);
@@ -121,13 +122,14 @@ export default function AdminDiscounts() {
             إدارة عروض الخصم ونسب التخفيض المؤقتة على العطور
           </p>
         </div>
-        <button 
-          className="btn-primary text-sm flex items-center gap-2"
+        <LuxuryButton 
+          variant="primary"
+          className="text-sm flex items-center gap-2"
           onClick={() => setIsModalOpen(true)}
+          iconLeft={Plus}
         >
-          <Plus size={16} />
-          <span>خصم جديد</span>
-        </button>
+          خصم جديد
+        </LuxuryButton>
       </div>
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -181,12 +183,14 @@ export default function AdminDiscounts() {
                       {disc.ends_at ? new Date(disc.ends_at).toLocaleDateString('ar-JO') : 'مفتوح'}
                     </td>
                     <td className="py-3 px-5">
-                      <button 
-                        className="text-red-400 hover:text-red-500 p-1"
+                      <LuxuryButton 
+                        variant="icon"
+                        className="!p-1 text-red-400 hover:!text-red-500 !w-auto !h-auto !min-h-0 !min-w-0 border-none rounded-full"
                         onClick={() => handleDeleteDiscount(disc.id)}
+                        aria-label="حذف الخصم"
                       >
                         <Trash size={18} />
-                      </button>
+                      </LuxuryButton>
                     </td>
                   </tr>
                 ))}
@@ -202,9 +206,9 @@ export default function AdminDiscounts() {
           <form onSubmit={handleAddDiscount} className="glass-card w-full max-w-lg p-6 border border-[var(--color-border-strong)] flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">إضافة خصم جديد</h2>
-              <button type="button" className="text-[var(--color-text-muted)] hover:text-white" onClick={() => setIsModalOpen(false)}>
+              <LuxuryButton variant="icon" className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-white border-none rounded-full" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="space-y-4">
@@ -295,8 +299,8 @@ export default function AdminDiscounts() {
             </div>
 
             <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
-              <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={() => setIsModalOpen(false)}>إلغاء</button>
-              <button type="submit" className="btn-primary px-4 py-2 text-sm">حفظ الخصم</button>
+              <LuxuryButton variant="secondary" className="px-4 py-2 text-sm" onClick={() => setIsModalOpen(false)}>إلغاء</LuxuryButton>
+              <LuxuryButton type="submit" variant="primary" className="px-4 py-2 text-sm">حفظ الخصم</LuxuryButton>
             </div>
           </form>
         </div>

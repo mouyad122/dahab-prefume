@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Heart, WhatsappLogo, Eye, ShoppingBag, Check } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
-import Button from '../ui/Button';
+import LuxuryButton from '../ui/LuxuryButton';
 
 export default function ProductCard({ product }) {
   const { language, t } = useContext(LanguageContext);
@@ -60,13 +60,14 @@ export default function ProductCard({ product }) {
           )}
 
           {/* Wishlist Button */}
-          <button 
+          <LuxuryButton 
+            variant="icon"
             onClick={handleWishlist}
-            className="w-8 h-8 rounded-full bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] hover:text-red-500 hover:border-red-500/20 active:scale-90 transition-all duration-300 pointer-events-auto cursor-pointer focus-visible:outline-none"
+            className={`w-8 h-8 !min-h-[32px] !min-w-[32px] !p-0 rounded-full bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] hover:text-red-500 hover:border-red-500/20 pointer-events-auto ${isWishlisted ? 'text-red-500' : ''}`}
             aria-label={isAr ? 'إضافة للمفضلة' : 'Add to Wishlist'}
           >
-            <Heart size={14} weight={isWishlisted ? 'fill' : 'regular'} className={isWishlisted ? 'text-red-500' : ''} />
-          </button>
+            <Heart size={14} weight={isWishlisted ? 'fill' : 'regular'} />
+          </LuxuryButton>
         </div>
 
         {/* Product Visual */}
@@ -128,49 +129,40 @@ export default function ProductCard({ product }) {
         <div className="flex items-center gap-2 mt-5 w-full">
           {isOutOfStock ? (
             /* Out of stock: WhatsApp Inquiry only */
-            <Button 
+            <LuxuryButton 
               href={whatsappUrl}
               target="_blank" 
               rel="noopener noreferrer" 
-              variant="success"
+              variant="whatsapp"
+              size="sm"
               className="flex-1 !py-2 !px-2 !text-[11px] font-sans-ar"
-              icon={WhatsappLogo}
+              iconLeft={WhatsappLogo}
             >
               {isAr ? 'استفسار واتساب' : 'WhatsApp Inquiry'}
-            </Button>
+            </LuxuryButton>
           ) : (
             <>
               {/* Add to Cart */}
-              <button
+              <LuxuryButton
                 onClick={handleAddToCart}
-                className={`flex-1 h-[42px] flex items-center justify-center gap-2 rounded-md font-bold uppercase transition-all duration-300 active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] text-[11px] font-sans-ar tracking-wider ${
-                  addedToCart
-                    ? 'bg-emerald-500 text-white border border-emerald-500'
-                    : 'bg-[linear-gradient(135deg,#c5a049_0%,#ecd393_50%,#9e7929_100%)] text-[#040302] border border-[rgba(255,223,122,0.4)] shadow-[0_4px_20px_rgba(196,154,68,0.22)] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(196,154,68,0.42)]'
-                }`}
+                variant={addedToCart ? 'success' : 'primary'}
+                size="sm"
+                className="flex-1 !h-[42px] !text-[11px] font-sans-ar tracking-wider uppercase"
                 aria-label={isAr ? 'أضف للسلة' : 'Add to Cart'}
+                iconLeft={() => addedToCart ? <Check size={16} weight="bold" /> : <ShoppingBag size={18} weight="bold" />}
               >
-                {addedToCart ? (
-                  <>
-                    <Check size={16} weight="bold" />
-                    <span>{isAr ? 'تمت الإضافة' : 'Added'}</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag size={18} weight="bold" />
-                    <span>{isAr ? 'إضافة للسلة' : 'Add to Cart'}</span>
-                  </>
-                )}
-              </button>
+                {addedToCart ? (isAr ? 'تمت الإضافة' : 'Added') : (isAr ? 'إضافة للسلة' : 'Add to Cart')}
+              </LuxuryButton>
 
               {/* View Product */}
-              <Button 
+              <LuxuryButton 
                 href={`/products/${product.slug}`}
                 variant="secondary"
-                className="flex-1 !py-2 !px-2 !text-[11px] font-sans-ar"
+                size="sm"
+                className="flex-1 !h-[42px] !py-2 !px-2 !text-[11px] font-sans-ar"
               >
                 {isAr ? 'عرض العطر' : 'View Scent'}
-              </Button>
+              </LuxuryButton>
             </>
           )}
         </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, PencilSimple, Trash, X, ArrowUpRight, Eye, Sparkle, Tag } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -131,10 +132,9 @@ export default function AdminCategories() {
             إدارة كاملة للمجموعات العطرية وإعداداتها وروابطها والصور الخاصة بها
           </p>
         </div>
-        <button onClick={handleAddNew} className="btn-primary text-sm flex items-center gap-2">
-          <Plus size={16} />
-          <span>إضافة مجموعة جديدة</span>
-        </button>
+        <LuxuryButton variant="primary" onClick={handleAddNew} className="text-sm flex items-center gap-2" iconLeft={Plus}>
+          إضافة مجموعة جديدة
+        </LuxuryButton>
       </div>
 
       {/* Stats bar */}
@@ -205,12 +205,12 @@ export default function AdminCategories() {
                     </a>
 
                     <div className="flex items-center gap-2">
-                      <button onClick={() => handleEdit(category)} className="text-[var(--color-text-muted)] hover:text-[var(--color-gold)] p-1.5 bg-[var(--color-bg-primary)] rounded transition-colors" title="تعديل">
+                      <LuxuryButton variant="icon" onClick={() => handleEdit(category)} className="!p-1.5 !w-auto !h-auto !min-h-0 !min-w-0 bg-[var(--color-bg-primary)] rounded text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] transition-colors" title="تعديل">
                         <PencilSimple size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(category.id)} className="text-[var(--color-text-muted)] hover:text-red-400 p-1.5 bg-[var(--color-bg-primary)] rounded transition-colors" title="حذف">
+                      </LuxuryButton>
+                      <LuxuryButton variant="icon" onClick={() => handleDelete(category.id)} className="!p-1.5 !w-auto !h-auto !min-h-0 !min-w-0 bg-[var(--color-bg-primary)] rounded text-[var(--color-text-muted)] hover:!text-red-400 transition-colors" title="حذف">
                         <Trash size={16} />
-                      </button>
+                      </LuxuryButton>
                     </div>
                   </div>
                 </div>
@@ -228,9 +228,9 @@ export default function AdminCategories() {
               <h3 className="font-display font-bold text-lg text-[var(--color-text-primary)]">
                 {editCategoryId ? 'تعديل المجموعة' : 'إضافة مجموعة جديدة'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-[var(--color-text-muted)] hover:text-white transition-colors">
+              <LuxuryButton variant="icon" onClick={() => setIsModalOpen(false)} className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-white border-none rounded-full transition-colors">
                 <X size={20} />
-              </button>
+              </LuxuryButton>
             </div>
             
             <div className="flex-1 overflow-y-auto p-5">
@@ -327,12 +327,12 @@ export default function AdminCategories() {
             </div>
             
             <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-surface)] flex justify-end gap-3">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">
+              <LuxuryButton variant="secondary" onClick={() => setIsModalOpen(false)}>
                 إلغاء
-              </button>
-              <button type="submit" form="categoryForm" className="btn-primary">
+              </LuxuryButton>
+              <LuxuryButton type="submit" form="categoryForm" variant="primary">
                 حفظ المجموعة
-              </button>
+              </LuxuryButton>
             </div>
           </div>
         </div>

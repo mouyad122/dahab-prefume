@@ -6,6 +6,7 @@ import { useCartStore } from '../../stores/useCartStore';
 import { initialProducts } from '../../data/initialProducts';
 import Link from 'next/link';
 import { Heart, ShoppingBag, WhatsappLogo, Trash, ArrowRight } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 export default function Wishlist() {
   const { language, t } = useContext(LanguageContext);
@@ -56,9 +57,9 @@ export default function Wishlist() {
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed max-w-[280px]">
               {isAr ? 'تصفح تشكيلة العطور الفخمة ومعطرات الشعر وأضف مفضلاتك هنا.' : 'Explore our collection of fine fragrances and save your favorites.'}
             </p>
-            <Link href="/shop" className="btn-primary py-3 px-8 mt-2">
+            <LuxuryButton href="/shop" variant="primary" className="py-3 px-8 mt-2">
               {t('backToShop')}
-            </Link>
+            </LuxuryButton>
           </div>
         </div>
       ) : (
@@ -120,36 +121,37 @@ export default function Wishlist() {
                   <div className="flex items-center gap-2.5 shrink-0 flex-wrap justify-center sm:justify-end">
                     {/* Move to Cart */}
                     {!isOutOfStock && (
-                      <button
+                      <LuxuryButton
+                        variant="primary"
                         onClick={() => handleMoveToCart(product)}
-                        className="flex items-center gap-1.5 bg-[var(--color-gold)] text-black text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-full hover:bg-[var(--color-gold-light)] transition-all active:scale-95 cursor-pointer focus-visible:outline-none"
-                        aria-label={isAr ? 'نقل إلى السلة' : 'Move to Cart'}
+                        className="text-[10px] uppercase tracking-wider !py-2.5 px-4 rounded-full font-bold"
+                        iconLeft={ShoppingBag}
                       >
-                        <ShoppingBag size={14} weight="bold" />
-                        <span>{isAr ? 'نقل للسلة' : 'Move to Cart'}</span>
-                      </button>
+                        {isAr ? 'نقل للسلة' : 'Move to Cart'}
+                      </LuxuryButton>
                     )}
 
                     {/* WhatsApp Inquiry */}
-                    <a
+                    <LuxuryButton
                       href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-full hover:bg-[#25D366]/20 transition-all active:scale-95 focus-visible:outline-none"
-                      aria-label={isAr ? 'استفسار واتساب' : 'WhatsApp Inquiry'}
+                      variant="whatsapp"
+                      className="text-[10px] uppercase tracking-wider !py-2.5 px-4 rounded-full font-bold"
+                      iconLeft={WhatsappLogo}
                     >
-                      <WhatsappLogo size={14} weight="bold" />
-                      <span>{isAr ? 'واتساب' : 'Inquire'}</span>
-                    </a>
+                      {isAr ? 'واتساب' : 'Inquire'}
+                    </LuxuryButton>
 
                     {/* Remove from Wishlist */}
-                    <button
+                    <LuxuryButton
+                      variant="icon"
                       onClick={() => toggleWishlist(product.id)}
-                      className="p-2.5 rounded-full border border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all active:scale-95 cursor-pointer focus-visible:outline-none"
+                      className="!p-2.5 !w-auto !h-auto !min-h-0 !min-w-0 rounded-full border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all cursor-pointer"
                       aria-label={isAr ? 'حذف من المفضلة' : 'Remove from Wishlist'}
                     >
                       <Trash size={14} />
-                    </button>
+                    </LuxuryButton>
                   </div>
 
                 </div>
@@ -159,13 +161,14 @@ export default function Wishlist() {
 
           {/* Continue Shopping CTA */}
           <div className="flex justify-center mt-4">
-            <Link 
+            <LuxuryButton 
               href="/shop" 
-              className="flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] uppercase tracking-wider transition-colors"
+              variant="ghost"
+              className="!text-[10px] font-bold !text-[var(--color-text-secondary)] hover:!text-[var(--color-gold)] uppercase tracking-wider"
+              iconRight={ArrowRight}
             >
-              <span>{isAr ? 'متابعة التسوق' : 'Continue Shopping'}</span>
-              <ArrowRight size={12} weight="bold" />
-            </Link>
+              {isAr ? 'متابعة التسوق' : 'Continue Shopping'}
+            </LuxuryButton>
           </div>
         </div>
       )}

@@ -39,6 +39,8 @@
     "@types/node": "^22.5.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^15.5.20",
     "prisma": "^6.2.1",
     "typescript": "^5.5.4"
   }

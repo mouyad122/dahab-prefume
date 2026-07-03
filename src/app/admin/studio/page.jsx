@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MagicWand, Image as ImageIcon, Sparkle, Upload, CheckCircle, Clock } from '@phosphor-icons/react';
-import Button from '../../../components/ui/Button';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AIStudio() {
   const [generations, setGenerations] = useState([
@@ -62,9 +62,9 @@ export default function AIStudio() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
-          <Button variant="primary" onClick={handleGenerate}>
+          <LuxuryButton variant="primary" onClick={handleGenerate}>
             <Sparkle size={18} className="mr-2" /> توليد
-          </Button>
+          </LuxuryButton>
         </div>
       </div>
 
@@ -108,18 +108,18 @@ export default function AIStudio() {
                 <div className="mt-auto flex gap-2">
                   {gen.status === 'pending' && (
                     <>
-                      <Button variant="ghost" onClick={() => handleDiscard(gen.id)} className="flex-1 !text-red-400 hover:!bg-red-500/10 !py-2 text-xs">
+                      <LuxuryButton variant="ghost" onClick={() => handleDiscard(gen.id)} className="flex-1 !text-red-400 hover:!bg-red-500/10 !py-2 text-xs">
                         حذف
-                      </Button>
-                      <Button variant="primary" onClick={() => handleApprove(gen.id)} className="flex-1 !py-2 text-xs border border-[var(--color-gold)]">
+                      </LuxuryButton>
+                      <LuxuryButton variant="primary" onClick={() => handleApprove(gen.id)} className="flex-1 !py-2 text-xs border border-[var(--color-gold)]">
                         موافقة ونشر
-                      </Button>
+                      </LuxuryButton>
                     </>
                   )}
                   {gen.status === 'published' && (
-                    <Button variant="secondary" disabled className="w-full !py-2 text-xs opacity-50">
+                    <LuxuryButton variant="secondary" disabled className="w-full !py-2 text-xs opacity-50">
                       تم النشر بنجاح
-                    </Button>
+                    </LuxuryButton>
                   )}
                 </div>
               </div>

@@ -7,6 +7,7 @@ import { Globe, Heart, List, MapPin, ShoppingBag, WhatsappLogo, X } from '@phosp
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
 import { brandConfig } from '../../config/brand';
+import LuxuryButton from '../ui/LuxuryButton';
 
 export default function Header() {
   const { language, toggleLanguage } = useContext(LanguageContext);
@@ -81,24 +82,44 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hidden md:inline-flex btn-whatsapp h-10 min-h-10 px-4 text-xs">
-            <WhatsappLogo size={16} weight="bold" />
-            <span>{isAr ? 'اطلب عبر واتساب' : 'WhatsApp'}</span>
-          </a>
-          <button type="button" onClick={toggleLanguage} className="icon-btn" aria-label={isAr ? 'Switch to English' : 'التبديل للعربية'}>
+          <LuxuryButton 
+            variant="whatsapp" 
+            href={whatsappUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="hidden md:inline-flex h-10 min-h-[40px] px-4 text-xs"
+            iconLeft={WhatsappLogo}
+          >
+            {isAr ? 'اطلب عبر واتساب' : 'WhatsApp'}
+          </LuxuryButton>
+          <LuxuryButton 
+            variant="icon" 
+            onClick={toggleLanguage} 
+            aria-label={isAr ? 'Switch to English' : 'التبديل للعربية'}
+          >
             <Globe size={17} />
-          </button>
-          <Link href="/wishlist" className="icon-btn relative" aria-label={isAr ? 'المفضلة' : 'Wishlist'}>
+          </LuxuryButton>
+          <Link href="/wishlist" className="relative group p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text-primary)] hover:text-[var(--color-gold-light)] transition-colors active:scale-[0.95]" aria-label={isAr ? 'المفضلة' : 'Wishlist'}>
             <Heart size={17} />
             {wishlist.length > 0 && <span className="counter-badge">{wishlist.length}</span>}
           </Link>
-          <button type="button" onClick={toggleCart} className="icon-btn relative" aria-label={isAr ? 'السلة' : 'Cart'}>
+          <LuxuryButton 
+            variant="icon" 
+            onClick={toggleCart} 
+            aria-label={isAr ? 'السلة' : 'Cart'}
+            className="relative"
+          >
             <ShoppingBag size={17} />
             {cartCount > 0 && <span className="counter-badge">{cartCount}</span>}
-          </button>
-          <button type="button" onClick={() => setOpen((value) => !value)} className="icon-btn lg:hidden" aria-label={open ? 'Close menu' : 'Open menu'}>
+          </LuxuryButton>
+          <LuxuryButton 
+            variant="icon" 
+            onClick={() => setOpen((value) => !value)} 
+            className="lg:hidden" 
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
             {open ? <X size={20} /> : <List size={20} />}
-          </button>
+          </LuxuryButton>
         </div>
       </div>
 
@@ -110,10 +131,16 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-whatsapp mt-4 w-full">
-              <WhatsappLogo size={18} weight="bold" />
-              <span>{isAr ? 'تواصل مع الخبير' : 'Talk to a specialist'}</span>
-            </a>
+            <LuxuryButton 
+              variant="whatsapp" 
+              href={whatsappUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="mt-4 w-full"
+              iconLeft={WhatsappLogo}
+            >
+              {isAr ? 'تواصل مع الخبير' : 'Talk to a specialist'}
+            </LuxuryButton>
           </div>
         </nav>
       )}

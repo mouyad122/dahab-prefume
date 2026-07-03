@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Money, Calculator, CheckCircle, Warning } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminCashReconciliation() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -118,12 +119,13 @@ export default function AdminCashReconciliation() {
         </div>
 
         <div className="flex justify-end border-t border-[var(--color-border-subtle)] pt-6">
-          <button 
-            className="btn-primary px-8"
+          <LuxuryButton 
+            variant="primary"
+            className="px-8"
             disabled={!employee || !actualCash}
           >
             اعتماد وحفظ التسوية
-          </button>
+          </LuxuryButton>
         </div>
       </div>
     </div>

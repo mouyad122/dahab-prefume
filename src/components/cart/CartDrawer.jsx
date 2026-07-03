@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { X, Trash, Plus, Minus, ShoppingBag, WhatsappLogo, ArrowRight } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
-import Button from '../ui/Button';
+import LuxuryButton from '../ui/LuxuryButton';
 
 export default function CartDrawer() {
   const { language, t } = useContext(LanguageContext);
@@ -73,13 +73,13 @@ export default function CartDrawer() {
               </span>
             )}
           </div>
-          <button 
+          <LuxuryButton 
+            variant="icon"
             onClick={() => setCartOpen(false)}
-            className="w-9 h-9 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-primary)] transition-all active:scale-90 cursor-pointer focus-visible:outline-none"
             aria-label={isAr ? 'إغلاق' : 'Close'}
           >
             <X size={16} weight="bold" />
-          </button>
+          </LuxuryButton>
         </div>
 
         {/* Drawer Body */}
@@ -98,13 +98,13 @@ export default function CartDrawer() {
                   ? 'اكتشف عطورنا الفخمة ومعطرات الشعر الحصرية وأضفها إلى سلتك.'
                   : 'Explore our luxury fragrances and exclusive hair mists to fill your cart.'}
               </p>
-              <Link
+              <LuxuryButton
                 href="/shop"
                 onClick={() => setCartOpen(false)}
-                className="btn-primary py-3 px-8 text-xs mt-2"
+                className="py-3 px-8 text-xs mt-2"
               >
                 {t('backToShop')}
-              </Link>
+              </LuxuryButton>
             </div>
           ) : (
             /* Items List */
@@ -149,6 +149,7 @@ export default function CartDrawer() {
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-full px-2.5 py-1">
                         <button
+                          type="button"
                           onClick={() => updateQty(item.id, item.quantity - 1, item.stock)}
                           disabled={item.quantity <= 1}
                           className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-500 hover:text-[var(--color-text-primary)] disabled:opacity-30 transition-colors cursor-pointer"
@@ -160,6 +161,7 @@ export default function CartDrawer() {
                           {item.quantity}
                         </span>
                         <button
+                          type="button"
                           onClick={() => updateQty(item.id, item.quantity + 1, item.stock)}
                           disabled={item.quantity >= item.stock}
                           className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-500 hover:text-[var(--color-text-primary)] disabled:opacity-30 transition-colors cursor-pointer"
@@ -178,8 +180,9 @@ export default function CartDrawer() {
 
                   {/* Remove */}
                   <button
+                    type="button"
                     onClick={() => removeFromCart(item.id)}
-                    className="p-1.5 rounded-full text-zinc-500 hover:text-red-500 hover:bg-red-500/5 transition-all active:scale-90 cursor-pointer shrink-0 mt-1"
+                    className="p-1.5 rounded-full text-zinc-500 hover:text-red-500 hover:bg-red-500/5 transition-all active:scale-90 cursor-pointer shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     aria-label={isAr ? 'حذف المنتج' : 'Remove item'}
                   >
                     <Trash size={14} />
@@ -210,7 +213,7 @@ export default function CartDrawer() {
             </p>
 
             {/* Checkout CTA */}
-            <Button
+            <LuxuryButton
               href={`https://wa.me/962785050655?text=${encodeURIComponent(
                 (isAr ? 'مرحباً، أود إتمام هذا الطلب من DAHAB PERFUMES:\n\n' : 'Hello, I would like to complete this order from DAHAB PERFUMES:\n\n') +
                 cartItems.map(item => `- ${item.quantity}x ${isAr ? item.title_ar || item.title : item.title_en || item.title} (${(item.price * item.quantity).toFixed(2)} JOD)`).join('\n') +
@@ -220,16 +223,16 @@ export default function CartDrawer() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              variant="primary"
+              variant="whatsapp"
               className="w-full font-sans-ar uppercase tracking-[0.1em]"
-              icon={WhatsappLogo}
+              iconLeft={WhatsappLogo}
               fullWidth
             >
               {isAr ? 'إتمام الطلب عبر واتساب' : 'Checkout via WhatsApp'}
-            </Button>
+            </LuxuryButton>
 
             {/* View Full Cart */}
-            <Button
+            <LuxuryButton
               href="/cart"
               onClick={() => setCartOpen(false)}
               variant="ghost"
@@ -237,7 +240,7 @@ export default function CartDrawer() {
               fullWidth
             >
               {isAr ? 'عرض السلة الكاملة' : 'View Full Cart'}
-            </Button>
+            </LuxuryButton>
           </div>
         )}
       </div>

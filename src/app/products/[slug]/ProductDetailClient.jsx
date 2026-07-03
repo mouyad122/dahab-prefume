@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Drop, MapPin, ShieldCheck, Sparkle, WhatsappLogo
 import { LanguageContext } from '../../../contexts/LanguageContext';
 import { brandConfig } from '../../../config/brand';
 import { useCartStore } from '../../../stores/useCartStore';
-import Button from '../../../components/ui/Button';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
 
@@ -108,11 +108,12 @@ export default function ProductDetailClient({ product }) {
                   {sizes.map(size => (
                     <button
                       key={size.key}
+                      type="button"
                       onClick={() => setSelectedSize(size.key)}
-                      className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${
+                      className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] ${
                         selectedSize === size.key
-                          ? 'border-[var(--color-gold)] bg-[var(--color-gold-dim)] text-[var(--color-gold-light)]'
-                          : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white'
+                          ? 'border-[var(--color-gold)] bg-[var(--color-gold-dim)] text-[var(--color-gold-light)] shadow-[0_0_15px_rgba(196,154,68,0.2)]'
+                          : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)]'
                       }`}
                     >
                       {size.label} ({formatJOD(size.price)})
@@ -133,28 +134,28 @@ export default function ProductDetailClient({ product }) {
 
               <div className="flex flex-col sm:flex-row gap-3 mt-4">
                 {/* Add to Cart button */}
-                <Button
+                <LuxuryButton
                   onClick={handleAddToCart}
                   disabled={isOut}
                   variant="primary"
                   className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
-                  icon={ShoppingCart}
+                  iconLeft={ShoppingCart}
                 >
                   {isAr ? 'إضافة إلى السلة' : 'Add to Cart'}
-                </Button>
+                </LuxuryButton>
 
                 {/* Direct Whatsapp button */}
-                <Button
+                <LuxuryButton
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  variant="success"
+                  variant="whatsapp"
                   className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
-                  icon={WhatsappLogo}
+                  iconLeft={WhatsappLogo}
                   disabled={isOut}
                 >
                   {isAr ? 'اطلب سريعاً عبر واتساب' : 'Order via WhatsApp'}
-                </Button>
+                </LuxuryButton>
               </div>
             </div>
 
@@ -191,16 +192,16 @@ export default function ProductDetailClient({ product }) {
 
         <section className="product-final-cta text-center py-16 bg-black/10 rounded-3xl border border-[var(--color-border-subtle)] mt-16">
           <h2 className="text-xl font-bold text-white mb-4">{isAr ? 'غير متأكد أن العطر مناسب لذوقك؟' : 'Not sure this is your scent?'}</h2>
-          <Button 
+          <LuxuryButton 
             href={whatsappUrl} 
             target="_blank" 
             rel="noopener noreferrer" 
             variant="secondary"
             className="!py-3 !px-8 !text-xs inline-flex items-center gap-2"
+            iconRight={ArrowIcon}
           >
-            <span>{isAr ? 'استفسر من خبير العطور' : 'Ask a Dahab specialist'}</span>
-            <ArrowIcon size={15} />
-          </Button>
+            {isAr ? 'استفسر من خبير العطور' : 'Ask a Dahab specialist'}
+          </LuxuryButton>
         </section>
       </div>
     </main>

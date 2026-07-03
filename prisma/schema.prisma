@@ -294,3 +294,24 @@ model SecurityEvent {
   @@index([is_blocked])
   @@index([created_at])
 }
+
+// ============================================================
+// CONTACT INQUIRIES
+// ============================================================
+
+model ContactInquiry {
+  id         String   @id @default(uuid())
+  name       String
+  phone      String
+  type       String   @default("استفسار عام")
+  message    String
+  status     String   @default("new")
+  notes      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([created_at])
+}
+

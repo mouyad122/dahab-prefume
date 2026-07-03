@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { Lock, User, Warning, Globe } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 export default function Login() {
   const { language, toggleLanguage } = useContext(LanguageContext);
@@ -52,14 +53,15 @@ export default function Login() {
 
       {/* Top Bar for Language switching */}
       <div className="w-full max-w-7xl mx-auto flex justify-end z-10">
-        <button
+        <LuxuryButton
+          variant="outline"
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--color-border)] text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] hover:border-[var(--color-gold)] transition-all cursor-pointer focus-visible:outline-none"
+          className="!px-4 !py-2 rounded-full text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] hover:!text-[var(--color-gold)] hover:!border-[var(--color-gold)]"
           aria-label={isAr ? 'Switch to English' : 'تغيير للغة العربية'}
+          iconLeft={Globe}
         >
-          <Globe size={14} />
-          <span>{isAr ? 'English' : 'العربية'}</span>
-        </button>
+          {isAr ? 'English' : 'العربية'}
+        </LuxuryButton>
       </div>
 
       {/* Login Main Card - Double Bezel Layout */}
@@ -121,12 +123,13 @@ export default function Login() {
               </div>
 
               {/* Submit button */}
-              <button 
+              <LuxuryButton 
                 type="submit" 
-                className="w-full flex items-center justify-center bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full transition-all duration-300 hover:bg-[var(--color-gold-light)] hover:scale-[1.02] active:scale-[0.98] mt-3 shadow-lg cursor-pointer"
+                variant="primary"
+                className="w-full justify-center text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full mt-3 shadow-lg"
               >
                 {isAr ? 'تسجيل الدخول' : 'Sign In'}
-              </button>
+              </LuxuryButton>
             </form>
           </div>
         </div>

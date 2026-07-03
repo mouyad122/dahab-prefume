@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Printer, CalendarBlank, FileText } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminReports() {
   const [report, setReport] = useState(null);
@@ -107,13 +108,14 @@ export default function AdminReports() {
                 { id: 'this_week', label: 'هذا الأسبوع' },
                 { id: 'this_month', label: 'هذا الشهر' }
               ].map(p => (
-                <button
+                <LuxuryButton
                   key={p.id}
+                  variant={period === p.id ? 'primary' : 'ghost'}
                   onClick={() => setPeriod(p.id)}
-                  className={`px-4 py-1.5 rounded text-xs font-bold transition-colors ${period === p.id ? 'bg-[var(--color-gold)] text-black' : 'text-[var(--color-text-secondary)] hover:text-white'}`}
+                  className="!px-4 !py-1.5 rounded text-xs font-bold transition-colors"
                 >
                   {p.label}
-                </button>
+                </LuxuryButton>
               ))}
             </div>
           </div>
@@ -156,10 +158,9 @@ export default function AdminReports() {
             <div className="glass-card border border-[var(--color-border-strong)] rounded-lg overflow-hidden bg-[var(--color-bg-surface)] no-print">
               <div className="p-4 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex justify-between items-center">
                 <h3 className="font-bold text-white">تفاصيل المبيعات</h3>
-                <button onClick={() => window.print()} className="btn-secondary text-xs py-1.5 px-3">
-                  <Printer size={16} />
-                  <span>طباعة التقرير</span>
-                </button>
+                <LuxuryButton variant="secondary" onClick={() => window.print()} className="text-xs !py-1.5 px-3" iconLeft={Printer}>
+                  طباعة التقرير
+                </LuxuryButton>
               </div>
               
               <div className="overflow-x-auto">

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Palette, Translate, MapPin, WhatsappLogo, Storefront, DeviceMobile, FloppyDisk, X, Image as ImageIcon } from '@phosphor-icons/react';
-import Button from '../../../components/ui/Button';
+import { Palette, Translate, MapPin, WhatsappLogo, Storefront, DeviceMobile, FloppyDisk, X, Image as ImageIcon, Desktop, Clock } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -57,7 +57,11 @@ export default function AdminSettings() {
         { key: 'whatsapp_number', value: formData.whatsapp_number || '', category: 'contact' },
         { key: 'phone_primary', value: formData.phone_primary || '', category: 'contact' },
         { key: 'address_ar', value: formData.address_ar || '', category: 'contact' },
-        { key: 'address_en', value: formData.address_en || '', category: 'contact' }
+        { key: 'address_en', value: formData.address_en || '', category: 'contact' },
+        { key: 'pos_idle_enabled', value: formData.pos_idle_enabled !== undefined ? String(formData.pos_idle_enabled) : 'true', category: 'pos', value_type: 'boolean' },
+        { key: 'pos_idle_timeout_minutes', value: formData.pos_idle_timeout_minutes || '4', category: 'pos', value_type: 'number' },
+        { key: 'pos_idle_show_clock', value: formData.pos_idle_show_clock !== undefined ? String(formData.pos_idle_show_clock) : 'true', category: 'pos', value_type: 'boolean' },
+        { key: 'pos_idle_require_pin', value: formData.pos_idle_require_pin !== undefined ? String(formData.pos_idle_require_pin) : 'false', category: 'pos', value_type: 'boolean' }
       ]
     };
 
@@ -106,14 +110,14 @@ export default function AdminSettings() {
         </div>
         <div className="flex items-center gap-3">
           {hasChanges && (
-            <Button variant="ghost" onClick={handleDiscard} disabled={saving} className="!text-red-400 hover:!bg-red-500/10">
+            <LuxuryButton variant="ghost" onClick={handleDiscard} disabled={saving} className="!text-red-400 hover:!bg-red-500/10">
               <X size={18} className="mr-2" /> التراجع
-            </Button>
+            </LuxuryButton>
           )}
-          <Button variant="primary" onClick={handlePublish} disabled={saving || !hasChanges}>
+          <LuxuryButton variant="primary" onClick={handlePublish} disabled={saving || !hasChanges}>
             <FloppyDisk size={18} className="mr-2" />
             {saving ? 'جاري الحفظ...' : 'نشر التغييرات'}
-          </Button>
+          </LuxuryButton>
         </div>
       </div>
 
@@ -126,7 +130,8 @@ export default function AdminSettings() {
               { id: 'general', icon: Storefront, label: 'إعدادات عامة' },
               { id: 'hero', icon: ImageIcon, label: 'قسم الهيرو (الرئيسية)' },
               { id: 'contact', icon: WhatsappLogo, label: 'التواصل والموقع' },
-              { id: 'theme', icon: Palette, label: 'المظهر والألوان' }
+              { id: 'theme', icon: Palette, label: 'المظهر والألوان' },
+              { id: 'pos', icon: Desktop, label: 'إعدادات الكاشير (POS)' }
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -263,6 +268,87 @@ export default function AdminSettings() {
                     <div className="w-full h-12 rounded border border-[var(--color-border)] bg-[#D6B878] mb-2"></div>
                     <div className="text-xs text-center text-[var(--color-text-muted)] font-mono">#D6B878<br/>Soft Gold</div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'pos' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="text-lg font-bold text-[var(--color-gold-light)] mb-6 font-display border-b border-[var(--color-border)] pb-2 flex items-center gap-2">
+                <Desktop size={20} />
+                إعدادات الكاشير وشاشة التوقف (POS)
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+                  <div>
+                    <label className="font-bold text-sm block">تفعيل شاشة التوقف</label>
+                    <span className="text-xs text-[var(--color-text-muted)]">إظهار شاشة توقف فاخرة عند خمول نقطة البيع</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={formData.pos_idle_enabled !== false && formData.pos_idle_enabled !== 'false'}
+                      onChange={e => handleChange('pos_idle_enabled', e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-[var(--color-bg-surface)] peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-gold)]"></div>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="form-label flex items-center gap-2">
+                    <Clock size={16} /> <span>مدة الخمول (بالدقائق)</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="60" 
+                    className="form-input text-center" 
+                    value={formData.pos_idle_timeout_minutes || '4'} 
+                    onChange={e => {
+                      let val = parseInt(e.target.value);
+                      if (isNaN(val)) val = 4;
+                      if (val < 1) val = 1;
+                      if (val > 60) val = 60;
+                      handleChange('pos_idle_timeout_minutes', val);
+                    }} 
+                  />
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">وقت عدم الاستخدام قبل ظهور شاشة التوقف (1 - 60 دقيقة)</p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+                  <div>
+                    <label className="font-bold text-sm block">عرض الساعة</label>
+                    <span className="text-xs text-[var(--color-text-muted)]">إظهار الوقت الحالي في شاشة التوقف</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={formData.pos_idle_show_clock !== false && formData.pos_idle_show_clock !== 'false'}
+                      onChange={e => handleChange('pos_idle_show_clock', e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-[var(--color-bg-surface)] peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-gold)]"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] opacity-60">
+                  <div>
+                    <label className="font-bold text-sm block">طلب رمز PIN بعد الخمول</label>
+                    <span className="text-xs text-[var(--color-text-muted)]">(ميزة مستقبلية) إغلاق الشاشة برقم سري</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-not-allowed">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={formData.pos_idle_require_pin === true || formData.pos_idle_require_pin === 'true'}
+                      onChange={e => handleChange('pos_idle_require_pin', e.target.checked)}
+                      disabled
+                    />
+                    <div className="w-11 h-6 bg-[var(--color-bg-surface)] peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-gold)]"></div>
+                  </label>
                 </div>
               </div>
             </div>

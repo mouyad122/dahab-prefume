@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Plus, PencilSimple, Trash, ShieldCheck, XCircle, X } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 const PERMISSION_KEYS = [
   { key: 'can_access_counter', label: 'الوصول لكاونتر البيع' },
@@ -150,13 +151,14 @@ export default function AdminEmployees() {
             إدارة حسابات وصلاحيات موظفي المبيعات والمدراء
           </p>
         </div>
-        <button 
-          className="btn-primary text-sm flex items-center gap-2"
+        <LuxuryButton 
+          variant="primary"
+          className="text-sm flex items-center gap-2"
           onClick={handleOpenAddModal}
+          iconLeft={Plus}
         >
-          <Plus size={16} />
-          <span>موظف جديد</span>
-        </button>
+          موظف جديد
+        </LuxuryButton>
       </div>
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -212,20 +214,22 @@ export default function AdminEmployees() {
                     </td>
                     <td className="py-3 px-5">
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          className="text-[var(--color-text-muted)] hover:text-[var(--color-gold)] p-1 transition-colors" 
+                        <LuxuryButton 
+                          variant="icon"
+                          className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] transition-colors border-none" 
                           title="تعديل"
                           onClick={() => handleOpenEditModal(emp)}
                         >
                           <PencilSimple size={18} />
-                        </button>
-                        <button 
-                          className={`p-1 transition-colors ${emp.is_active ? 'text-red-400 hover:text-red-500' : 'text-[#5ddb85] hover:text-[#43c46e]'}`}
+                        </LuxuryButton>
+                        <LuxuryButton 
+                          variant="icon"
+                          className={`!p-1 !w-auto !h-auto !min-h-0 !min-w-0 transition-colors border-none ${emp.is_active ? 'text-red-400 hover:!text-red-500' : 'text-[#5ddb85] hover:!text-[#43c46e]'}`}
                           title={emp.is_active ? 'تعطيل الحساب' : 'تفعيل الحساب'}
                           onClick={() => handleToggleActive(emp.id, emp.is_active)}
                         >
                           {emp.is_active ? <Trash size={18} /> : <ShieldCheck size={18} />}
-                        </button>
+                        </LuxuryButton>
                       </div>
                     </td>
                   </tr>
@@ -244,9 +248,9 @@ export default function AdminEmployees() {
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
                 {editEmployeeId ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}
               </h2>
-              <button type="button" className="text-[var(--color-text-muted)] hover:text-white" onClick={() => setIsModalOpen(false)}>
+              <LuxuryButton variant="icon" className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-white border-none rounded-full" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="space-y-4">
@@ -323,8 +327,8 @@ export default function AdminEmployees() {
             </div>
 
             <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
-              <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={() => setIsModalOpen(false)}>إلغاء</button>
-              <button type="submit" className="btn-primary px-4 py-2 text-sm">حفظ البيانات</button>
+              <LuxuryButton variant="secondary" className="px-4 py-2 text-sm" onClick={() => setIsModalOpen(false)}>إلغاء</LuxuryButton>
+              <LuxuryButton type="submit" variant="primary" className="px-4 py-2 text-sm">حفظ البيانات</LuxuryButton>
             </div>
           </form>
         </div>

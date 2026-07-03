@@ -6,6 +6,7 @@ import { LanguageContext } from '../../contexts/LanguageContext';
 import { StorageService } from '../../services/StorageService';
 import Link from 'next/link';
 import { WhatsappLogo, CheckCircle, Truck, ShieldCheck, ArrowRight, Copy, Check } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 export default function OrderSuccess() {
   const { language, t } = useContext(LanguageContext);
@@ -48,7 +49,7 @@ export default function OrderSuccess() {
         <p className="text-xs text-[var(--color-text-secondary)] max-w-sm">
           {isAr ? 'تأكد من أنك وصلت لهذه الصفحة من خلال إتمام طلب صحيح.' : 'Please make sure you arrived here from a valid checkout.'}
         </p>
-        <Link href="/shop" className="btn-primary mt-2">{t('backToShop')}</Link>
+        <LuxuryButton href="/shop" variant="primary" className="mt-2">{t('backToShop')}</LuxuryButton>
       </div>
     );
   }
@@ -137,15 +138,16 @@ ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Card Payment'}`;
       </div>
 
       {/* Primary CTA: WhatsApp Confirmation */}
-      <a 
+      <LuxuryButton 
         href={compileWhatsAppUrl()}
         target="_blank" 
         rel="noopener noreferrer" 
-        className="group relative flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-sm font-bold uppercase tracking-[0.15em] py-5 px-10 rounded-full transition-all duration-300 hover:scale-105 active:scale-[0.98] shadow-lg w-full max-w-md"
+        variant="whatsapp"
+        className="w-full max-w-md uppercase tracking-[0.15em] !py-5 px-10 rounded-full text-sm font-bold shadow-lg !text-white"
+        iconLeft={(props) => <WhatsappLogo size={22} weight="bold" {...props} />}
       >
-        <WhatsappLogo size={22} weight="bold" />
-        <span>{isAr ? 'تأكيد الطلب عبر واتساب' : 'Confirm on WhatsApp'}</span>
-      </a>
+        {isAr ? 'تأكيد الطلب عبر واتساب' : 'Confirm on WhatsApp'}
+      </LuxuryButton>
 
       {/* Main Order Success Frame - Double Bezel Card */}
       <div className="rounded-[3rem] bg-black/5 dark:bg-white/5 p-2.5 ring-1 ring-black/5 dark:ring-white/10 w-full max-w-4xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
@@ -162,13 +164,14 @@ ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Card Payment'}`;
                 <h4 className="font-sans-en text-lg font-bold text-[var(--color-text-primary)]">
                   {order.orderId}
                 </h4>
-                <button 
+                <LuxuryButton 
+                  variant="icon"
                   onClick={handleCopyOrderId}
-                  className="p-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] hover:border-[var(--color-gold)] transition-all active:scale-95 cursor-pointer"
+                  className="!p-1.5 !w-auto !h-auto !min-h-0 !min-w-0 rounded-lg text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] hover:border-[var(--color-gold)] transition-all cursor-pointer"
                   aria-label={isAr ? 'نسخ رقم الطلب' : 'Copy order ID'}
                 >
                   {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                </button>
+                </LuxuryButton>
               </div>
               <span className="text-[9px] text-zinc-500 font-light block mt-1">
                 {isAr ? 'التاريخ:' : 'Date:'} {order.orderDate}
@@ -257,13 +260,15 @@ ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Card Payment'}`;
 
       {/* Secondary CTAs */}
       <div className="flex flex-col sm:flex-row gap-4 mt-4 items-center justify-center w-full max-w-md">
-        <Link 
+        <LuxuryButton 
           href="/shop" 
-          className="btn-secondary py-4 px-8 text-center flex items-center justify-center gap-2 w-full"
+          variant="secondary"
+          fullWidth
+          className="py-4 px-8 flex items-center justify-center text-center"
+          iconRight={ArrowRight}
         >
-          <span>{isAr ? 'متابعة التسوق' : 'Continue Shopping'}</span>
-          <ArrowRight size={14} weight="bold" />
-        </Link>
+          {isAr ? 'متابعة التسوق' : 'Continue Shopping'}
+        </LuxuryButton>
       </div>
 
     </div>

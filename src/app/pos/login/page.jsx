@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function PosLogin() {
   const [username, setUsername] = useState('');
@@ -106,13 +107,16 @@ export default function PosLogin() {
             />
           </div>
           
-          <button 
+          <LuxuryButton 
             type="submit" 
-            className="btn-primary mt-4 w-full h-12 text-base shadow-[var(--shadow-gold)]"
+            variant="primary"
+            fullWidth
+            className="mt-4 h-12 text-base shadow-[var(--shadow-gold)]"
             disabled={loading}
+            loading={loading}
           >
-            {loading ? <div className="spinner"></div> : 'تسجيل الدخول'}
-          </button>
+            تسجيل الدخول
+          </LuxuryButton>
         </form>
 
         <div className="mt-10 text-center text-xs text-[var(--color-text-muted)] border-t border-[var(--color-border)] pt-6">

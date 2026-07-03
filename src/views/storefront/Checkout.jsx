@@ -8,6 +8,7 @@ import { useCartStore } from '../../stores/useCartStore';
 import { useOrderStore } from '../../stores/useOrderStore';
 import { StorageService } from '../../services/StorageService';
 import { Truck, ShieldCheck, WhatsappLogo, Info, ArrowLeft, CheckCircle, Warning } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 // Sanitize input to prevent XSS
 const sanitize = (str) => {
@@ -201,7 +202,7 @@ export default function Checkout() {
         <p className="text-xs text-[var(--color-text-secondary)] max-w-sm">
           {isAr ? 'أضف عطورك المفضلة إلى السلة أولاً ثم عد هنا لإتمام الطلب.' : 'Add your favorite fragrances to the cart first, then return here to complete your order.'}
         </p>
-        <Link href="/shop" className="btn-primary mt-2">{t('backToShop')}</Link>
+        <LuxuryButton href="/shop" variant="primary" className="mt-2">{t('backToShop')}</LuxuryButton>
       </div>
     );
   }
@@ -223,13 +224,14 @@ export default function Checkout() {
       </div>
 
       {/* Back to cart */}
-      <Link 
+      <LuxuryButton 
         href="/cart" 
-        className="text-[10px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] uppercase tracking-wider flex items-center gap-1.5 self-start transition-colors"
+        variant="ghost"
+        className="!text-[10px] font-bold !text-[var(--color-text-secondary)] hover:!text-[var(--color-gold)] uppercase tracking-wider self-start"
+        iconLeft={ArrowLeft}
       >
-        <ArrowLeft size={12} weight="bold" />
-        <span>{isAr ? 'العودة للسلة' : 'Back to Cart'}</span>
-      </Link>
+        {isAr ? 'العودة للسلة' : 'Back to Cart'}
+      </LuxuryButton>
 
       {/* Split column checkout layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -505,32 +507,30 @@ export default function Checkout() {
             </div>
 
             {/* Submit Button - connected to form */}
-            <button 
+            <LuxuryButton 
               type="submit"
               form="checkout-form"
               disabled={paymentMethod === 'card' || isSubmitting}
-              className="w-full flex items-center justify-center gap-3 bg-[var(--color-gold)] text-black text-xs font-bold uppercase tracking-[0.15em] py-4 rounded-full transition-all duration-300 hover:bg-[var(--color-gold-light)] hover:scale-[1.02] active:scale-[0.98] mt-2 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[var(--color-gold)] disabled:hover:scale-100"
+              loading={isSubmitting}
+              variant="primary"
+              fullWidth
+              className="text-xs font-bold uppercase tracking-[0.15em] !py-4 rounded-full mt-2"
+              iconLeft={CheckCircle}
             >
-              {isSubmitting ? (
-                <span className="animate-pulse">{isAr ? 'جاري التأكيد...' : 'Processing...'}</span>
-              ) : (
-                <>
-                  <CheckCircle size={18} weight="bold" />
-                  <span>{isAr ? 'تأكيد وحفظ الطلب' : 'Confirm & Place Order'}</span>
-                </>
-              )}
-            </button>
+              {isSubmitting ? (isAr ? 'جاري التأكيد...' : 'Processing...') : (isAr ? 'تأكيد وحفظ الطلب' : 'Confirm & Place Order')}
+            </LuxuryButton>
 
             {/* WhatsApp alternative */}
-            <a 
+            <LuxuryButton 
               href={`https://wa.me/962785050655?text=${encodeURIComponent(isAr ? 'مرحباً، أحتاج مساعدة لإتمام طلبي من DAHAB PERFUMES.' : 'Hello, I need help completing my DAHAB PERFUMES order.')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#25D366] hover:text-[#20ba59] transition-colors"
+              variant="ghost"
+              className="!text-[10px] font-bold uppercase tracking-wider !text-[#25D366] hover:!text-[#20ba59]"
+              iconLeft={(props) => <WhatsappLogo size={14} weight="bold" {...props} />}
             >
-              <WhatsappLogo size={14} weight="bold" />
-              <span>{isAr ? 'أو أكمل طلبك عبر واتساب' : 'Or complete via WhatsApp'}</span>
-            </a>
+              {isAr ? 'أو أكمل طلبك عبر واتساب' : 'Or complete via WhatsApp'}
+            </LuxuryButton>
 
           </div>
         </div>

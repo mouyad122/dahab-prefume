@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import LuxuryButton from '../ui/LuxuryButton';
 
 export default function ImageUpload({ value, onChange, label = 'Image', className = '' }) {
   const [isUploading, setIsUploading] = useState(false);
@@ -78,14 +79,15 @@ export default function ImageUpload({ value, onChange, label = 'Image', classNam
           {value ? (
             <>
               <img src={value} alt="Preview" className="w-full h-full object-cover" />
-              <button
+              <LuxuryButton
                 type="button"
+                variant="icon"
                 onClick={handleRemove}
-                className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove image"
+                className="absolute top-1 right-1 !w-6 !h-6 !min-h-0 !min-w-0 !p-1 bg-red-500/80 hover:!bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-md"
+                aria-label="Remove image"
               >
                 <X size={14} />
-              </button>
+              </LuxuryButton>
             </>
           ) : (
             <ImageIcon size={32} className="text-gray-500" />
@@ -93,7 +95,7 @@ export default function ImageUpload({ value, onChange, label = 'Image', classNam
           
           {isUploading && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-              <Loader2 className="w-6 h-6 text-yellow-500 animate-spin" />
+              <Loader2 className="w-6 h-6 text-[var(--color-gold)] animate-spin" />
             </div>
           )}
         </div>
@@ -109,13 +111,16 @@ export default function ImageUpload({ value, onChange, label = 'Image', classNam
             id={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
           />
           
-          <label
-            htmlFor={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm rounded-lg border border-gray-700 cursor-pointer transition-colors w-fit"
+          <LuxuryButton
+            type="button"
+            variant="admin"
+            size="sm"
+            onClick={() => document.getElementById(`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`).click()}
+            className="w-fit"
+            iconLeft={(props) => <Upload size={16} {...props} />}
           >
-            <Upload size={16} />
             {isUploading ? 'Uploading...' : (value ? 'Change Image' : 'Upload Image')}
-          </label>
+          </LuxuryButton>
           
           <p className="text-xs text-gray-500 mt-1 max-w-[200px]">
             Supported formats: JPG, PNG, WEBP. Max size: 5MB.

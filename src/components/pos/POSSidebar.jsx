@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Storefront, Receipt, FileText, SignOut } from '@phosphor-icons/react';
 import { usePosContext } from '../../contexts/PosContext';
+import LuxuryButton from '../ui/LuxuryButton';
 
 export default function POSSidebar() {
   const pathname = usePathname();
@@ -80,13 +81,15 @@ export default function POSSidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-[var(--color-border)]">
-        <button
+        <LuxuryButton
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 p-3 rounded-md text-sm font-bold text-[#f97171] hover:bg-[rgba(180,30,30,0.08)] border border-transparent hover:border-[#f97171]/30 transition-colors"
+          variant="ghost"
+          fullWidth
+          className="!text-[#f97171] hover:!bg-[rgba(180,30,30,0.08)] hover:!border-[#f97171]/30"
+          iconLeft={(props) => <SignOut size={18} weight="bold" {...props} />}
         >
-          <SignOut size={18} weight="bold" />
-          <span>تسجيل خروج</span>
-        </button>
+          تسجيل خروج
+        </LuxuryButton>
       </div>
     </aside>
   );

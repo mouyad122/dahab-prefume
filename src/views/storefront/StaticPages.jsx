@@ -113,7 +113,7 @@ export default function StaticPages() {
           <p className="text-sm md:text-base text-[var(--color-text-secondary)] font-light leading-relaxed dir-auto whitespace-pre-line">
             {content.desc}
           </p>
-          {(pathname === '/store-location' || pathname === '/contact') && (
+          {pathname === '/store-location' && (
             <div className="mt-4 flex flex-col gap-4">
               <div className="relative h-[250px] md:h-[350px] rounded-2xl overflow-hidden border border-[var(--color-border)]">
                 <iframe 

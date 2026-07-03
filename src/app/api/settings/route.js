@@ -81,7 +81,7 @@ export async function POST(request) {
     }
 
     const VALID_TYPES      = ['string', 'number', 'boolean', 'json', 'color', 'url'];
-    const VALID_CATEGORIES = ['colors', 'content', 'social', 'hours', 'general', 'branding', 'contact', 'hero', 'layout'];
+    const VALID_CATEGORIES = ['colors', 'content', 'social', 'hours', 'general', 'branding', 'contact', 'hero', 'layout', 'pos'];
 
     // Perform all upserts in a transaction
     await prisma.$transaction(

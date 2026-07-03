@@ -6,8 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   ChartBar, Package, Tag, UsersThree, Coins, 
   Warehouse, Percent, Gear, ShieldWarning, 
-  FileText, SignOut, List, X, CaretDown, Sparkle, Storefront
+  FileText, SignOut, List, X, CaretDown, Sparkle, Storefront, ChatTeardropText
 } from '@phosphor-icons/react';
+import LuxuryButton from '../ui/LuxuryButton';
+
 
 export default function AdminSidebar({ user, open, setOpen }) {
   const pathname = usePathname();
@@ -79,6 +81,7 @@ export default function AdminSidebar({ user, open, setOpen }) {
         { path: '/admin/categories', label: 'الأقسام', icon: Tag, show: isSuperAdmin || perms.can_manage_products },
         { path: '/admin/inventory', label: 'المخزون', icon: Warehouse, show: isSuperAdmin || perms.can_view_inventory || perms.can_manage_products },
         { path: '/admin/discounts', label: 'العروض والخصومات', icon: Percent, show: isSuperAdmin || perms.can_manage_products },
+        { path: '/admin/inquiries', label: 'الاستفسارات والرسائل', icon: ChatTeardropText, show: isSuperAdmin || perms.can_view_settings || perms.can_manage_products },
       ]
     },
     { 
@@ -136,9 +139,13 @@ export default function AdminSidebar({ user, open, setOpen }) {
               ADMIN PANEL
             </span>
           </Link>
-          <button className="lg:hidden icon-btn" onClick={() => setOpen(false)}>
+          <LuxuryButton 
+            variant="icon" 
+            className="lg:hidden" 
+            onClick={() => setOpen(false)}
+          >
             <X size={20} />
-          </button>
+          </LuxuryButton>
         </div>
 
         {/* Navigation */}
@@ -202,13 +209,15 @@ export default function AdminSidebar({ user, open, setOpen }) {
               </div>
             </div>
           </div>
-          <button
+          <LuxuryButton
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-[var(--radius-md)] text-sm font-semibold text-[#f97171] hover:bg-[rgba(180,30,30,0.12)] border border-transparent hover:border-[rgba(180,30,30,0.3)] transition-colors"
+            variant="ghost"
+            fullWidth
+            className="!text-[#f97171] hover:!bg-[rgba(180,30,30,0.12)] hover:!border-[rgba(180,30,30,0.3)]"
+            iconLeft={(props) => <SignOut size={18} weight="bold" {...props} />}
           >
-            <SignOut size={18} weight="bold" />
-            <span>تسجيل الخروج</span>
-          </button>
+            تسجيل الخروج
+          </LuxuryButton>
         </div>
       </aside>
     </>

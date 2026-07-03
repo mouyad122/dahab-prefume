@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, ArrowLeft, ShoppingCart, WhatsappLogo } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
+import LuxuryButton from '../ui/LuxuryButton';
 
 const FEATURED_PRODUCTS = [
   {
@@ -92,9 +93,13 @@ export default function FeaturedProductSection() {
                 <div className="product-image-wrap relative">
                   <img src={product.image} alt={product.name[language]} />
                   <div className="absolute bottom-2 right-2">
-                    <button className="icon-btn bg-[var(--color-bg-card)]/80 backdrop-blur-sm border-[var(--color-border)] shadow-md text-[var(--color-text-primary)] hover:bg-[var(--color-gold)] hover:text-black">
+                    <LuxuryButton 
+                      variant="icon" 
+                      className="bg-[var(--color-bg-card)]/80 backdrop-blur-sm border-[var(--color-border)] shadow-md text-[var(--color-text-primary)] hover:bg-[var(--color-gold)] hover:text-black hover:border-[var(--color-gold)]"
+                      aria-label="Add to cart"
+                    >
                       <ShoppingCart size={18} />
-                    </button>
+                    </LuxuryButton>
                   </div>
                 </div>
               </Link>
@@ -111,16 +116,18 @@ export default function FeaturedProductSection() {
                   <span className="font-semibold text-[var(--color-gold)]">
                     {formatPrice(product.price_fils)}
                   </span>
-                  <a
+                  <LuxuryButton
+                    variant="whatsapp"
+                    size="sm"
                     href={`https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(`أريد طلب: ${product.name.ar} - ${product.name.en}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[0.7rem] font-bold text-[#5ddb85] hover:text-white transition-colors flex items-center gap-1 bg-[#5ddb85]/10 px-2 py-1 rounded"
+                    className="h-8 min-h-[32px] px-3 py-1 text-[0.7rem] gap-1"
                     onClick={(e) => e.stopPropagation()}
+                    iconLeft={() => <WhatsappLogo weight="fill" size={14} />}
                   >
-                    <WhatsappLogo weight="fill" />
-                    <span>{isAr ? 'اطلب' : 'Order'}</span>
-                  </a>
+                    {isAr ? 'اطلب' : 'Order'}
+                  </LuxuryButton>
                 </div>
               </div>
             </div>
@@ -129,10 +136,14 @@ export default function FeaturedProductSection() {
 
         {/* View All Button */}
         <div className={`mt-12 flex justify-center ${visible ? 'reveal-up' : 'opacity-0'}`} style={{ animationDelay: '0.5s' }}>
-          <Link href="/shop" className="btn-secondary group px-8">
-            <span>{isAr ? 'عرض جميع المنتجات' : 'View All Products'}</span>
-            <Arrow size={16} weight="bold" className="transition-transform group-hover:translate-x-1" />
-          </Link>
+          <LuxuryButton 
+            variant="secondary" 
+            href="/shop" 
+            className="px-8 group"
+            iconRight={(props) => <Arrow {...props} className="transition-transform group-hover:translate-x-1" />}
+          >
+            {isAr ? 'عرض جميع المنتجات' : 'View All Products'}
+          </LuxuryButton>
         </div>
       </div>
     </section>

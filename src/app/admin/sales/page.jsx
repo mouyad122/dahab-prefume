@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DownloadSimple, MagnifyingGlass, Funnel, CalendarBlank, Eye } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminSales() {
   const [sales, setSales] = useState([]);
@@ -46,10 +47,9 @@ export default function AdminSales() {
             عرض وتتبع جميع مبيعات المتجر
           </p>
         </div>
-        <button className="btn-secondary text-sm flex items-center gap-2">
-          <DownloadSimple size={16} />
-          <span>تصدير البيانات</span>
-        </button>
+        <LuxuryButton variant="secondary" className="text-sm flex items-center gap-2" iconLeft={DownloadSimple}>
+          تصدير البيانات
+        </LuxuryButton>
       </div>
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -66,10 +66,9 @@ export default function AdminSales() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <button className="btn-secondary py-2 px-4 text-sm w-full sm:w-auto flex items-center gap-2 justify-center">
-            <Funnel size={16} />
-            <span>تصفية (التاريخ / الموظف)</span>
-          </button>
+          <LuxuryButton variant="secondary" className="!py-2 px-4 text-sm w-full sm:w-auto justify-center" iconLeft={Funnel}>
+            تصفية (التاريخ / الموظف)
+          </LuxuryButton>
         </div>
 
         {/* Table */}
@@ -126,13 +125,14 @@ export default function AdminSales() {
                       )}
                     </td>
                     <td className="py-3 px-5 text-left">
-                      <button 
+                      <LuxuryButton 
+                        variant="icon"
                         onClick={() => setSelectedSale(sale)}
-                        className="text-[var(--color-text-muted)] hover:text-[var(--color-gold)] p-1 opacity-0 group-hover:opacity-100 transition-opacity" 
+                        className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] opacity-0 group-hover:opacity-100 transition-opacity border-none" 
                         title="عرض التفاصيل"
                       >
                         <Eye size={18} />
-                      </button>
+                      </LuxuryButton>
                     </td>
                   </tr>
                 ))}
@@ -150,12 +150,13 @@ export default function AdminSales() {
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
                 تفاصيل الفاتورة - {selectedSale.invoice_number}
               </h2>
-              <button 
+              <LuxuryButton 
+                variant="ghost"
                 onClick={() => setSelectedSale(null)} 
-                className="text-[var(--color-text-muted)] hover:text-white text-sm"
+                className="text-sm !p-2 !w-auto !h-auto !min-h-0 !min-w-0"
               >
                 إغلاق
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">

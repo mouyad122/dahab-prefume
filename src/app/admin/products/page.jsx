@@ -11,6 +11,7 @@ import {
   ImageSquare
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 function formatJOD(fils) {
   const value = Number.isFinite(fils) ? fils : 0;
@@ -257,13 +258,14 @@ export default function AdminProducts() {
             إضافة وتعديل عطور المتجر ومتابعة الكميات والأسعار
           </p>
         </div>
-        <button 
-          className="btn-primary text-sm flex items-center gap-2"
+        <LuxuryButton 
+          variant="primary"
+          className="text-sm flex items-center gap-2"
           onClick={handleOpenAddModal}
+          iconLeft={Plus}
         >
-          <Plus size={16} />
-          <span>إضافة عطر جديد</span>
-        </button>
+          إضافة عطر جديد
+        </LuxuryButton>
       </div>
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex flex-col overflow-hidden min-h-[520px] flex-1 bg-[var(--color-bg-surface)]">
@@ -278,10 +280,9 @@ export default function AdminProducts() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <button className="btn-secondary py-2 px-4 text-sm w-full sm:w-auto flex items-center gap-2 justify-center">
-            <Funnel size={16} />
-            <span>تصفية</span>
-          </button>
+          <LuxuryButton variant="secondary" className="!py-2 px-4 text-sm w-full sm:w-auto justify-center" iconLeft={Funnel}>
+            تصفية
+          </LuxuryButton>
         </div>
 
         <div className="flex-1 overflow-auto">
@@ -343,20 +344,22 @@ export default function AdminProducts() {
                       </td>
                       <td className="py-3 px-5">
                         <div className="flex items-center gap-2">
-                          <button 
-                            className="text-[var(--color-text-muted)] hover:text-[var(--color-gold)] p-1 transition-colors" 
+                          <LuxuryButton 
+                            variant="icon"
+                            className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] transition-colors border-none" 
                             title="تعديل"
                             onClick={(e) => handleOpenEditModal(e, product)}
                           >
                             <PencilSimple size={18} />
-                          </button>
-                          <button 
-                            className="text-[var(--color-text-muted)] hover:text-red-400 p-1 transition-colors" 
+                          </LuxuryButton>
+                          <LuxuryButton 
+                            variant="icon"
+                            className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-red-400 transition-colors border-none" 
                             title="حذف"
                             onClick={(e) => handleDeleteProduct(e, product.id)}
                           >
                             <Trash size={18} />
-                          </button>
+                          </LuxuryButton>
                         </div>
                       </td>
                     </tr>
@@ -376,9 +379,9 @@ export default function AdminProducts() {
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
                 {formProductId ? 'تعديل بيانات العطر' : 'إضافة عطر جديد'}
               </h2>
-              <button type="button" className="text-[var(--color-text-muted)] hover:text-white" onClick={() => setIsFormOpen(false)}>
+              <LuxuryButton variant="icon" className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 text-[var(--color-text-muted)] hover:!text-white border-none rounded-full" onClick={() => setIsFormOpen(false)}>
                 <X size={20} />
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="space-y-4">
@@ -656,8 +659,8 @@ export default function AdminProducts() {
             </div>
 
             <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
-              <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={() => setIsFormOpen(false)}>إلغاء</button>
-              <button type="submit" className="btn-primary px-4 py-2 text-sm">حفظ المنتج</button>
+              <LuxuryButton variant="secondary" className="px-4 py-2 text-sm" onClick={() => setIsFormOpen(false)}>إلغاء</LuxuryButton>
+              <LuxuryButton type="submit" variant="primary" className="px-4 py-2 text-sm">حفظ المنتج</LuxuryButton>
             </div>
           </form>
         </div>

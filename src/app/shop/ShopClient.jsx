@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FadersHorizontal, MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import ProductCard from '../../components/product/ProductCard';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=700';
 
@@ -83,14 +84,23 @@ export default function ShopClient({ initialProducts }) {
           />
         </div>
         <div className="category-strip">
-          <button onClick={() => setCategory('all')} className={category === 'all' ? 'active' : ''}>
-            <FadersHorizontal size={15} />
+          <LuxuryButton 
+            onClick={() => setCategory('all')} 
+            variant={category === 'all' ? 'primary' : 'outline'}
+            className="!rounded-full !py-2 !px-5 text-sm"
+            iconLeft={FadersHorizontal}
+          >
             {isAr ? 'الكل' : 'All'}
-          </button>
+          </LuxuryButton>
           {categories.map((item) => (
-            <button key={item.id} onClick={() => setCategory(item.id)} className={category === item.id ? 'active' : ''}>
+            <LuxuryButton 
+              key={item.id} 
+              onClick={() => setCategory(item.id)} 
+              variant={category === item.id ? 'primary' : 'outline'}
+              className="!rounded-full !py-2 !px-5 text-sm"
+            >
               {isAr ? item.name_ar : item.name_en}
-            </button>
+            </LuxuryButton>
           ))}
         </div>
       </section>

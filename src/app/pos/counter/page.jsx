@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlass, Plus, Minus, X, CheckCircle, Printer, ArrowRight, Receipt, Package, ShoppingCart } from '@phosphor-icons/react';
 import { usePosContext } from '../../../contexts/PosContext';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function PosCounter() {
   const { employee } = usePosContext();
@@ -196,14 +197,12 @@ export default function PosCounter() {
           </div>
 
           <div className="flex gap-4">
-            <button onClick={printInvoice} className="btn-secondary flex-1">
-              <Printer size={20} />
-              <span>طباعة الفاتورة</span>
-            </button>
-            <button onClick={resetNewSale} className="btn-primary flex-1">
-              <span>فاتورة جديدة</span>
-              <ArrowRight size={20} />
-            </button>
+            <LuxuryButton onClick={printInvoice} variant="secondary" className="flex-1" iconLeft={Printer}>
+              طباعة الفاتورة
+            </LuxuryButton>
+            <LuxuryButton onClick={resetNewSale} variant="primary" className="flex-1" iconRight={ArrowRight}>
+              فاتورة جديدة
+            </LuxuryButton>
           </div>
         </div>
 
@@ -302,6 +301,7 @@ export default function PosCounter() {
                   onClick={() => addToCart(product)}
                   disabled={outOfStock}
                   className={`pos-product-btn flex flex-col gap-2 ${outOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  type="button"
                 >
                   <div className="w-full aspect-square rounded-md overflow-hidden bg-black/40 border border-[var(--color-border-subtle)] relative">
                     {product.image_filename ? (
@@ -353,21 +353,25 @@ export default function PosCounter() {
             <div className="flex flex-col">
               {cartItems.map(item => (
                 <div key={item.productId} className="pos-cart-item flex flex-col gap-2">
-                  <div className="flex justify-between w-full">
+                  <div className="flex justify-between w-full items-center">
                     <span className="font-semibold text-sm">{item.name_ar}</span>
-                    <button onClick={() => removeFromCart(item.productId)} className="text-[var(--color-text-muted)] hover:text-red-400">
+                    <LuxuryButton 
+                      variant="icon" 
+                      onClick={() => removeFromCart(item.productId)} 
+                      className="!p-1 !text-[var(--color-text-muted)] hover:!text-red-400 !w-auto !h-auto !min-h-0 !min-w-0 border-none rounded-full"
+                    >
                       <X size={16} />
-                    </button>
+                    </LuxuryButton>
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3 bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] rounded-md px-2 py-1">
-                      <button onClick={() => updateQuantity(item.productId, -1)} className="text-[var(--color-text-muted)] hover:text-white" disabled={item.quantity <= 1}>
+                      <LuxuryButton variant="icon" onClick={() => updateQuantity(item.productId, -1)} className="!p-1 !text-[var(--color-text-muted)] hover:!text-white !w-auto !h-auto !min-h-0 !min-w-0 border-none" disabled={item.quantity <= 1}>
                         <Minus size={14} />
-                      </button>
+                      </LuxuryButton>
                       <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.productId, 1)} className="text-[var(--color-text-muted)] hover:text-[var(--color-gold)]">
+                      <LuxuryButton variant="icon" onClick={() => updateQuantity(item.productId, 1)} className="!p-1 !text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] !w-auto !h-auto !min-h-0 !min-w-0 border-none">
                         <Plus size={14} />
-                      </button>
+                      </LuxuryButton>
                     </div>
                     <span className="font-bold text-[var(--color-gold)] text-sm">
                       {formatJOD(item.subtotal_fils)}
@@ -391,18 +395,20 @@ export default function PosCounter() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <button 
-              className={`p-2 rounded-md text-sm font-bold border transition-colors ${paymentMethod === 'cash' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border-strong)]'}`}
+            <LuxuryButton 
+              variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
+              className="!py-2 text-sm font-bold"
               onClick={() => setPaymentMethod('cash')}
             >
               نقدي
-            </button>
-            <button 
-              className={`p-2 rounded-md text-sm font-bold border transition-colors ${paymentMethod === 'card' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border-strong)]'}`}
+            </LuxuryButton>
+            <LuxuryButton 
+              variant={paymentMethod === 'card' ? 'primary' : 'outline'}
+              className="!py-2 text-sm font-bold"
               onClick={() => { setPaymentMethod('card'); setAmountReceived(''); }}
             >
               بطاقة
-            </button>
+            </LuxuryButton>
           </div>
 
           {paymentMethod === 'cash' && (
@@ -439,30 +445,33 @@ export default function PosCounter() {
             />
           </div>
 
-          <button 
-            className="btn-primary w-full h-12 text-lg shadow-[var(--shadow-gold)]"
+          <LuxuryButton 
+            variant="primary"
+            fullWidth
+            className="h-12 text-lg shadow-[var(--shadow-gold)]"
             disabled={!canComplete || isSubmitting}
+            loading={isSubmitting}
             onClick={handleCompleteSale}
           >
-            {isSubmitting ? <div className="spinner"></div> : 'إتمام البيع'}
-          </button>
+            إتمام البيع
+          </LuxuryButton>
         </div>
       </div>
 
       {/* Mobile Bottom Tab Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[var(--color-bg-surface)] border-t border-[var(--color-border)] flex items-center justify-around z-30 no-print">
-        <button 
-          type="button"
+        <LuxuryButton 
+          variant="ghost"
           onClick={() => setActiveTab('products')}
-          className={`flex flex-col items-center justify-center gap-1 w-1/2 h-full transition-colors ${activeTab === 'products' ? 'text-[var(--color-gold)] font-bold' : 'text-[var(--color-text-muted)]'}`}
+          className={`flex flex-col items-center justify-center gap-1 w-1/2 h-full rounded-none transition-colors ${activeTab === 'products' ? '!text-[var(--color-gold)] font-bold' : '!text-[var(--color-text-muted)]'}`}
         >
           <Package size={20} weight={activeTab === 'products' ? "fill" : "regular"} />
           <span className="text-xs">المنتجات</span>
-        </button>
-        <button 
-          type="button"
+        </LuxuryButton>
+        <LuxuryButton 
+          variant="ghost"
           onClick={() => setActiveTab('cart')}
-          className={`flex flex-col items-center justify-center gap-1 w-1/2 h-full transition-colors relative ${activeTab === 'cart' ? 'text-[var(--color-gold)] font-bold' : 'text-[var(--color-text-muted)]'}`}
+          className={`flex flex-col items-center justify-center gap-1 w-1/2 h-full rounded-none transition-colors relative ${activeTab === 'cart' ? '!text-[var(--color-gold)] font-bold' : '!text-[var(--color-text-muted)]'}`}
         >
           <div className="relative">
             <ShoppingCart size={20} weight={activeTab === 'cart' ? "fill" : "regular"} />
@@ -473,7 +482,7 @@ export default function PosCounter() {
             )}
           </div>
           <span className="text-xs">السلة</span>
-        </button>
+        </LuxuryButton>
       </div>
     </div>
   );

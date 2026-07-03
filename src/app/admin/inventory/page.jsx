@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Warning, Funnel, Plus, ArrowCounterClockwise, MagnifyingGlass } from '@phosphor-icons/react';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminInventory() {
   const [products, setProducts] = useState([]);
@@ -44,10 +45,9 @@ export default function AdminInventory() {
             مراقبة كميات المنتجات والتعديل اليدوي على المخزون
           </p>
         </div>
-        <button className="btn-secondary text-sm flex items-center gap-2">
-          <ArrowCounterClockwise size={16} />
-          <span>سجل حركات المخزون</span>
-        </button>
+        <LuxuryButton variant="secondary" className="text-sm flex items-center gap-2" iconLeft={ArrowCounterClockwise}>
+          سجل حركات المخزون
+        </LuxuryButton>
       </div>
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -65,10 +65,9 @@ export default function AdminInventory() {
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button className="btn-secondary py-2 px-4 text-sm flex items-center gap-2 flex-1 justify-center">
-              <Funnel size={16} />
-              <span>تصفية (نواقص فقط)</span>
-            </button>
+            <LuxuryButton variant="secondary" className="!py-2 px-4 text-sm flex-1 justify-center" iconLeft={Funnel}>
+              تصفية (نواقص فقط)
+            </LuxuryButton>
           </div>
         </div>
 
@@ -125,10 +124,9 @@ export default function AdminInventory() {
                         )}
                       </td>
                       <td className="py-3 px-5">
-                        <button className="btn-secondary py-1 px-3 text-xs flex items-center gap-1">
-                          <Plus size={12} />
-                          <span>تعديل</span>
-                        </button>
+                        <LuxuryButton variant="secondary" className="!py-1 px-3 text-xs" iconLeft={() => <Plus size={12} />}>
+                          تعديل
+                        </LuxuryButton>
                       </td>
                     </tr>
                   );

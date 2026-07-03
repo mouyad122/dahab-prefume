@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, Receipt, CalendarBlank, DownloadSimple } from '@phosphor-icons/react';
 import { usePosContext } from '../../../contexts/PosContext';
+import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function PosInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -43,9 +44,9 @@ export default function PosInvoices() {
               عرض أحدث المبيعات الخاصة بك
             </p>
           </div>
-          <button onClick={fetchInvoices} className="btn-secondary text-sm px-4">
+          <LuxuryButton variant="secondary" onClick={fetchInvoices} className="text-sm px-4">
             تحديث القائمة
-          </button>
+          </LuxuryButton>
         </div>
 
         {loading ? (
@@ -89,13 +90,14 @@ export default function PosInvoices() {
                   <div className="font-display font-bold text-[var(--color-gold-light)] text-lg">
                     {formatJOD(invoice.total)}
                   </div>
-                  <button 
+                  <LuxuryButton 
+                    variant="icon"
                     onClick={() => setSelectedInvoice(invoice)}
-                    className="icon-btn text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-colors"
+                    className="!p-2 text-[var(--color-gold)] hover:!bg-[var(--color-gold)] hover:!text-black !w-auto !h-auto !min-h-0 !min-w-0"
                     title="عرض التفاصيل"
                   >
                     <Eye size={18} />
-                  </button>
+                  </LuxuryButton>
                 </div>
               </div>
             ))}
@@ -112,12 +114,13 @@ export default function PosInvoices() {
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
                 تفاصيل الفاتورة - {selectedInvoice.invoice_number}
               </h2>
-              <button 
+              <LuxuryButton 
+                variant="ghost"
                 onClick={() => setSelectedInvoice(null)} 
-                className="text-[var(--color-text-muted)] hover:text-white"
+                className="!text-[var(--color-text-muted)] hover:!text-white !p-2 !h-auto"
               >
                 إغلاق
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg-primary)]">
@@ -206,15 +209,13 @@ export default function PosInvoices() {
             </div>
             
             <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex justify-end">
-              <button 
-                onClick={() => {
-                  window.print();
-                }} 
-                className="btn-secondary"
+              <LuxuryButton 
+                variant="secondary"
+                onClick={() => window.print()} 
+                iconLeft={DownloadSimple}
               >
-                <DownloadSimple size={18} />
-                <span>تحميل / طباعة الفاتورة</span>
-              </button>
+                تحميل / طباعة الفاتورة
+              </LuxuryButton>
             </div>
 
           </div>

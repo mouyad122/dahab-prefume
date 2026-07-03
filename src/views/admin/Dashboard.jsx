@@ -31,6 +31,7 @@ import {
   Hourglass,
   Globe
 } from '@phosphor-icons/react';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 // Input sanitization
 const sanitizeInput = (val) => {
@@ -394,20 +395,22 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
+            <LuxuryButton
+              variant="ghost"
               onClick={toggleLanguage}
-              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] focus-visible:outline-none"
+              className="!p-0 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)] hover:!text-[var(--color-gold)]"
+              iconLeft={Globe}
             >
-              <Globe size={14} />
-              <span>{isAr ? 'English' : 'العربية'}</span>
-            </button>
-            <button 
+              {isAr ? 'English' : 'العربية'}
+            </LuxuryButton>
+            <LuxuryButton 
+              variant="ghost"
               onClick={() => { logout(); router.push('/admin/login'); }}
-              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-red-500 hover:text-red-400 focus-visible:outline-none cursor-pointer"
+              className="!p-0 text-[10px] font-bold uppercase tracking-wider text-red-500 hover:!text-red-400"
+              iconLeft={SignOut}
             >
-              <SignOut size={14} />
-              <span>{isAr ? 'خروج' : 'Logout'}</span>
-            </button>
+              {isAr ? 'خروج' : 'Logout'}
+            </LuxuryButton>
           </div>
         </div>
       </div>
@@ -661,13 +664,14 @@ export default function Dashboard() {
                   </div>
 
                   {/* Add Product CTA */}
-                  <button 
+                  <LuxuryButton 
+                    variant="primary"
                     onClick={() => openProductForm()}
-                    className="flex items-center gap-2 bg-[var(--color-gold)] hover:bg-[var(--color-gold-light)] text-black text-xs font-bold uppercase tracking-wider py-2.5 px-5 rounded-full transition-all cursor-pointer focus-visible:outline-none"
+                    className="text-xs font-bold uppercase tracking-wider py-2.5 px-5 rounded-full"
+                    iconLeft={() => <Plus size={14} weight="bold" />}
                   >
-                    <Plus size={14} weight="bold" />
-                    <span>{isAr ? 'إضافة عطر' : 'Add Scent'}</span>
-                  </button>
+                    {isAr ? 'إضافة عطر' : 'Add Scent'}
+                  </LuxuryButton>
                 </div>
               </div>
 
@@ -729,20 +733,22 @@ export default function Dashboard() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
-                              <button 
+                              <LuxuryButton 
+                                variant="icon"
                                 onClick={() => openProductForm(p)}
-                                className="p-2 rounded-lg border border-[var(--color-border)] text-zinc-500 hover:text-[var(--color-gold)] hover:border-[var(--color-gold)]/40 transition-all active:scale-90 cursor-pointer focus-visible:outline-none"
+                                className="!p-2 !w-auto !h-auto !min-h-0 !min-w-0 border border-[var(--color-border)] text-zinc-500 hover:!text-[var(--color-gold)] hover:border-[var(--color-gold)]/40 transition-all active:scale-90"
                                 title={isAr ? 'تعديل' : 'Edit'}
                               >
                                 <Pencil size={12} />
-                              </button>
-                              <button 
+                              </LuxuryButton>
+                              <LuxuryButton 
+                                variant="icon"
                                 onClick={() => handleDeleteProduct(p.id, isAr ? p.title.ar : p.title.en)}
-                                className="p-2 rounded-lg border border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all active:scale-90 cursor-pointer focus-visible:outline-none"
+                                className="!p-2 !w-auto !h-auto !min-h-0 !min-w-0 border border-red-500/10 text-red-500 hover:bg-red-500/5 hover:border-red-500/30 transition-all active:scale-90"
                                 title={isAr ? 'حذف' : 'Delete'}
                               >
                                 <Trash size={12} />
-                              </button>
+                              </LuxuryButton>
                             </div>
                           </td>
                         </tr>
@@ -823,18 +829,20 @@ export default function Dashboard() {
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
                               {/* Quick Mark Available / Out of stock */}
-                              <button 
+                              <LuxuryButton
+                                variant="outline" 
                                 onClick={() => handleUpdateStock(p.id, 0, p.lowStockThreshold || 5)}
-                                className={`text-[9px] font-bold px-3 py-1.5 rounded-full border border-red-500/20 text-red-500 hover:bg-red-500/5 transition-all cursor-pointer focus-visible:outline-none ${isOut ? 'opacity-40 pointer-events-none' : ''}`}
+                                className={`text-[9px] font-bold !px-3 !py-1.5 rounded-full border-red-500/20 text-red-500 hover:bg-red-500/5 ${isOut ? 'opacity-40 pointer-events-none' : ''}`}
                               >
                                 {isAr ? 'تصفير المخزون' : 'Set sold-out'}
-                              </button>
-                              <button 
+                              </LuxuryButton>
+                              <LuxuryButton
+                                variant="outline" 
                                 onClick={() => handleUpdateStock(p.id, 10, p.lowStockThreshold || 5)}
-                                className={`text-[9px] font-bold px-3 py-1.5 rounded-full border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer focus-visible:outline-none ${!isOut && !isLow ? 'opacity-40 pointer-events-none' : ''}`}
+                                className={`text-[9px] font-bold !px-3 !py-1.5 rounded-full border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/5 ${!isOut && !isLow ? 'opacity-40 pointer-events-none' : ''}`}
                               >
                                 {isAr ? 'شحن المخزون (10)' : 'Restock to 10'}
-                              </button>
+                              </LuxuryButton>
                             </div>
                           </td>
                         </tr>
@@ -942,12 +950,13 @@ export default function Dashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <button 
+                          <LuxuryButton 
+                            variant="icon"
                             onClick={() => setViewingOrder(o)}
-                            className="p-2 rounded-lg border border-[var(--color-border)] text-zinc-500 hover:text-[var(--color-gold)] hover:border-[var(--color-gold)]/40 transition-all active:scale-90 cursor-pointer focus-visible:outline-none"
+                            className="!p-2 !w-auto !h-auto !min-h-0 !min-w-0 border border-[var(--color-border)] text-zinc-500 hover:!text-[var(--color-gold)] hover:border-[var(--color-gold)]/40 transition-all active:scale-90"
                           >
                             <Eye size={12} />
-                          </button>
+                          </LuxuryButton>
                         </td>
                       </tr>
                     ))}
@@ -974,12 +983,13 @@ export default function Dashboard() {
                   : (isAr ? 'تعديل تفاصيل العطر' : 'Edit Fragrance Details')
                 }
               </h2>
-              <button 
+              <LuxuryButton 
+                variant="ghost"
                 onClick={() => setEditingProduct(null)}
-                className="text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-red-500 font-bold focus-visible:outline-none"
+                className="!p-0 text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:!text-red-500 font-bold"
               >
                 {isAr ? 'إغلاق' : 'Close'}
-              </button>
+              </LuxuryButton>
             </div>
 
             <form onSubmit={handleSaveProduct} className="flex flex-col gap-6">
@@ -1278,19 +1288,20 @@ export default function Dashboard() {
 
               {/* Submit CTA row */}
               <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
-                <button 
-                  type="button" 
+                <LuxuryButton 
+                  variant="secondary"
                   onClick={() => setEditingProduct(null)}
-                  className="btn-secondary py-3 px-6 text-xs cursor-pointer focus-visible:outline-none"
+                  className="py-3 px-6 text-xs"
                 >
                   {isAr ? 'إلغاء التعديل' : 'Cancel'}
-                </button>
-                <button 
+                </LuxuryButton>
+                <LuxuryButton 
                   type="submit"
-                  className="btn-primary py-3 px-8 text-xs cursor-pointer focus-visible:outline-none"
+                  variant="primary"
+                  className="py-3 px-8 text-xs"
                 >
                   {isAr ? 'حفظ العطر بالكتالوج' : 'Save Scent'}
-                </button>
+                </LuxuryButton>
               </div>
 
             </form>
@@ -1315,12 +1326,13 @@ export default function Dashboard() {
                   {viewingOrder.status}
                 </span>
               </div>
-              <button 
+              <LuxuryButton 
+                variant="ghost"
                 onClick={() => setViewingOrder(null)}
-                className="text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:text-red-500 font-bold focus-visible:outline-none"
+                className="!p-0 text-xs uppercase tracking-wider text-[var(--color-text-secondary)] hover:!text-red-500 font-bold"
               >
                 {isAr ? 'إغلاق' : 'Close'}
-              </button>
+              </LuxuryButton>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -1337,13 +1349,14 @@ export default function Dashboard() {
                     
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-[var(--color-text-secondary)] font-mono">{viewingOrder.customer?.phone}</span>
-                      <button 
+                      <LuxuryButton 
+                        variant="icon"
                         onClick={() => handleCopy(viewingOrder.customer?.phone, 'phone')}
-                        className="p-1 rounded border border-[var(--color-border)] text-zinc-500 hover:text-[var(--color-gold)] transition-colors cursor-pointer"
+                        className="!p-1 !w-auto !h-auto !min-h-0 !min-w-0 border border-[var(--color-border)] text-zinc-500 hover:!text-[var(--color-gold)] transition-colors"
                         title={isAr ? 'نسخ الهاتف' : 'Copy phone'}
                       >
                         {copiedId === 'phone' ? <Check size={10} className="text-emerald-500" /> : <Copy size={10} />}
-                      </button>
+                      </LuxuryButton>
                       
                       {/* Whatsapp contact direct action */}
                       <a 

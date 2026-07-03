@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { List } from '@phosphor-icons/react';
 import AdminSidebar from '../../components/admin/AdminSidebar';
+import LuxuryButton from '../../components/ui/LuxuryButton';
 
 export default function AdminLayout({ children }) {
   const [user, setUser] = useState(null);
@@ -78,9 +79,9 @@ export default function AdminLayout({ children }) {
           <div className="font-display font-bold text-[var(--color-gold-light)] tracking-widest text-lg">
             DAHAB ADMIN
           </div>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="icon-btn text-[var(--color-gold)] cursor-pointer hover:bg-[var(--color-gold-dim)]">
+          <LuxuryButton variant="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="!p-2 text-[var(--color-gold)] hover:!bg-[var(--color-gold-dim)] hover:!text-[var(--color-gold-light)] !w-auto !h-auto !min-h-0 !min-w-0 border-none">
             <List size={24} />
-          </button>
+          </LuxuryButton>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 dir-ar relative">
