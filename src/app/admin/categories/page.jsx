@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Plus, PencilSimple, Trash, X, ArrowUpRight, Eye, Sparkle, Tag } from '@phosphor-icons/react';
+import ImageUpload from '../../../components/admin/ImageUpload';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -292,15 +293,11 @@ export default function AdminCategories() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="form-label">رابط الصورة (URL)</label>
-                  <input 
-                    type="url" 
-                    className="form-input text-left" 
-                    dir="ltr"
+                <div className="pt-2">
+                  <ImageUpload
+                    label="صورة المجموعة"
                     value={formData.image}
-                    onChange={e => setFormData({...formData, image: e.target.value})}
-                    placeholder="https://..."
+                    onChange={(url) => setFormData({...formData, image: url})}
                   />
                 </div>
 

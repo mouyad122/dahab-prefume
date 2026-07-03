@@ -10,6 +10,7 @@ import {
   X,
   ImageSquare
 } from '@phosphor-icons/react';
+import ImageUpload from '../../../components/admin/ImageUpload';
 
 function formatJOD(fils) {
   const value = Number.isFinite(fils) ? fils : 0;
@@ -99,14 +100,6 @@ export default function AdminProducts() {
     );
   });
 
-  const handleImageUpload = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageFilename(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
 
   // Product Add/Edit Form Actions
   const handleOpenAddModal = () => {
@@ -496,27 +489,12 @@ export default function AdminProducts() {
               </div>
 
               {/* Product Image */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-4">
-                <div>
-                  <label className="form-label">رابط صورة المنتج (URL)</label>
-                  <input 
-                    type="text" 
-                    className="form-input text-white bg-black/30 text-left" 
-                    dir="ltr"
-                    value={imageFilename}
-                    onChange={e => setImageFilename(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-                <div>
-                  <label className="form-label">أو ارفع صورة مباشرة</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    className="form-input py-1.5 text-white bg-black/30"
-                    onChange={e => handleImageUpload(e.target.files?.[0])}
-                  />
-                </div>
+              <div className="border-t border-[var(--color-border)] pt-4">
+                <ImageUpload
+                  label="صورة المنتج"
+                  value={imageFilename}
+                  onChange={setImageFilename}
+                />
               </div>
 
               {/* Price & Volumes Selection with Checkboxes */}
