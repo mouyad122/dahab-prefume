@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Palette, Translate, MapPin, WhatsappLogo, Storefront, DeviceMobile, FloppyDisk, X, Image as ImageIcon, Desktop, Clock } from '@phosphor-icons/react';
+import { Palette, MapPin, WhatsappLogo, Storefront, DeviceMobile, FloppyDisk, X, Image as ImageIcon, Desktop, Clock, Heartbeat, Database, Lightning, ArrowsClockwise, HardDrive, CheckCircle, WarningCircle, XCircle } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminSettings() {
@@ -11,6 +11,25 @@ export default function AdminSettings() {
   const [originalData, setOriginalData] = useState({});
   const [formData, setFormData] = useState({});
   const [toast, setToast] = useState(null);
+
+  // Health state
+  const [health, setHealth]           = useState(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  const fetchHealth = async () => {
+    setHealthLoading(true);
+    try {
+      const res = await fetch('/api/admin/health');
+      if (res.ok) setHealth(await res.json());
+    } catch {}
+    finally { setHealthLoading(false); }
+  };
+
+  // Auto-load health when that tab opens
+  const handleTabChange = (id) => {
+    setActiveTab(id);
+    if (id === 'health' && !health) fetchHealth();
+  };
 
   useEffect(() => {
     fetch('/api/settings')
@@ -131,14 +150,15 @@ export default function AdminSettings() {
               { id: 'hero', icon: ImageIcon, label: 'قسم الهيرو (الرئيسية)' },
               { id: 'contact', icon: WhatsappLogo, label: 'التواصل والموقع' },
               { id: 'theme', icon: Palette, label: 'المظهر والألوان' },
-              { id: 'pos', icon: Desktop, label: 'إعدادات الكاشير (POS)' }
+              { id: 'pos', icon: Desktop, label: 'إعدادات الكاشير (POS)' },
+              { id: 'health', icon: Heartbeat, label: 'الأداء والصحة' },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-3 w-full p-3 rounded-lg text-sm transition-colors text-right ${isActive ? 'bg-[var(--color-gold-dim)] text-[var(--color-gold-light)] border border-[var(--color-border-strong)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface)] border border-transparent'}`}
                 >
                   <Icon size={18} />
@@ -351,6 +371,153 @@ export default function AdminSettings() {
                   </label>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ── Health & Performance Tab ── */}
+          {activeTab === 'health' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
+                <h2 className="text-lg font-bold text-[var(--color-gold-light)] font-display flex items-center gap-2">
+                  <Heartbeat size={20} /> الأداء والصحة
+                </h2>
+                <button
+                  onClick={fetchHealth}
+                  disabled={healthLoading}
+                  className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
+                >
+                  <ArrowsClockwise size={16} className={healthLoading ? 'animate-spin' : ''} />
+                  تحديث
+                </button>
+              </div>
+
+              {healthLoading && !health && (
+                <div className="flex justify-center py-12">
+                  <div className="spinner w-8 h-8" />
+                </div>
+              )}
+
+              {health && (() => {
+                const StatusIcon = ({ status }) => {
+                  if (status === 'ok' || status === 'healthy') return <CheckCircle size={18} className="text-[var(--color-success)]" weight="fill" />;
+                  if (status === 'error' || status === 'degraded') return <XCircle size={18} className="text-[var(--color-error)]" weight="fill" />;
+                  return <WarningCircle size={18} className="text-[var(--color-warning)]" weight="fill" />;
+                };
+                const LatencyBadge = ({ ms }) => {
+                  if (ms === null || ms === undefined) return <span className="badge-warning-sm">N/A</span>;
+                  if (ms < 50)  return <span className="badge-success-sm font-mono">{ms}ms</span>;
+                  if (ms < 200) return <span className="badge-warning-sm font-mono">{ms}ms</span>;
+                  return <span className="badge-error-sm font-mono">{ms}ms</span>;
+                };
+
+                return (
+                  <div className="space-y-4">
+                    {/* Overall status banner */}
+                    <div className={`p-4 rounded-xl border flex items-center gap-3 ${
+                      health.status === 'healthy'
+                        ? 'bg-[var(--color-success-dim)] border-[var(--color-success-border)]'
+                        : 'bg-[var(--color-error-dim)] border-[var(--color-error-border)]'
+                    }`}>
+                      <StatusIcon status={health.status} />
+                      <div>
+                        <div className={`font-bold text-sm ${health.status === 'healthy' ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'}`}>
+                          {health.status === 'healthy' ? 'النظام يعمل بشكل طبيعي' : 'النظام يعاني من مشكلات'}
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          آخر فحص: {new Date(health.generated_at).toLocaleString('ar-JO')}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Service checks grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Database */}
+                      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] flex items-center gap-3">
+                        <Database size={24} className="text-[var(--color-gold)] shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-[var(--color-text-primary)]">PostgreSQL</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <StatusIcon status={health.checks.database?.status} />
+                            <LatencyBadge ms={health.checks.database?.ping_ms} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Redis */}
+                      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] flex items-center gap-3">
+                        <Lightning size={24} className="text-[var(--color-gold)] shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-[var(--color-text-primary)]">Redis Cache</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <StatusIcon status={health.checks.redis?.status} />
+                            {health.checks.redis?.status === 'not_configured'
+                              ? <span className="text-xs text-[var(--color-text-muted)]">غير مُفعّل</span>
+                              : <LatencyBadge ms={health.checks.redis?.ping_ms} />
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Benchmarks */}
+                    <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+                      <div className="text-sm font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                        <Lightning size={16} className="text-[var(--color-gold)]" /> قياسات الاستجابة
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs text-[var(--color-text-muted)] mb-1">DB Ping</div>
+                          <LatencyBadge ms={health.benchmarks?.db_ping_ms} />
+                        </div>
+                        <div>
+                          <div className="text-xs text-[var(--color-text-muted)] mb-1">آخر 50 فاتورة</div>
+                          <LatencyBadge ms={health.benchmarks?.sales_query_ms} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Memory */}
+                    {health.memory && (
+                      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+                        <div className="text-sm font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                          <HardDrive size={16} className="text-[var(--color-gold)]" /> استخدام الذاكرة (Server)
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[['Heap Used', health.memory.heap_used_mb], ['Heap Total', health.memory.heap_total_mb], ['RSS', health.memory.rss_mb]].map(([label, val]) => (
+                            <div key={label} className="text-center">
+                              <div className="text-lg font-mono font-bold text-[var(--color-gold-light)]">{val}</div>
+                              <div className="text-[0.65rem] text-[var(--color-text-muted)]">MB — {label}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Table counts */}
+                    {health.counts && !health.counts.error && (
+                      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+                        <div className="text-sm font-bold text-[var(--color-text-primary)] mb-3">إحصائيات قاعدة البيانات</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            ['منتجات', health.counts.products],
+                            ['مبيعات', health.counts.sales],
+                            ['موظفون', health.counts.employees],
+                            ['استفسارات', health.counts.inquiries],
+                          ].map(([label, val]) => (
+                            <div key={label} className="text-center p-3 rounded-lg bg-[var(--color-bg-raised)]">
+                              <div className="text-xl font-mono font-bold text-[var(--color-text-primary)]">{val?.toLocaleString('ar-JO') ?? '—'}</div>
+                              <div className="text-[0.65rem] text-[var(--color-text-muted)] mt-0.5">{label}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2 text-[0.65rem] text-[var(--color-text-subtle)]">
+                          وقت الاستعلام: <span className="font-mono text-[var(--color-gold)]">{health.counts.query_ms}ms</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
