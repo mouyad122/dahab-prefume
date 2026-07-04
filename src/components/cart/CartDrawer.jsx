@@ -131,7 +131,7 @@ export default function CartDrawer() {
                   <div className="flex-1 flex flex-col gap-2 min-w-0 text-start">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] font-bold">
-                        {item.category}
+                        {item.category?.name_ar || item.category?.name_en || item.main_category || (isAr ? 'عطور نيش' : 'Niche Fragrance')}
                       </span>
                       <Link
                         href={`/products/${item.slug}`}
