@@ -3,6 +3,8 @@ import { prisma } from '../../../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../../../lib/session';
 import { sanitize } from '../../../../../lib/security';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const adminSession = await verifyAdminSession();
