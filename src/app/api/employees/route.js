@@ -4,7 +4,6 @@ import { verifyAdminSession } from '../../../lib/session';
 import { prisma } from '../../../lib/prisma';
 import { sanitize } from '../../../lib/security';
 
-// ─── PERMISSION FIELDS ────────────────────────────────────────────────────────
 const PERMISSION_FIELDS = [
   'can_access_counter',
   'can_view_invoices',
@@ -17,14 +16,12 @@ const PERMISSION_FIELDS = [
   'can_view_settings',
 ];
 
-/**
- * Extracts and validates permission flags from a raw permissions object.
- * Defaults to false for any missing field.
- */
-function parsePermissions(raw = {}) {
+const ALLOWED_ROLES = ['admin', 'manager', 'employee', 'inventory', 'accountant'];
+
+function parsePermissions(raw = {}, defaultVal = false) {
   const result = {};
   for (const field of PERMISSION_FIELDS) {
-    result[field] = raw[field] === true;
+    result[field] = raw[field] === undefined ? defaultVal : raw[field] === true;
   }
   return result;
 }
@@ -32,7 +29,6 @@ function parsePermissions(raw = {}) {
 // ─── GET /api/employees ───────────────────────────────────────────────────────
 export async function GET() {
   try {
-    // Admin only
     const session = await verifyAdminSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
@@ -63,23 +59,33 @@ export async function GET() {
             can_view_accounting:  emp.permissions.can_view_accounting,
             can_view_settings:    emp.permissions.can_view_settings,
           }
-        : null,
+        : parsePermissions({}, emp.role === 'admin'),
     }));
+
+    // Check if system Super Admin is present in Employee table
+    const hasAdminInDb = data.some(emp => emp.username === 'admin' || emp.role === 'admin');
+    if (!hasAdminInDb) {
+      data.unshift({
+        id: 'super-admin-001',
+        username: 'admin',
+        display_name: 'المدير العام (سبر أدمن)',
+        role: 'admin',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        permissions: parsePermissions({}, true)
+      });
+    }
 
     return NextResponse.json({ ok: true, employees: data });
   } catch (error) {
     console.error('[GET /api/employees]', error);
-    return NextResponse.json(
-      { error: 'Internal server error.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }
 
 // ─── POST /api/employees ──────────────────────────────────────────────────────
 export async function POST(request) {
   try {
-    // Admin only
     const session = await verifyAdminSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
@@ -92,7 +98,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
     }
 
-    // ── Validate required fields ──────────────────────────────────────────────
     const username     = sanitize(body?.username ?? '').toLowerCase();
     const password     = body?.password ?? '';
     const display_name = sanitize(body?.display_name ?? '');
@@ -103,48 +108,27 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Username is required.' }, { status: 400 });
     }
     if (username.length < 3 || username.length > 50) {
-      return NextResponse.json(
-        { error: 'Username must be between 3 and 50 characters.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username must be between 3 and 50 characters.' }, { status: 400 });
     }
     if (!/^[a-z0-9_]+$/.test(username)) {
-      return NextResponse.json(
-        { error: 'Username may only contain lowercase letters, numbers, and underscores.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username may only contain lowercase letters, numbers, and underscores.' }, { status: 400 });
     }
     if (!password || password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
     }
     if (!display_name) {
       return NextResponse.json({ error: 'Display name is required.' }, { status: 400 });
     }
-    const safeRole = role || 'employee';
-    if (!['employee', 'manager'].includes(safeRole)) {
-      return NextResponse.json(
-        { error: 'Role must be "employee" or "manager".' },
-        { status: 400 }
-      );
-    }
 
-    // ── Check for duplicate username ──────────────────────────────────────────
+    const safeRole = ALLOWED_ROLES.includes(role) ? role : 'employee';
+
     const existing = await prisma.employee.findUnique({ where: { username } });
     if (existing) {
-      return NextResponse.json(
-        { error: 'An employee with this username already exists.' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'An account with this username already exists.' }, { status: 409 });
     }
 
-    // ── Hash Password ─────────────────────────────────────────────────────────
     const password_hash = await bcrypt.hash(password, 12);
-
-    // ── Create Employee + Permissions in Transaction ───────────────────────────
-    const parsedPerms = parsePermissions(permissions);
+    const parsedPerms = parsePermissions(permissions, safeRole === 'admin');
 
     const employee = await prisma.$transaction(async (tx) => {
       const newEmployee = await tx.employee.create({
@@ -183,9 +167,6 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error('[POST /api/employees]', error);
-    return NextResponse.json(
-      { error: 'Internal server error.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

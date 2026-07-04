@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Warning, Funnel, ArrowCounterClockwise, MagnifyingGlass, X, CheckCircle, DownloadSimple } from '@phosphor-icons/react';
+import { Warning, Funnel, ArrowCounterClockwise, MagnifyingGlass, X, CheckCircle, DownloadSimple, Plus, Minus } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminInventory() {
@@ -54,6 +54,35 @@ export default function AdminInventory() {
       console.error('Failed to fetch movements');
     } finally {
       setLoadingMovements(false);
+    }
+  };
+
+  const handleQuickStockAdjust = async (product, delta) => {
+    const firstVariant = product.variants?.[0];
+    if (!firstVariant) return;
+
+    const newQty = Math.max(0, firstVariant.stock + delta);
+    try {
+      const res = await fetch('/api/admin/inventory/adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          variantId: firstVariant.id,
+          newStock: newQty,
+          lowStockThreshold: product.low_stock_threshold || 5,
+          reason: delta > 0 ? 'زيادة سريعة من جدول المخزون' : 'تخفيض سريع من جدول المخزون'
+        })
+      });
+
+      if (res.ok) {
+        fetchInventory();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'فشل تعديل المخزون');
+      }
+    } catch (e) {
+      alert('حدث خطأ أثناء التعديل السريع');
     }
   };
 
@@ -150,10 +179,10 @@ export default function AdminInventory() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] mb-1">
-            إدارة المخزون
+            إدارة المخزون والتكميل
           </h1>
           <p className="text-[var(--color-text-secondary)] text-sm">
-            مراقبة كميات العطور والتعديل الموثق على المخزون
+            مراقبة كميات العطور والتعديل المباشر الموثق على مخزون المعرض والمتجر
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -228,7 +257,7 @@ export default function AdminInventory() {
                 <tr>
                   <th className="py-3 px-5 font-normal">المنتج</th>
                   <th className="py-3 px-5 font-normal">SKU</th>
-                  <th className="py-3 px-5 font-normal text-center">الكمية المتوفرة</th>
+                  <th className="py-3 px-5 font-normal text-center">الكمية المتوفرة (تعديل سريع)</th>
                   <th className="py-3 px-5 font-normal text-center">حد النواقص</th>
                   <th className="py-3 px-5 font-normal">الحالة</th>
                   <th className="py-3 px-5 font-normal w-24">إجراءات</th>
@@ -252,10 +281,28 @@ export default function AdminInventory() {
                       <td className="py-3 px-5 font-mono text-xs text-[var(--color-text-secondary)]">
                         {product.sku}
                       </td>
-                      <td className="py-3 px-5 text-center">
-                        <span className={`font-mono font-bold text-lg ${isOut ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-[#5ddb85]'}`}>
-                          {totalStock}
-                        </span>
+                      <td className="py-3 px-5">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleQuickStockAdjust(product, -1)}
+                            className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center font-bold text-sm border border-red-500/20 active:scale-95 transition-all cursor-pointer"
+                            title="إنقاص الكمية (-1)"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className={`font-mono font-bold text-base px-2 min-w-[32px] text-center ${isOut ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-[#5ddb85]'}`}>
+                            {totalStock}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickStockAdjust(product, 1)}
+                            className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center font-bold text-sm border border-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                            title="زيادة الكمية (+1)"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </td>
                       <td className="py-3 px-5 text-center text-[var(--color-text-muted)] font-mono">
                         {lowThresh}
@@ -275,7 +322,7 @@ export default function AdminInventory() {
                           className="!py-1 px-3 text-xs"
                           onClick={() => handleOpenEditModal(product)}
                         >
-                          تعديل
+                          تعديل تفصيلي
                         </LuxuryButton>
                       </td>
                     </tr>
@@ -301,7 +348,6 @@ export default function AdminInventory() {
             </div>
 
             <div className="space-y-4 text-xs">
-              {/* Variant Select if multiple */}
               {selectedProduct.variants && selectedProduct.variants.length > 1 && (
                 <div>
                   <label className="block text-gray-300 font-semibold mb-1">اختر الحجم المراد تعديله</label>

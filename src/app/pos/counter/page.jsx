@@ -398,28 +398,40 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
           ) : (
             <div className="flex flex-col">
               {cartItems.map(item => (
-                <div key={item.productId} className="pos-cart-item flex flex-col gap-2">
-                  <div className="flex justify-between w-full items-center">
-                    <span className="font-semibold text-sm">{item.name_ar}</span>
-                    <LuxuryButton 
-                      variant="icon" 
-                      onClick={() => removeFromCart(item.productId)} 
-                      className="!p-1 !text-[var(--color-text-muted)] hover:!text-red-400 !w-auto !h-auto !min-h-0 !min-w-0 border-none rounded-full"
+                <div key={item.id} className="p-3 border-b border-[var(--color-border-subtle)] flex flex-col gap-2 bg-[#121216]/50">
+                  <div className="flex justify-between w-full items-start gap-2">
+                    <span className="font-bold text-sm text-white leading-tight">{item.name_ar}</span>
+                    <button 
+                      type="button" 
+                      onClick={() => removeFromCart(item.id)} 
+                      className="min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 rounded-lg flex items-center justify-center transition-colors active:scale-95 shrink-0 cursor-pointer"
+                      title="حذف المنتج من الفاتورة"
                     >
-                      <X size={16} />
-                    </LuxuryButton>
+                      <X size={18} />
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3 bg-[var(--color-bg-primary)] border border-[var(--color-border-subtle)] rounded-md px-2 py-1">
-                      <LuxuryButton variant="icon" onClick={() => updateQuantity(item.productId, -1)} className="!p-1 !text-[var(--color-text-muted)] hover:!text-white !w-auto !h-auto !min-h-0 !min-w-0 border-none" disabled={item.quantity <= 1}>
-                        <Minus size={14} />
-                      </LuxuryButton>
-                      <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                      <LuxuryButton variant="icon" onClick={() => updateQuantity(item.productId, 1)} className="!p-1 !text-[var(--color-text-muted)] hover:!text-[var(--color-gold)] !w-auto !h-auto !min-h-0 !min-w-0 border-none">
-                        <Plus size={14} />
-                      </LuxuryButton>
+                  <div className="flex items-center justify-between w-full mt-1">
+                    <div className="flex items-center gap-2 bg-[#0a0a0c] border border-white/10 rounded-xl p-1">
+                      <button 
+                        type="button" 
+                        onClick={() => updateQuantity(item.id, -1)} 
+                        className="min-w-[36px] min-h-[36px] bg-[#181820] text-white hover:bg-[#c5a25d] hover:text-black disabled:opacity-40 disabled:hover:bg-[#181820] disabled:hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-95 font-bold cursor-pointer" 
+                        disabled={item.quantity <= 1}
+                        title="إنقاص الكمية"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="text-sm font-bold font-mono px-3 text-center text-white">{item.quantity}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => updateQuantity(item.id, 1)} 
+                        className="min-w-[36px] min-h-[36px] bg-[#181820] text-white hover:bg-[#c5a25d] hover:text-black rounded-lg flex items-center justify-center transition-all active:scale-95 font-bold cursor-pointer"
+                        title="زيادة الكمية"
+                      >
+                        <Plus size={16} />
+                      </button>
                     </div>
-                    <span className="font-bold text-[var(--color-gold)] text-sm">
+                    <span className="font-bold font-mono text-[var(--color-gold-light)] text-sm">
                       {formatJOD(item.subtotal_fils)}
                     </span>
                   </div>

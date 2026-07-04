@@ -14,8 +14,5 @@ export function PosProvider({ children, employee, permissions }) {
 
 export function usePosContext() {
   const context = useContext(PosContext);
-  if (!context) {
-    throw new Error('usePosContext must be used within a PosProvider');
-  }
-  return context;
+  return context || { employee: null, permissions: {} };
 }

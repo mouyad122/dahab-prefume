@@ -4,7 +4,6 @@ import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session'
 import { sanitize } from '../../../lib/security';
 
 // ─── GET /api/sales ───────────────────────────────────────────────────────────
-// Query params: employeeId, sellerUserId, startDate, endDate, paymentMethod, status, limit=50, offset=0
 export async function GET(request) {
   try {
     const adminSession = await verifyAdminSession();
@@ -23,12 +22,10 @@ export async function GET(request) {
     const endDate   = searchParams.get('endDate');
     let reqEmployeeId = searchParams.get('employeeId') || searchParams.get('sellerUserId');
 
-    // Employees can only view their own sales — override any query param
     if (employeeSession) {
       reqEmployeeId = employeeSession.employeeId;
     }
 
-    // Build where clause
     const where = {};
 
     if (reqEmployeeId) {
@@ -82,7 +79,7 @@ export async function GET(request) {
       sales,
       total,
       count: sales.length,
-      totalAmount: aggregate._sum.total ?? 0, // in fils
+      totalAmount: aggregate._sum.total ?? 0,
     });
   } catch (error) {
     console.error('[GET /api/sales]', error);
@@ -91,7 +88,6 @@ export async function GET(request) {
 }
 
 // ─── POST /api/sales ──────────────────────────────────────────────────────────
-// Accessible by Employee or Admin (for Admin Counter).
 export async function POST(request) {
   try {
     const adminSession = await verifyAdminSession();
@@ -119,7 +115,6 @@ export async function POST(request) {
       sale_source
     } = body;
 
-    // Determine seller identity snapshot
     let sellerUserId = null;
     let sellerNameSnapshot = 'غير محدد';
     let sellerRoleSnapshot = 'كاشير';
@@ -144,36 +139,55 @@ export async function POST(request) {
       controlledSaleSource = sale_source === 'ADMIN_COUNTER' ? 'ADMIN_COUNTER' : 'STAFF_POS';
     }
 
-    // ── Validate required fields ──────────────────────────────────────────────
+    // ── Validate basic structure ──────────────────────────────────────────────
     if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Sale must include at least one item' }, { status: 400 });
+      return NextResponse.json({ error: 'الفاتورة يجب أن تحتوي على منتج واحد على الأقل' }, { status: 400 });
     }
     if (typeof total !== 'number' || total < 0) {
-      return NextResponse.json({ error: 'Invalid total amount' }, { status: 400 });
+      return NextResponse.json({ error: 'المبلغ الإجمالي غير صحيح' }, { status: 400 });
     }
     if (typeof amount_received !== 'number' || amount_received < 0) {
-      return NextResponse.json({ error: 'Invalid amount_received' }, { status: 400 });
+      return NextResponse.json({ error: 'المبلغ المستلم غير صحيح' }, { status: 400 });
     }
     if (amount_received < total) {
-      return NextResponse.json({ error: 'Amount received is less than total' }, { status: 400 });
+      return NextResponse.json({ error: 'المبلغ المستلم أقل من الإجمالي المطلوب' }, { status: 400 });
     }
 
+    // ── Strict Server-Side Re-Verification of Items, Prices & Live Stock ──────
     for (const item of items) {
       if (!item.product_name_ar || !item.product_sku) {
-        return NextResponse.json({ error: 'Each item must have product_name_ar and product_sku' }, { status: 400 });
+        return NextResponse.json({ error: 'بيانات المنتج ناقصة' }, { status: 400 });
       }
       if (typeof item.quantity !== 'number' || item.quantity < 1) {
-        return NextResponse.json({ error: 'Each item must have a positive quantity' }, { status: 400 });
+        return NextResponse.json({ error: 'كمية المنتج يجب أن تكون 1 أو أكثر' }, { status: 400 });
       }
-      if (typeof item.unit_price !== 'number' || item.unit_price < 0) {
-        return NextResponse.json({ error: 'Each item must have a valid unit_price in fils' }, { status: 400 });
-      }
-      if (typeof item.total_price !== 'number' || item.total_price < 0) {
-        return NextResponse.json({ error: 'Each item must have a valid total_price in fils' }, { status: 400 });
+
+      if (item.productId && item.volume) {
+        const volClean = String(item.volume).replace('ml', '').trim();
+        const dbVariant = await prisma.productVariant.findUnique({
+          where: {
+            productId_volume: {
+              productId: item.productId,
+              volume: volClean
+            }
+          }
+        });
+
+        if (!dbVariant) {
+          return NextResponse.json({ 
+            error: `المنتج (${item.product_name_ar}) بالحجم (${item.volume}) غير متوفر في النظام` 
+          }, { status: 400 });
+        }
+
+        if (dbVariant.stock < item.quantity) {
+          return NextResponse.json({ 
+            error: `الكمية المطلوبة من (${item.product_name_ar}) غير متوفرة حالياً في المخزن (المتوفر الحقيقي: ${dbVariant.stock})` 
+          }, { status: 400 });
+        }
       }
     }
 
-    // ── Generate Invoice Number with Retry Loop ──
+    // ── Generate Invoice Number & Create Sale in DB ──
     let invoice_number = '';
     let sale = null;
     let retries = 3;
@@ -266,7 +280,7 @@ export async function POST(request) {
             },
           });
 
-          // Deduct stock for each item's specific variant volume
+          // Deduct stock for each item's specific variant volume only on successful completion
           for (const item of items) {
             if (item.productId && item.volume) {
               const volClean = String(item.volume).replace('ml', '').trim();
@@ -305,11 +319,8 @@ export async function POST(request) {
   } catch (error) {
     console.error('[POST /api/sales]', error);
     if (error.code === 'P2002' && error.meta?.target?.includes('invoice_number')) {
-      return NextResponse.json(
-        { error: 'Invoice number conflict, please retry' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'تعارض في رقم الفاتورة، يرجى إعادة المحاولة' }, { status: 409 });
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'خطأ داخلي في السيرفر' }, { status: 500 });
   }
 }

@@ -317,8 +317,9 @@ export default function AdminAccounts() {
                   value={role}
                   onChange={e => setRole(e.target.value)}
                 >
-                  <option value="employee">موظف كاشير / مبيعات</option>
+                  <option value="admin">مدير عام / أدمن النظام</option>
                   <option value="manager">مدير فرع / مشرف</option>
+                  <option value="employee">موظف كاشير / مبيعات</option>
                   <option value="inventory">مسؤول مخزون</option>
                   <option value="accountant">محاسب</option>
                 </select>
