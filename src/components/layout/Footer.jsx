@@ -5,14 +5,26 @@ import Link from 'next/link';
 import { Clock, InstagramLogo, MapPin, Phone, WhatsappLogo } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
+import { SettingsContext } from '../../contexts/SettingsContext';
 
 export default function Footer() {
   const { language } = useContext(LanguageContext);
+  const { settings } = useContext(SettingsContext);
   const isAr = language === 'ar';
+  
   const whatsappText = isAr
     ? 'مرحبًا، أريد الاستفسار عن عطور DAHAB PERFUMES.'
     : 'Hello, I would like to ask about DAHAB PERFUMES.';
-  const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(whatsappText)}`;
+  
+  const wpNumberClean = (settings.contact_phone || brandConfig.whatsappNumber).replace(/\D/g, '');
+  const whatsappUrl = `https://wa.me/${wpNumberClean}?text=${encodeURIComponent(whatsappText)}`;
+  
+  const instagramUrl = settings.social_instagram || brandConfig.instagram;
+  const storeAddressAr = settings.store_address || brandConfig.address.ar;
+  const storeAddressEn = settings.store_address_en || brandConfig.address.en;
+  const workingHoursAr = settings.working_hours || brandConfig.workingHours.weekdays.ar;
+  const workingHoursEn = settings.working_hours_en || brandConfig.workingHours.weekdays.en;
+  const contactPhone = settings.contact_phone || brandConfig.phoneFormatted;
 
   const links = [
     { label: isAr ? 'المتجر' : 'Shop', href: '/shop' },
@@ -41,7 +53,7 @@ export default function Footer() {
                 : 'A fragrance house in the heart of Amman, curating Eastern and international blends with presence, longevity, and polish.'}
             </p>
             <div className="mt-6 flex gap-3">
-              <a href={brandConfig.instagram} target="_blank" rel="noopener noreferrer" className="icon-btn" aria-label="Instagram">
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="icon-btn" aria-label="Instagram">
                 <InstagramLogo size={18} />
               </a>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="icon-btn text-[#71d79a]" aria-label="WhatsApp">

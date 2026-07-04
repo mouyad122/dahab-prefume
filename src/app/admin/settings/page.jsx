@@ -56,6 +56,22 @@ export default function AdminSettings() {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
+  const extractMapUrl = () => {
+    let val = formData.store_google_maps_url || '';
+    if (!val) {
+      alert('الرجاء إدخال رابط أو كود Embed أولاً');
+      return;
+    }
+    const iframeMatch = val.match(/src="([^"]+)"/);
+    if (iframeMatch) {
+      handleChange('store_map_embed_url', iframeMatch[1]);
+    } else {
+      const computedEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(val)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+      handleChange('store_map_embed_url', computedEmbed);
+    }
+    alert('تم استخراج الرابط بنجاح وتحديث الخريطة');
+  };
+
   const handleDiscard = () => {
     setFormData(originalData);
     setToast({ type: 'info', message: 'تم التراجع عن التغييرات' });
@@ -271,21 +287,19 @@ export default function AdminSettings() {
                     <label className="form-label flex items-center gap-2">
                       <span>رابط موقعنا على Google Maps المباشر *</span>
                     </label>
-                    <input 
-                      type="text" 
-                      className="form-input text-left dir-ltr text-xs font-mono" 
-                      placeholder="ضع رابط موقعك هنا: https://maps.app.goo.gl/... أو اسم المكان" 
-                      value={formData.store_google_maps_url || ''} 
-                      onChange={e => {
-                        const val = e.target.value;
-                        handleChange('store_google_maps_url', val);
-                        if (!val.includes('output=embed')) {
-                          const computedEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(val)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-                          handleChange('store_map_embed_url', computedEmbed);
-                        }
-                      }} 
-                    />
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">انسخ رابط مكانك من خرائط جوجل والصقه هنا، وسيتم تعيينه كخريطة حية للموقع تلقائيًا.</p>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        className="form-input text-left dir-ltr text-xs font-mono flex-1" 
+                        placeholder="ضع رابط موقعك هنا: https://maps.app.goo.gl/... أو كود iframe" 
+                        value={formData.store_google_maps_url || ''} 
+                        onChange={e => handleChange('store_google_maps_url', e.target.value)} 
+                      />
+                      <LuxuryButton type="button" variant="primary" onClick={extractMapUrl} className="!py-2 !px-4 text-xs whitespace-nowrap">
+                        استخراج
+                      </LuxuryButton>
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">انسخ رابط مكانك من خرائط جوجل أو كود التضمين (iframe) والصقه هنا، ثم اضغط على "استخراج".</p>
                   </div>
 
                   {/* Live Map Preview */}

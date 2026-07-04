@@ -10,6 +10,11 @@ export default function AdminInventory() {
   const [search, setSearch] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
 
+  // Bulk Edit State
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [bulkStock, setBulkStock] = useState('');
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
   // Edit Modal State
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariantId, setSelectedVariantId] = useState('');
@@ -40,6 +45,56 @@ export default function AdminInventory() {
     } finally {
       setLoading(false);
     }
+  };
+
+
+  const handleSelectAll = (e, filteredArray) => {
+    if (e.target.checked) {
+      setSelectedProducts(filteredArray.map(p => p.id));
+    } else {
+      setSelectedProducts([]);
+    }
+  };
+
+  const handleSelectProduct = (id) => {
+    setSelectedProducts(prev => 
+      prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    if (!bulkStock) { alert('الرجاء إدخال الكمية الجديدة'); return; }
+    if (!confirm(`هل أنت متأكد من تحديث ${selectedProducts.length} منتجات؟`)) return;
+    
+    setBulkSubmitting(true);
+    let successCount = 0;
+    
+    for (const pId of selectedProducts) {
+      const product = products.find(p => p.id === pId);
+      if (!product || !product.variants || product.variants.length === 0) continue;
+      
+      try {
+        const res = await fetch('/api/admin/inventory/adjust', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: product.id,
+            variantId: product.variants[0].id,
+            newStock: parseInt(bulkStock, 10),
+            lowStockThreshold: product.low_stock_threshold || 5,
+            reason: 'تحديث جماعي'
+          })
+        });
+        if (res.ok) successCount++;
+      } catch (err) {}
+    }
+    
+    alert(`تم التحديث بنجاح: ${successCount} منتج`);
+    setBulkSubmitting(false);
+    setSelectedProducts([]);
+    setBulkStock('');
+    fetchInventory();
   };
 
   const fetchMovements = async () => {
@@ -243,6 +298,30 @@ export default function AdminInventory() {
 
         {/* Table */}
         <div className="flex-1 overflow-auto">
+          {selectedProducts.length > 0 && (
+            <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-3 flex items-center justify-between">
+              <div className="text-sm font-bold text-[var(--color-gold-light)]">
+                تم تحديد {selectedProducts.length} منتج
+              </div>
+              <form onSubmit={handleBulkSubmit} className="flex items-center gap-2">
+                <input
+                  type="number"
+                  className="form-input text-xs py-1.5 w-24"
+                  placeholder="الكمية"
+                  value={bulkStock}
+                  onChange={e => setBulkStock(e.target.value)}
+                  min="0"
+                  required
+                />
+                <LuxuryButton type="submit" variant="primary" className="!py-1.5 px-3 text-xs" loading={bulkSubmitting}>
+                  تحديث الكل
+                </LuxuryButton>
+                <LuxuryButton type="button" variant="ghost" className="!py-1.5 px-3 text-xs" onClick={() => setSelectedProducts([])}>
+                  إلغاء
+                </LuxuryButton>
+              </form>
+            </div>
+          )}
           {loading ? (
             <div className="flex justify-center p-20">
               <div className="spinner w-8 h-8"></div>
@@ -255,6 +334,14 @@ export default function AdminInventory() {
             <table className="w-full text-right text-sm">
               <thead className="bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] text-xs sticky top-0 z-10 shadow-sm border-b border-[var(--color-border-subtle)]">
                 <tr>
+                  <th className="py-3 px-4 font-normal w-10 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-[var(--color-border-subtle)] bg-transparent focus:ring-[var(--color-gold)]"
+                      checked={filtered.length > 0 && selectedProducts.length === filtered.length}
+                      onChange={(e) => handleSelectAll(e, filtered)}
+                    />
+                  </th>
                   <th className="py-3 px-5 font-normal">المنتج</th>
                   <th className="py-3 px-5 font-normal">SKU</th>
                   <th className="py-3 px-5 font-normal text-center">الكمية المتوفرة (تعديل سريع)</th>
@@ -272,6 +359,14 @@ export default function AdminInventory() {
                   
                   return (
                     <tr key={product.id} className="hover:bg-[var(--color-bg-surface)] transition-colors">
+                      <td className="py-3 px-4 text-center">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-[var(--color-border-subtle)] bg-transparent focus:ring-[var(--color-gold)]"
+                          checked={selectedProducts.includes(product.id)}
+                          onChange={() => handleSelectProduct(product.id)}
+                        />
+                      </td>
                       <td className="py-3 px-5">
                         <div className="font-bold text-[var(--color-text-primary)]">{product.name_ar}</div>
                         <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
