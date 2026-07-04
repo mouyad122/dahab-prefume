@@ -5,8 +5,9 @@ import ProductDetailClient from './ProductDetailClient';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
   const product = await prisma.product.findUnique({
-    where: { slug }
+    where: { slug: decodedSlug }
   });
 
   if (!product) return { title: 'Product Not Found' };
@@ -21,9 +22,10 @@ export const revalidate = 60;
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
 
   const product = await prisma.product.findUnique({
-    where: { slug },
+    where: { slug: decodedSlug },
     include: {
       category: true,
       variants: true,

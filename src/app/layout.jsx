@@ -36,7 +36,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="flex flex-col min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+      <body className="flex flex-col min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-center transition-colors duration-300">
         <Providers>
           <PublicLayoutWrapper>
             {children}

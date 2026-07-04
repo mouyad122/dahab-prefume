@@ -93,9 +93,9 @@ export default function ProductDetailClient({ product }) {
           </div>
 
             {/* Product Details */}
-            <div className="product-info flex flex-col gap-6 text-right">
+            <div className="product-info flex flex-col gap-6 text-center">
               <div>
-                <div className="eyebrow flex items-center gap-1.5 justify-end">
+                <div className="eyebrow flex items-center gap-1.5 justify-center">
                   <Sparkle size={15} weight="fill" className="text-[var(--color-gold)]" />
                   <span>{product.category?.name_ar || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
                 </div>
@@ -106,7 +106,7 @@ export default function ProductDetailClient({ product }) {
                   </p>
                 )}
                 
-                <div className="flex gap-2 justify-end mt-3 flex-wrap">
+                <div className="flex gap-2 justify-center mt-3 flex-wrap">
                   {product.gender && (
                      <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.gender}</span>
                   )}
@@ -129,7 +129,7 @@ export default function ProductDetailClient({ product }) {
                 <span className="text-xs text-[var(--color-text-muted)] font-bold mb-3 block">
                   {isAr ? 'اختر الحجم:' : 'Select Size:'}
                 </span>
-                <div className="flex gap-3 justify-end">
+                <div className="flex gap-3 justify-center">
                   {sizes.map(size => (
                     <button
                       key={size.key}
@@ -186,11 +186,11 @@ export default function ProductDetailClient({ product }) {
 
             {/* Assurances */}
             <div className="product-assurance border-t border-[var(--color-border)] pt-5 mt-2 flex flex-col gap-3.5 text-xs text-[var(--color-text-secondary)]">
-              <div className="flex items-center gap-3 justify-end">
+              <div className="flex items-center gap-3 justify-center">
                 <span>{isAr ? 'تجربة وتجربة العطر قبل الشراء متوفرة في معرضنا' : 'In-store testing available'}</span>
                 <ShieldCheck size={20} className="text-[var(--color-gold)]" weight="duotone" />
               </div>
-              <div className="flex items-center gap-3 justify-end">
+              <div className="flex items-center gap-3 justify-center">
                 <span>{isAr ? 'مكان تواجدنا:' : 'Location:'} {brandConfig.address[language]}</span>
                 <MapPin size={20} className="text-[var(--color-gold)]" weight="duotone" />
               </div>
@@ -202,24 +202,24 @@ export default function ProductDetailClient({ product }) {
         <section className="mt-16 border-t border-[var(--color-border)] pt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
           
           {/* Story & Specs */}
-          <div className="story-block text-right">
+          <div className="story-block text-center">
             <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-2">{isAr ? 'قصة العطر' : 'Fragrance Story'}</span>
             <h2 className="text-2xl font-display font-bold text-[var(--color-text-primary)] mb-4">{isAr ? 'الأثر قبل التفاصيل.' : 'The impression before the details.'}</h2>
             <p className="text-[var(--color-text-secondary)] leading-relaxed">{story || (isAr ? 'عطر مصمم ليحمل فخامة شرقية بلمسة عصرية، مناسب لمن يريد حضورًا هادئًا وواضحًا في الوقت نفسه.' : 'A scent designed around Eastern luxury with a modern restraint, made for a quiet yet unmistakable presence.')}</p>
 
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right">
+              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center">
                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الجنس' : 'Gender'}</span>
                 <strong className="text-sm font-bold text-[var(--color-text-primary)]">
                   {product.gender === 'unisex' ? (isAr ? 'للجنسين' : 'Unisex') : (product.gender === 'men' ? (isAr ? 'رجالي' : 'Men') : (isAr ? 'نسائي' : 'Women'))}
                 </strong>
               </div>
-              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right">
+              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center">
                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الموسم' : 'Season'}</span>
                 <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.season === 'all' ? (isAr ? 'جميع المواسم' : 'All Seasons') : product.season}</strong>
               </div>
               {product.fragrance_family && (
-                <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right col-span-2">
+                <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center col-span-2">
                   <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'العائلة العطرية' : 'Fragrance Family'}</span>
                   <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.fragrance_family}</strong>
                 </div>
@@ -227,7 +227,7 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {product.family_tags && product.family_tags.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2 justify-end">
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
                 {product.family_tags.map(tag => (
                   <span key={tag.id} className="px-3 py-1 bg-[var(--color-gold-dim)] text-[var(--color-gold)] border border-[var(--color-gold)]/20 rounded-full text-xs font-bold">
                     {tag.tag_ar}
@@ -239,7 +239,7 @@ export default function ProductDetailClient({ product }) {
 
           {/* Accords & Notes */}
           <div className="flex flex-col gap-8">
-            <div className="notes-panel text-right bg-[var(--color-bg-secondary)] p-6 rounded-2xl border border-[var(--color-border)] shadow-sm">
+            <div className="notes-panel text-center bg-[var(--color-bg-secondary)] p-6 rounded-2xl border border-[var(--color-border)] shadow-sm">
               <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-4">{isAr ? 'الهرم العطري' : 'Olfactory Pyramid'}</span>
               {notes.map((note) => (
                 <div key={note.label} className="border-b border-[var(--color-border-subtle)] pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 flex justify-between items-center">
