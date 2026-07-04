@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "import:products": "node scripts/import-products.mjs",
     "verify:products": "node scripts/verify-products.mjs",
     "dev:show-sample-products": "node scripts/dev-show-sample-products.mjs",
-    "dev:hide-all-products": "node scripts/dev-hide-all-products.mjs"
+    "dev:hide-all-products": "node scripts/dev-hide-all-products.mjs",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
