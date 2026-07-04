@@ -23,7 +23,9 @@ export default function ProductDetailClient({ product }) {
   const isAr = language === 'ar';
   const categoryLabel = getCategoryLabel(product, language);
   const seasonLabel = getSeasonLabel(product, language);
-  const genderLabel = product.gender === 'men' ? (isAr ? 'رجالي' : 'Men') : product.gender === 'women' ? (isAr ? 'نسائي' : 'Women') : (isAr ? 'للجنسين' : 'Unisex');
+  const isMen = product.gender === 'men' || product.gender === 'رجالي';
+  const isWomen = product.gender === 'women' || product.gender === 'نسائي';
+  const genderLabel = isMen ? (isAr ? 'رجالي' : 'Men') : isWomen ? (isAr ? 'نسائي' : 'Women') : (isAr ? 'للجنسين' : 'Unisex');
   const addToCart = useCartStore(state => state.addToCart);
   
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
@@ -217,7 +219,7 @@ export default function ProductDetailClient({ product }) {
               <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center">
                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الجنس' : 'Gender'}</span>
                 <strong className="text-sm font-bold text-[var(--color-text-primary)]">
-                  {product.gender === 'unisex' ? (isAr ? 'للجنسين' : 'Unisex') : (product.gender === 'men' ? (isAr ? 'رجالي' : 'Men') : (isAr ? 'نسائي' : 'Women'))}
+                  {genderLabel}
                 </strong>
               </div>
               <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center">
