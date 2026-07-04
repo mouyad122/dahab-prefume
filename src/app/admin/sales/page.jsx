@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { DownloadSimple, MagnifyingGlass, Funnel, CalendarBlank, Eye, X, FilePdf, FileXls, Printer } from '@phosphor-icons/react';
+import { DownloadSimple, MagnifyingGlass, Funnel, CalendarBlank, Eye, X, FileXls, Printer } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminSales() {
@@ -10,26 +10,46 @@ export default function AdminSales() {
   const [search, setSearch] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
 
-  // Date/Time Filter States
+  // Accounts/Employees List
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('all');
+
+  // Date & Time Filter States
   const [fromDate, setFromDate] = useState('');
   const [fromTime, setFromTime] = useState('00:00');
   const [toDate, setToDate] = useState('');
   const [toTime, setToTime] = useState('23:59');
   const [paymentFilter, setPaymentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   // Export Modal
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   useEffect(() => {
+    fetchEmployees();
     fetchSales();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch('/api/employees');
+      if (res.ok) {
+        const data = await res.json();
+        setEmployees(data.employees || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch accounts list');
+    }
+  };
 
   const fetchSales = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.append('limit', '200');
+      params.append('limit', '300');
+
+      if (selectedEmployeeId !== 'all') {
+        params.append('employeeId', selectedEmployeeId);
+      }
 
       if (fromDate) {
         const startISO = new Date(`${fromDate}T${fromTime || '00:00'}:00`).toISOString();
@@ -40,7 +60,6 @@ export default function AdminSales() {
         params.append('endDate', endISO);
       }
       if (paymentFilter !== 'all') params.append('paymentMethod', paymentFilter);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
 
       const res = await fetch(`/api/sales?${params.toString()}`);
       if (res.ok) {
@@ -117,9 +136,9 @@ export default function AdminSales() {
 
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex-1 flex flex-col overflow-hidden">
         
-        {/* Date & Time Filters Bar */}
+        {/* Date, Time & Employee Filter Toolbar */}
         <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 items-end">
             
             {/* Search */}
             <div className="md:col-span-2 relative">
@@ -136,19 +155,34 @@ export default function AdminSales() {
               </div>
             </div>
 
+            {/* Employee Filter */}
+            <div>
+              <label className="block text-[11px] text-gray-400 mb-1">الموظف / البائع</label>
+              <select
+                className="form-select text-xs py-1.5 px-2 bg-[#0a0a0c] border border-white/10 text-white rounded-lg w-full"
+                value={selectedEmployeeId}
+                onChange={e => setSelectedEmployeeId(e.target.value)}
+              >
+                <option value="all">جميع الموظفين والمدراء</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.display_name} ({emp.username})</option>
+                ))}
+              </select>
+            </div>
+
             {/* From Date & Time */}
             <div>
-              <label className="block text-[11px] text-gray-400 mb-1">من تاريخ ووقت</label>
+              <label className="block text-[11px] text-gray-400 mb-1">من يوم وساعة</label>
               <div className="flex gap-1">
                 <input 
                   type="date"
-                  className="form-input text-xs py-1.5 px-2 w-full font-mono"
+                  className="form-input text-xs py-1.5 px-1 w-full font-mono"
                   value={fromDate}
                   onChange={e => setFromDate(e.target.value)}
                 />
                 <input 
                   type="time"
-                  className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-20"
+                  className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-16"
                   value={fromTime}
                   onChange={e => setFromTime(e.target.value)}
                 />
@@ -157,17 +191,17 @@ export default function AdminSales() {
 
             {/* To Date & Time */}
             <div>
-              <label className="block text-[11px] text-gray-400 mb-1">إلى تاريخ ووقت</label>
+              <label className="block text-[11px] text-gray-400 mb-1">إلى يوم وساعة</label>
               <div className="flex gap-1">
                 <input 
                   type="date"
-                  className="form-input text-xs py-1.5 px-2 w-full font-mono"
+                  className="form-input text-xs py-1.5 px-1 w-full font-mono"
                   value={toDate}
                   onChange={e => setToDate(e.target.value)}
                 />
                 <input 
                   type="time"
-                  className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-20"
+                  className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-16"
                   value={toTime}
                   onChange={e => setToTime(e.target.value)}
                 />
@@ -178,7 +212,7 @@ export default function AdminSales() {
             <div>
               <LuxuryButton 
                 variant="primary" 
-                className="!py-2 px-4 text-xs w-full justify-center" 
+                className="!py-2 px-3 text-xs w-full justify-center" 
                 iconLeft={Funnel}
                 onClick={fetchSales}
               >
@@ -197,7 +231,7 @@ export default function AdminSales() {
             </div>
           ) : filteredSales.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-20 text-[var(--color-text-muted)]">
-              <p>لا توجد مبيعات مطابقة للبحث أو الفترة المحددة</p>
+              <p>لا توجد مبيعات مطابقة للبحث أو الموظف أو الفترة المحددة</p>
             </div>
           ) : (
             <table className="w-full text-right text-sm">

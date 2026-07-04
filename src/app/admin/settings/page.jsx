@@ -77,6 +77,8 @@ export default function AdminSettings() {
         { key: 'phone_primary', value: formData.phone_primary || '', category: 'contact' },
         { key: 'address_ar', value: formData.address_ar || '', category: 'contact' },
         { key: 'address_en', value: formData.address_en || '', category: 'contact' },
+        { key: 'store_google_maps_url', value: formData.store_google_maps_url || 'https://maps.google.com/?q=Dahab+Perfumes+Amman', category: 'contact' },
+        { key: 'store_map_embed_url', value: formData.store_map_embed_url || 'https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed', category: 'contact' },
         { key: 'pos_idle_enabled', value: formData.pos_idle_enabled !== undefined ? String(formData.pos_idle_enabled) : 'true', category: 'pos', value_type: 'boolean' },
         { key: 'pos_idle_timeout_minutes', value: formData.pos_idle_timeout_minutes || '4', category: 'pos', value_type: 'number' },
         { key: 'pos_idle_show_clock', value: formData.pos_idle_show_clock !== undefined ? String(formData.pos_idle_show_clock) : 'true', category: 'pos', value_type: 'boolean' },
@@ -256,6 +258,55 @@ export default function AdminSettings() {
                       <MapPin size={16} /> <span>Address (English)</span>
                     </label>
                     <input type="text" className="form-input text-left" value={formData.address_en || ''} onChange={e => handleChange('address_en', e.target.value)} />
+                  </div>
+                </div>
+
+                {/* Map Location Builder */}
+                <div className="pt-4 border-t border-[var(--color-border)] space-y-4">
+                  <h3 className="text-sm font-bold text-[var(--color-gold-light)] flex items-center gap-2">
+                    <MapPin size={18} /> تحديد موقع المعرض على الخريطة (Google Maps)
+                  </h3>
+
+                  <div>
+                    <label className="form-label flex items-center gap-2">
+                      <span>رابط خرائط جوجل المباشر (Google Maps Link)</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      className="form-input text-left dir-ltr text-xs font-mono" 
+                      placeholder="https://maps.app.goo.gl/..." 
+                      value={formData.store_google_maps_url || ''} 
+                      onChange={e => handleChange('store_google_maps_url', e.target.value)} 
+                    />
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">الرابط الذي يتم فتحه عند انقاد العميل لعرض الخريطة في تطبيق Google Maps</p>
+                  </div>
+
+                  <div>
+                    <label className="form-label flex items-center gap-2">
+                      <span>رابط تضمين الخريطة (Embed Map iFrame URL)</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      className="form-input text-left dir-ltr text-xs font-mono" 
+                      placeholder="https://maps.google.com/maps?q=Amman..." 
+                      value={formData.store_map_embed_url || ''} 
+                      onChange={e => handleChange('store_map_embed_url', e.target.value)} 
+                    />
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">رابط Embed الذي يظهر كخريطة تفاعلية على شاشة العميل في صفحة المتجر والموقع</p>
+                  </div>
+
+                  {/* Live Map Preview */}
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-300 mb-2">معاينة الخريطة الحية للموقع (Live Map Preview)</label>
+                    <div className="relative h-[220px] rounded-xl overflow-hidden border border-[#c5a25d]/30 bg-black/40">
+                      <iframe 
+                        src={formData.store_map_embed_url || "https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed"} 
+                        className="w-full h-full border-0 grayscale invert contrast-[0.9] hover:grayscale-0 hover:invert-0 transition-all duration-500"
+                        allowFullScreen="" 
+                        loading="lazy"
+                        title="Live Map Preview"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

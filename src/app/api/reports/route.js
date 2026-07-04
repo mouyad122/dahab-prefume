@@ -3,9 +3,6 @@ import { prisma } from '../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session';
 
 // ─── GET /api/reports ─────────────────────────────────────────────────────────
-// Admin and employees with can_print_reports permission.
-// Employees always see only their own data.
-// Query params: employeeId, startDate, endDate, groupBy=('day'|'employee')
 export async function GET(request) {
   try {
     const adminSession    = await verifyAdminSession();
@@ -15,10 +12,9 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Employees need can_print_reports permission
     if (employeeSession) {
       const employee = await prisma.employee.findUnique({
-        where: { id: employeeSession.id },
+        where: { id: employeeSession.employeeId },
         include: { permissions: true },
       });
       if (!employee || !employee.is_active) {
@@ -30,23 +26,24 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const groupBy   = searchParams.get('groupBy'); // 'day' | 'employee'
+    const groupBy   = searchParams.get('groupBy');
     const startDate = searchParams.get('startDate');
     const endDate   = searchParams.get('endDate');
-    let   reqEmployeeId = searchParams.get('employeeId');
+    let reqEmployeeId = searchParams.get('employeeId') || searchParams.get('sellerUserId');
 
-    // Employees always see only their own data
     if (employeeSession) {
-      reqEmployeeId = employeeSession.id;
+      reqEmployeeId = employeeSession.employeeId;
     }
 
-    // Build where clause
     const where = {
-      status: { not: 'voided' }, // exclude voided from report totals
+      status: { not: 'voided' },
     };
 
-    if (reqEmployeeId) {
-      where.employeeId = reqEmployeeId;
+    if (reqEmployeeId && reqEmployeeId !== 'all') {
+      where.OR = [
+        { employeeId: reqEmployeeId },
+        { seller_user_id: reqEmployeeId }
+      ];
     }
 
     if (startDate || endDate) {
@@ -55,7 +52,6 @@ export async function GET(request) {
       if (endDate)   where.created_at.lte = new Date(endDate);
     }
 
-    // ── Fetch sales with items and employee info ───────────────────────────────
     const sales = await prisma.sale.findMany({
       where,
       orderBy: { created_at: 'desc' },
@@ -73,7 +69,6 @@ export async function GET(request) {
       },
     });
 
-    // ── Summary Calculations ───────────────────────────────────────────────────
     const total_sales_fils   = sales.reduce((sum, s) => sum + (s.total ?? 0), 0);
     const total_invoices     = sales.length;
     const total_items_sold   = sales.reduce((sum, s) => {
@@ -90,11 +85,9 @@ export async function GET(request) {
       average_invoice_fils,
     };
 
-    // ── Optional Grouping ──────────────────────────────────────────────────────
     let grouped = undefined;
 
     if (groupBy === 'day') {
-      // Group sales by calendar date (YYYY-MM-DD)
       const byDay = {};
       for (const sale of sales) {
         const date = sale.created_at.toISOString().slice(0, 10);
@@ -113,14 +106,13 @@ export async function GET(request) {
       grouped = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
 
     } else if (groupBy === 'employee') {
-      // Group sales by employee
       const byEmployee = {};
       for (const sale of sales) {
-        const eId = sale.employeeId;
+        const eId = sale.seller_name_snapshot || sale.employee?.display_name || 'غير محدد';
         if (!byEmployee[eId]) {
           byEmployee[eId] = {
             employeeId:       eId,
-            display_name:     sale.employee?.display_name ?? 'Unknown',
+            display_name:     eId,
             username:         sale.employee?.username ?? '',
             total_sales_fils: 0,
             total_invoices:   0,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
@@ -9,6 +9,31 @@ export default function StaticPages() {
   const pathname = usePathname();
   const { language, t } = useContext(LanguageContext);
   const isAr = language === 'ar';
+
+  const [mapEmbedUrl, setMapEmbedUrl] = useState("https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed");
+  const [mapsLink, setMapsLink] = useState(brandConfig.googleMapsLink);
+  const [storeAddressAr, setStoreAddressAr] = useState('');
+  const [storeAddressEn, setStoreAddressEn] = useState('');
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.contact?.store_map_embed_url) {
+          setMapEmbedUrl(data.contact.store_map_embed_url);
+        }
+        if (data?.contact?.store_google_maps_url) {
+          setMapsLink(data.contact.store_google_maps_url);
+        }
+        if (data?.contact?.address_ar) {
+          setStoreAddressAr(data.contact.address_ar);
+        }
+        if (data?.contact?.address_en) {
+          setStoreAddressEn(data.contact.address_en);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const getPageContent = () => {
     switch (pathname) {
@@ -33,8 +58,8 @@ export default function StaticPages() {
           title: t('storeLocation'),
           eyebrow: isAr ? 'عنوان المعرض' : 'Boutique Location',
           desc: isAr
-            ? `معرض دهب للعطور يرحب بكم في قلب وسط البلد، شارع الأمير محمد، مقابل زقاق سينما البتراء سابقاً، عمّان.`
-            : `Visit the DAHAB PERFUMES showroom in Downtown Amman, Prince Muhammad Street, opposite the historic Petra Cinema alley.`
+            ? (storeAddressAr || `معرض دهب للعطور يرحب بكم في قلب وسط البلد، شارع الأمير محمد، مقابل زقاق سينما البتراء سابقاً، عمّان.`)
+            : (storeAddressEn || `Visit the DAHAB PERFUMES showroom in Downtown Amman, Prince Muhammad Street, opposite the historic Petra Cinema alley.`)
         };
       case '/reviews':
         return {
@@ -117,7 +142,7 @@ export default function StaticPages() {
             <div className="mt-4 flex flex-col gap-4">
               <div className="relative h-[250px] md:h-[350px] rounded-2xl overflow-hidden border border-[var(--color-border)]">
                 <iframe 
-                  src="https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                  src={mapEmbedUrl} 
                   className="w-full h-full border-0 grayscale invert contrast-[0.9] opacity-80 hover:grayscale-0 hover:invert-0 transition-all duration-500"
                   allowFullScreen="" 
                   loading="lazy"
@@ -125,7 +150,7 @@ export default function StaticPages() {
                 />
               </div>
               <a 
-                href={brandConfig.googleMapsLink} 
+                href={mapsLink} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn-primary w-full text-center py-3.5 text-xs flex items-center justify-center gap-2"

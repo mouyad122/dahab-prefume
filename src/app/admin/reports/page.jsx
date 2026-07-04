@@ -1,22 +1,30 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Printer, CalendarBlank, FileText } from '@phosphor-icons/react';
+import { Printer, CalendarBlank, FileText, Funnel } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminReports() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('today'); // today, yesterday, this_week, this_month
+  const [period, setPeriod] = useState('today'); // today, yesterday, this_week, this_month, custom
   const [employees, setEmployees] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('all');
+
+  // Exact Date & Time Range Filter States
+  const [fromDate, setFromDate] = useState('');
+  const [fromTime, setFromTime] = useState('00:00');
+  const [toDate, setToDate] = useState('');
+  const [toTime, setToTime] = useState('23:59');
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   useEffect(() => {
-    fetchReport(period, selectedEmployeeId);
+    if (period !== 'custom') {
+      fetchReport(period, selectedEmployeeId);
+    }
   }, [period, selectedEmployeeId]);
 
   const fetchEmployees = async () => {
@@ -31,31 +39,37 @@ export default function AdminReports() {
     }
   };
 
-  const fetchReport = async (selectedPeriod, empId) => {
+  const fetchReport = async (selectedPeriod, empId, customStart = null, customEnd = null) => {
     setLoading(true);
     try {
-      const now = new Date();
-      let startDate, endDate;
-      
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      endDate = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      let startDateStr = customStart;
+      let endDateStr = customEnd;
 
-      if (selectedPeriod === 'today') {
-        startDate = startOfToday.toISOString();
-      } else if (selectedPeriod === 'yesterday') {
-        const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
-        startDate = startOfYesterday.toISOString();
-        endDate = startOfToday.toISOString();
-      } else if (selectedPeriod === 'this_week') {
-        const startOfWeek = new Date(startOfToday);
-        startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
-        startDate = startOfWeek.toISOString();
-      } else if (selectedPeriod === 'this_month') {
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        startDate = startOfMonth.toISOString();
+      if (!customStart || !customEnd) {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
+        if (selectedPeriod === 'today') {
+          startDateStr = startOfToday.toISOString();
+          endDateStr = endOfToday.toISOString();
+        } else if (selectedPeriod === 'yesterday') {
+          const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+          startDateStr = startOfYesterday.toISOString();
+          endDateStr = startOfToday.toISOString();
+        } else if (selectedPeriod === 'this_week') {
+          const startOfWeek = new Date(startOfToday);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          startDateStr = startOfWeek.toISOString();
+          endDateStr = endOfToday.toISOString();
+        } else if (selectedPeriod === 'this_month') {
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          startDateStr = startOfMonth.toISOString();
+          endDateStr = endOfToday.toISOString();
+        }
       }
 
-      let url = `/api/reports?startDate=${startDate}&endDate=${endDate}`;
+      let url = `/api/reports?startDate=${startDateStr}&endDate=${endDateStr}`;
       if (empId && empId !== 'all') {
         url += `&employeeId=${empId}`;
       }
@@ -72,51 +86,128 @@ export default function AdminReports() {
     }
   };
 
-  const formatJOD = (fils) => `${(fils / 1000).toFixed(3)} JOD`;
+  const handleApplyCustomFilter = () => {
+    if (!fromDate || !toDate) {
+      alert('يرجى تحديد تاريخ البداية وتاريخ النهاية');
+      return;
+    }
+
+    const startISO = new Date(`${fromDate}T${fromTime || '00:00'}:00`).toISOString();
+    const endISO = new Date(`${toDate}T${toTime || '23:59'}:59`).toISOString();
+
+    setPeriod('custom');
+    fetchReport('custom', selectedEmployeeId, startISO, endISO);
+  };
+
+  const formatJOD = (fils) => `${((fils || 0) / 1000).toFixed(3)} JOD`;
 
   return (
-    <div className="flex-grow p-6 md:p-10 bg-[var(--color-bg-primary)] h-full overflow-y-auto dir-ar">
+    <div className="flex-grow p-6 md:p-10 bg-[var(--color-bg-primary)] h-full overflow-y-auto dir-ar text-white">
       <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-white mb-1">
-              تقرير المبيعات العام
-            </h1>
-            <p className="text-[var(--color-text-secondary)] text-sm">
-              ملخص مبيعات المحل وأداء الموظفين
-            </p>
+        <div className="flex flex-col gap-6 mb-8 no-print">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-white mb-1">
+                تقرير المبيعات العام والتأكيدات
+              </h1>
+              <p className="text-[var(--color-text-secondary)] text-sm">
+                ملخص مبيعات المعرض وأداء الموظفين بناءً على اليوم والساعة
+              </p>
+            </div>
+            
+            <LuxuryButton variant="secondary" onClick={() => window.print()} className="text-xs !py-2 px-4" iconLeft={Printer}>
+              طباعة التقرير (PDF)
+            </LuxuryButton>
           </div>
-          
-          <div className="flex flex-wrap gap-3">
-            {/* Employee Filter */}
-            <select 
-              className="form-select text-xs font-bold bg-[var(--color-bg-surface)] text-white border border-[var(--color-border)] py-1.5 px-3 rounded-md shadow-sm"
-              value={selectedEmployeeId}
-              onChange={e => setSelectedEmployeeId(e.target.value)}
-            >
-              <option value="all">كل الموظفين</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.display_name}</option>
-              ))}
-            </select>
 
-            {/* Period Filter */}
-            <div className="flex gap-2 bg-[var(--color-bg-surface)] p-1 rounded-md border border-[var(--color-border)] shadow-sm">
-              {[
-                { id: 'today', label: 'اليوم' },
-                { id: 'yesterday', label: 'الأمس' },
-                { id: 'this_week', label: 'هذا الأسبوع' },
-                { id: 'this_month', label: 'هذا الشهر' }
-              ].map(p => (
-                <LuxuryButton
-                  key={p.id}
-                  variant={period === p.id ? 'primary' : 'ghost'}
-                  onClick={() => setPeriod(p.id)}
-                  className="!px-4 !py-1.5 rounded text-xs font-bold transition-colors"
+          {/* Filter Bar with Date, Time, and Employee */}
+          <div className="p-4 rounded-2xl bg-[#121216] border border-[#c5a25d]/20 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 items-end">
+              
+              {/* Employee Selection */}
+              <div>
+                <label className="block text-[11px] text-gray-400 mb-1">الموظف / البائع</label>
+                <select 
+                  className="form-select text-xs py-1.5 px-2 bg-[#0a0a0c] text-white border border-white/10 rounded-lg w-full"
+                  value={selectedEmployeeId}
+                  onChange={e => setSelectedEmployeeId(e.target.value)}
                 >
-                  {p.label}
+                  <option value="all">جميع الموظفين والمدراء</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.display_name} ({emp.username})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* From Date & Time */}
+              <div>
+                <label className="block text-[11px] text-gray-400 mb-1">من يوم وساعة</label>
+                <div className="flex gap-1">
+                  <input 
+                    type="date"
+                    className="form-input text-xs py-1.5 px-1 w-full font-mono bg-[#0a0a0c]"
+                    value={fromDate}
+                    onChange={e => setFromDate(e.target.value)}
+                  />
+                  <input 
+                    type="time"
+                    className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-16 bg-[#0a0a0c]"
+                    value={fromTime}
+                    onChange={e => setFromTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* To Date & Time */}
+              <div>
+                <label className="block text-[11px] text-gray-400 mb-1">إلى يوم وساعة</label>
+                <div className="flex gap-1">
+                  <input 
+                    type="date"
+                    className="form-input text-xs py-1.5 px-1 w-full font-mono bg-[#0a0a0c]"
+                    value={toDate}
+                    onChange={e => setToDate(e.target.value)}
+                  />
+                  <input 
+                    type="time"
+                    className="form-input text-xs py-1.5 px-1 font-mono shrink-0 w-16 bg-[#0a0a0c]"
+                    value={toTime}
+                    onChange={e => setToTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Apply Custom Filter */}
+              <div>
+                <LuxuryButton 
+                  variant="primary" 
+                  className="!py-2 px-3 text-xs w-full justify-center" 
+                  iconLeft={Funnel}
+                  onClick={handleApplyCustomFilter}
+                >
+                  فلترة مخصصة
                 </LuxuryButton>
-              ))}
+              </div>
+
+              {/* Quick Period Presets */}
+              <div className="md:col-span-2 flex flex-wrap gap-1 bg-[#0a0a0c] p-1 rounded-xl border border-white/10">
+                {[
+                  { id: 'today', label: 'اليوم' },
+                  { id: 'yesterday', label: 'الأمس' },
+                  { id: 'this_week', label: 'هذا الأسبوع' },
+                  { id: 'this_month', label: 'هذا الشهر' }
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setPeriod(p.id); setFromDate(''); setToDate(''); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex-1 text-center ${period === p.id ? 'bg-[#c5a25d] text-black' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
             </div>
           </div>
         </div>
@@ -130,25 +221,25 @@ export default function AdminReports() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 no-print">
               <div className="glass-card p-5 border-l-4 border-l-[var(--color-gold)] bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                 <div className="text-[0.75rem] text-white/60 font-bold mb-1">إجمالي المبيعات</div>
-                <div className="text-2xl font-display font-bold text-[var(--color-gold-light)]">
+                <div className="text-2xl font-display font-bold text-[var(--color-gold-light)] font-mono">
                   {formatJOD(report.summary.total_sales_fils)}
                 </div>
               </div>
               <div className="glass-card p-5 border-l-4 border-l-[var(--color-gold)] bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                 <div className="text-[0.75rem] text-white/60 font-bold mb-1">عدد الفواتير</div>
-                <div className="text-2xl font-display font-bold text-white">
+                <div className="text-2xl font-display font-bold text-white font-mono">
                   {report.summary.total_invoices}
                 </div>
               </div>
               <div className="glass-card p-5 border-l-4 border-l-[var(--color-gold)] bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                 <div className="text-[0.75rem] text-white/60 font-bold mb-1">إجمالي المنتجات المباعة</div>
-                <div className="text-2xl font-display font-bold text-white">
+                <div className="text-2xl font-display font-bold text-white font-mono">
                   {report.summary.total_items_sold}
                 </div>
               </div>
               <div className="glass-card p-5 border-l-4 border-l-[var(--color-gold)] bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                 <div className="text-[0.75rem] text-white/60 font-bold mb-1">متوسط قيمة الفاتورة</div>
-                <div className="text-2xl font-display font-bold text-[var(--color-gold-light)]">
+                <div className="text-2xl font-display font-bold text-[var(--color-gold-light)] font-mono">
                   {formatJOD(report.summary.average_invoice_fils)}
                 </div>
               </div>
@@ -157,10 +248,8 @@ export default function AdminReports() {
             {/* Sales Details Table */}
             <div className="glass-card border border-[var(--color-border-strong)] rounded-lg overflow-hidden bg-[var(--color-bg-surface)] no-print">
               <div className="p-4 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex justify-between items-center">
-                <h3 className="font-bold text-white">تفاصيل المبيعات</h3>
-                <LuxuryButton variant="secondary" onClick={() => window.print()} className="text-xs !py-1.5 px-3" iconLeft={Printer}>
-                  طباعة التقرير
-                </LuxuryButton>
+                <h3 className="font-bold text-white">تفاصيل فواتير المبيعات</h3>
+                <span className="text-xs text-gray-400 font-mono">إجمالي: {report.sales.length} فاتورة</span>
               </div>
               
               <div className="overflow-x-auto">
@@ -168,8 +257,8 @@ export default function AdminReports() {
                   <thead className="bg-black/40 text-white text-xs border-b border-[var(--color-border)]">
                     <tr>
                       <th className="py-3 px-4 font-bold">رقم الفاتورة</th>
-                      <th className="py-3 px-4 font-bold">الوقت</th>
-                      <th className="py-3 px-4 font-bold">الموظف</th>
+                      <th className="py-3 px-4 font-bold">التاريخ والوقت</th>
+                      <th className="py-3 px-4 font-bold">البائع المسجل</th>
                       <th className="py-3 px-4 font-bold">المنتجات</th>
                       <th className="py-3 px-4 font-bold">طريقة الدفع</th>
                       <th className="py-3 px-4 font-bold">المبلغ</th>
@@ -179,8 +268,8 @@ export default function AdminReports() {
                     {report.sales.length > 0 ? report.sales.map(sale => (
                       <tr key={sale.id} className="hover:bg-black/20 transition-colors">
                         <td className="py-3 px-5 font-mono text-[var(--color-gold-light)] font-bold">{sale.invoice_number}</td>
-                        <td className="py-3 px-4 text-white/90">{new Date(sale.created_at).toLocaleTimeString('ar-JO')}</td>
-                        <td className="py-3 px-4 text-white/90">{sale.employee?.display_name || 'غير معروف'}</td>
+                        <td className="py-3 px-4 text-white/90 font-mono text-xs">{new Date(sale.created_at).toLocaleString('ar-JO')}</td>
+                        <td className="py-3 px-4 text-white/90 font-bold">{sale.seller_name_snapshot || sale.employee?.display_name || 'غير محدد'}</td>
                         <td className="py-3 px-4 text-white/90">{sale.items?.length || 0}</td>
                         <td className="py-3 px-4">
                           <span className={`px-2.5 py-0.5 rounded border text-[0.65rem] font-bold ${
@@ -195,7 +284,7 @@ export default function AdminReports() {
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="6" className="py-10 text-center text-white/60">لا توجد مبيعات في هذه الفترة</td>
+                        <td colSpan="6" className="py-10 text-center text-white/60">لا توجد مبيعات في هذه الفترة المحددة</td>
                       </tr>
                     )}
                   </tbody>
@@ -203,10 +292,8 @@ export default function AdminReports() {
               </div>
             </div>
 
-
             {/* Hidden Print Layout */}
             <div className="hidden print-only print-report" dir="rtl">
-              {/* ── Print Header: Logo + Brand + Report Info ── */}
               <div className="print-header">
                 <img
                   src="/brand/dahab-logo.png"
@@ -216,12 +303,12 @@ export default function AdminReports() {
                 />
                 <div className="print-brand-block">
                   <div className="print-brand-name">DAHAB PERFUMES</div>
-                  <div className="print-brand-subtitle">دهب للعطور — وسط عمّان</div>
-                  <div className="print-report-title">تقرير المبيعات</div>
+                  <div className="print-brand-subtitle">دهب للعطور — عمان</div>
+                  <div className="print-report-title">تقرير المبيعات التفصيلي</div>
                   <div className="print-report-meta">
-                    الموظف: {selectedEmployeeId === 'all' ? 'جميع الموظفين' : employees.find(e => e.id === selectedEmployeeId)?.display_name} &nbsp;|&nbsp;
-                    الفترة: {period === 'today' ? 'اليوم' : period === 'yesterday' ? 'الأمس' : period === 'this_week' ? 'هذا الأسبوع' : 'هذا الشهر'} &nbsp;|&nbsp;
-                    طُبع: {new Date().toLocaleString('ar-JO')}
+                    الموظف/البائع: {selectedEmployeeId === 'all' ? 'جميع الموظفين والمدراء' : employees.find(e => e.id === selectedEmployeeId)?.display_name} &nbsp;|&nbsp;
+                    الفترة: {period === 'custom' ? `من ${fromDate} ${fromTime} إلى ${toDate} ${toTime}` : period === 'today' ? 'اليوم' : period === 'yesterday' ? 'الأمس' : period === 'this_week' ? 'هذا الأسبوع' : 'هذا الشهر'} &nbsp;|&nbsp;
+                    تاريخ الطباعة: {new Date().toLocaleString('ar-JO')}
                   </div>
                 </div>
               </div>
@@ -247,7 +334,7 @@ export default function AdminReports() {
                   <tr>
                     <th className="w-24">رقم الفاتورة</th>
                     <th className="w-32">التاريخ والوقت</th>
-                    <th className="w-24">الموظف</th>
+                    <th className="w-24">البائع</th>
                     <th className="w-16">المنتجات</th>
                     <th className="w-20">الدفع</th>
                     <th className="w-24">المجموع</th>
@@ -258,7 +345,7 @@ export default function AdminReports() {
                     <tr key={sale.id}>
                       <td style={{ fontFamily: 'monospace' }}>{sale.invoice_number}</td>
                       <td>{new Date(sale.created_at).toLocaleString('ar-JO')}</td>
-                      <td>{sale.employee?.display_name || 'غير معروف'}</td>
+                      <td>{sale.seller_name_snapshot || sale.employee?.display_name || 'غير محدد'}</td>
                       <td>{sale.items?.length || 0}</td>
                       <td>{sale.payment_method === 'cash' ? 'نقدي' : 'بطاقة'}</td>
                       <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{formatJOD(sale.total)}</td>
