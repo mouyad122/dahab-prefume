@@ -5,7 +5,7 @@ import { MagnifyingGlass, Plus, Minus, X, CheckCircle, Printer, ArrowRight, Rece
 import { usePosContext } from '../../../contexts/PosContext';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
-export default function PosCounter() {
+export default function PosCounter({ saleSource = 'STAFF_POS' }) {
   const { employee } = usePosContext();
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,7 +151,8 @@ export default function PosCounter() {
         total: total_fils,
         amount_received: paymentMethod === 'cash' ? amountReceived_fils : total_fils,
         payment_method: paymentMethod,
-        notes: saleNote
+        notes: saleNote,
+        sale_source: saleSource
       };
 
       const res = await fetch('/api/sales', {

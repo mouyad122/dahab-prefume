@@ -13,43 +13,44 @@ generator client {
 // ============================================================
 
 model Product {
-  id                    String             @id @default(uuid())
-  sku                   String             @unique
-  slug                  String             @unique
+  id                    String              @id @default(uuid())
+  sku                   String              @unique
+  slug                  String              @unique
   name_ar               String
   name_en               String?
   inspired_by           String?
-  main_category         String             @default("general")
-  gender                String             @default("unisex")
-  season                String             @default("all")
-  fragrance_family_raw  String             @default("")
-  short_description_ar  String             @default("")
+  main_category         String              @default("general")
+  gender                String              @default("unisex")
+  season                String              @default("all")
+  fragrance_family_raw  String              @default("")
+  short_description_ar  String              @default("")
   short_description_en  String?
   long_description_ar   String?
   long_description_en   String?
-  keywords_ar           String             @default("")
-  image_filename        String             @default("")
-  needs_image           Boolean            @default(true)
-  visible_on_website    Boolean            @default(true)
-  featured_on_frontend  Boolean            @default(false)
-  low_stock_threshold   Int                @default(5)
+  keywords_ar           String              @default("")
+  image_filename        String              @default("")
+  needs_image           Boolean             @default(true)
+  visible_on_website    Boolean             @default(true)
+  featured_on_frontend  Boolean             @default(false)
+  low_stock_threshold   Int                 @default(5)
   notes_top             String?
   notes_heart           String?
   notes_base            String?
   notes                 String?
-  research_confidence   String             @default("medium")
-  needs_review          Boolean            @default(false)
-  source_excel_row      Int?               @unique
-  created_at            DateTime           @default(now())
-  updated_at            DateTime           @updatedAt
+  research_confidence   String              @default("medium")
+  needs_review          Boolean             @default(false)
+  source_excel_row      Int?                @unique
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
 
   categoryId            String?
-  category              Category?          @relation(fields: [categoryId], references: [id])
+  category              Category?           @relation(fields: [categoryId], references: [id])
   variants              ProductVariant[]
   accords               ProductAccord[]
   family_tags           ProductFamilyTag[]
   discounts             Discount[]
   sale_items            SaleItem[]
+  inventory_movements   InventoryMovement[]
 
   @@index([slug])
   @@index([sku])
@@ -166,6 +167,7 @@ model Employee {
   display_name  String
   role          String               @default("employee")
   is_active     Boolean              @default(true)
+  pin_hash      String?
   created_at    DateTime             @default(now())
   updated_at    DateTime             @updatedAt
 
@@ -200,25 +202,31 @@ model EmployeePermission {
 // ============================================================
 
 model Sale {
-  id              String     @id @default(uuid())
-  invoice_number  String     @unique
-  employeeId      String
-  subtotal        Int
-  discount_total  Int        @default(0)
-  total           Int
-  amount_received Int        @default(0)
-  change_amount   Int        @default(0)
-  payment_method  String     @default("cash")
-  status          String     @default("completed")
-  notes           String?
-  employee_note   String?
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @updatedAt
+  id                   String     @id @default(uuid())
+  invoice_number       String     @unique
+  employeeId           String?
+  seller_user_id       String?
+  seller_name_snapshot String?
+  seller_role_snapshot String?
+  sale_source          String     @default("STAFF_POS")
+  subtotal             Int
+  discount_total       Int        @default(0)
+  total                Int
+  amount_received      Int        @default(0)
+  change_amount        Int        @default(0)
+  payment_method       String     @default("cash")
+  status               String     @default("completed")
+  notes                String?
+  employee_note        String?
+  created_at           DateTime   @default(now())
+  updated_at           DateTime   @updatedAt
 
-  employee        Employee   @relation(fields: [employeeId], references: [id])
-  items           SaleItem[]
+  employee             Employee?  @relation(fields: [employeeId], references: [id])
+  items                SaleItem[]
 
   @@index([employeeId])
+  @@index([seller_user_id])
+  @@index([sale_source])
   @@index([status])
   @@index([created_at])
   @@index([invoice_number])
@@ -241,6 +249,27 @@ model SaleItem {
 
   @@index([saleId])
   @@index([productId])
+}
+
+// ============================================================
+// INVENTORY MOVEMENTS
+// ============================================================
+
+model InventoryMovement {
+  id              String   @id @default(uuid())
+  productId       String
+  variantId       String?
+  old_quantity    Int
+  new_quantity    Int
+  quantity_change Int
+  reason          String
+  adjusted_by     String
+  created_at      DateTime @default(now())
+
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([created_at])
 }
 
 // ============================================================
@@ -295,6 +324,17 @@ model SecurityEvent {
   @@index([created_at])
 }
 
+model BlockedIP {
+  id          String    @id @default(uuid())
+  ip_address  String    @unique
+  reason      String?
+  blocked_by  String    @default("system")
+  expires_at  DateTime?
+  created_at  DateTime  @default(now())
+
+  @@index([ip_address])
+}
+
 // ============================================================
 // CONTACT INQUIRIES
 // ============================================================
@@ -314,4 +354,3 @@ model ContactInquiry {
   @@index([type])
   @@index([created_at])
 }
-

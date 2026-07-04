@@ -4,11 +4,9 @@ import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session'
 import { sanitize } from '../../../lib/security';
 
 // ─── GET /api/sales ───────────────────────────────────────────────────────────
-// Admin sees all sales; employees see only their own.
-// Query params: employeeId, startDate, endDate, status, limit=50, offset=0
+// Query params: employeeId, sellerUserId, startDate, endDate, paymentMethod, status, limit=50, offset=0
 export async function GET(request) {
   try {
-    // Try admin session first, then employee
     const adminSession = await verifyAdminSession();
     const employeeSession = !adminSession ? await verifyEmployeeSession() : null;
 
@@ -17,27 +15,35 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit  = Math.min(parseInt(searchParams.get('limit')  ?? '50', 10), 200);
+    const limit  = Math.min(parseInt(searchParams.get('limit')  ?? '50', 10), 500);
     const offset = Math.max(parseInt(searchParams.get('offset') ?? '0',  10), 0);
     const status = searchParams.get('status');
+    const paymentMethod = searchParams.get('paymentMethod');
     const startDate = searchParams.get('startDate');
     const endDate   = searchParams.get('endDate');
-    let   reqEmployeeId = searchParams.get('employeeId');
+    let reqEmployeeId = searchParams.get('employeeId') || searchParams.get('sellerUserId');
 
     // Employees can only view their own sales — override any query param
     if (employeeSession) {
-      reqEmployeeId = employeeSession.id;
+      reqEmployeeId = employeeSession.employeeId;
     }
 
     // Build where clause
     const where = {};
 
     if (reqEmployeeId) {
-      where.employeeId = reqEmployeeId;
+      where.OR = [
+        { employeeId: reqEmployeeId },
+        { seller_user_id: reqEmployeeId }
+      ];
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       where.status = status;
+    }
+
+    if (paymentMethod && paymentMethod !== 'all') {
+      where.payment_method = paymentMethod;
     }
 
     if (startDate || endDate) {
@@ -46,7 +52,6 @@ export async function GET(request) {
       if (endDate)   where.created_at.lte = new Date(endDate);
     }
 
-    // Fetch sales + total count + sum in one transaction
     const [sales, total, aggregate] = await prisma.$transaction([
       prisma.sale.findMany({
         where,
@@ -62,7 +67,7 @@ export async function GET(request) {
             },
           },
           employee: {
-            select: { id: true, display_name: true, username: true },
+            select: { id: true, display_name: true, username: true, role: true },
           },
         },
       }),
@@ -86,11 +91,13 @@ export async function GET(request) {
 }
 
 // ─── POST /api/sales ──────────────────────────────────────────────────────────
-// Employee only. Creates a sale and deducts stock.
+// Accessible by Employee or Admin (for Admin Counter).
 export async function POST(request) {
   try {
-    const session = await verifyEmployeeSession();
-    if (!session) {
+    const adminSession = await verifyAdminSession();
+    const employeeSession = !adminSession ? await verifyEmployeeSession() : null;
+
+    if (!adminSession && !employeeSession) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -109,7 +116,33 @@ export async function POST(request) {
       amount_received,
       payment_method = 'cash',
       notes,
+      sale_source
     } = body;
+
+    // Determine seller identity snapshot
+    let sellerUserId = null;
+    let sellerNameSnapshot = 'غير محدد';
+    let sellerRoleSnapshot = 'كاشير';
+    let employeeIdVal = null;
+    let controlledSaleSource = 'STAFF_POS';
+
+    if (adminSession) {
+      sellerUserId = adminSession.id || 'admin';
+      sellerNameSnapshot = adminSession.displayName || adminSession.username || 'المدير العام';
+      sellerRoleSnapshot = 'المدير العام';
+      controlledSaleSource = 'ADMIN_COUNTER';
+    } else if (employeeSession) {
+      const emp = await prisma.employee.findUnique({
+        where: { id: employeeSession.employeeId }
+      });
+      if (emp) {
+        employeeIdVal = emp.id;
+        sellerUserId = emp.id;
+        sellerNameSnapshot = emp.display_name || emp.username;
+        sellerRoleSnapshot = emp.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
+      }
+      controlledSaleSource = sale_source === 'ADMIN_COUNTER' ? 'ADMIN_COUNTER' : 'STAFF_POS';
+    }
 
     // ── Validate required fields ──────────────────────────────────────────────
     if (!Array.isArray(items) || items.length === 0) {
@@ -140,7 +173,7 @@ export async function POST(request) {
       }
     }
 
-    // ── Generate Invoice Number with Timezone-Proof startsWith & Retry Loop ──
+    // ── Generate Invoice Number with Retry Loop ──
     let invoice_number = '';
     let sale = null;
     let retries = 3;
@@ -153,7 +186,6 @@ export async function POST(request) {
       const dd      = String(now.getDate()).padStart(2, '0');
       const dateStr = `${yyyy}${mm}${dd}`;
 
-      // Query database for the latest invoice number starting with today's dateStr
       const latestSale = await prisma.sale.findFirst({
         where: {
           invoice_number: {
@@ -182,9 +214,7 @@ export async function POST(request) {
       invoice_number = `INV-${dateStr}-${invoiceSeq}`;
 
       try {
-        // Run database transaction
         sale = await prisma.$transaction(async (tx) => {
-          // Double check unique constraint within transaction to prevent race conditions
           const conflict = await tx.sale.findUnique({
             where: { invoice_number },
             select: { id: true }
@@ -193,19 +223,22 @@ export async function POST(request) {
             throw { code: 'P2002', meta: { target: ['invoice_number'] } };
           }
 
-          // Create the sale
           const newSale = await tx.sale.create({
             data: {
               invoice_number,
-              employeeId:     session.employeeId,
-              subtotal:       Math.round(subtotal),
-              discount_total: Math.round(discount_total),
-              total:          Math.round(total),
-              amount_received: Math.round(amount_received),
-              change_amount:  Math.round(change_amount),
-              payment_method: sanitize(String(payment_method)),
-              status:         'completed',
-              notes:          notes ? sanitize(String(notes)) : null,
+              employeeId:           employeeIdVal,
+              seller_user_id:       sellerUserId,
+              seller_name_snapshot: sellerNameSnapshot,
+              seller_role_snapshot: sellerRoleSnapshot,
+              sale_source:          controlledSaleSource,
+              subtotal:             Math.round(subtotal),
+              discount_total:       Math.round(discount_total),
+              total:                Math.round(total),
+              amount_received:      Math.round(amount_received),
+              change_amount:        Math.round(change_amount),
+              payment_method:       sanitize(String(payment_method)),
+              status:               'completed',
+              notes:                notes ? sanitize(String(notes)) : null,
               items: {
                 create: items.map((item) => ({
                   productId:       item.productId ?? null,
@@ -257,15 +290,14 @@ export async function POST(request) {
           return newSale;
         });
 
-        // Success - break retry loop
         break;
       } catch (error) {
         if (error.code === 'P2002' && error.meta?.target?.includes('invoice_number')) {
           retries--;
-          if (retries === 0) throw error; // Throw after all retries fail
-          continue; // Retry next loop iteration with incremented sequence
+          if (retries === 0) throw error;
+          continue;
         }
-        throw error; // Throw any other database error
+        throw error;
       }
     }
 

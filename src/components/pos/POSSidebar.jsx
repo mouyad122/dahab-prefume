@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Storefront, Receipt, FileText, SignOut, Gear } from '@phosphor-icons/react';
+import { Storefront, Receipt, FileText, SignOut, Gear, Warehouse } from '@phosphor-icons/react';
 import { usePosContext } from '../../contexts/PosContext';
 import LuxuryButton from '../ui/LuxuryButton';
 
@@ -43,7 +43,13 @@ export default function POSSidebar() {
       show: permissions?.can_print_reports
     },
     {
-      path: '/admin/settings',
+      path: '/pos/inventory',
+      label: 'المخزون',
+      icon: Warehouse,
+      show: permissions?.can_view_inventory
+    },
+    {
+      path: '/pos/settings',
       label: 'الإعدادات',
       icon: Gear,
       show: permissions?.can_view_settings
@@ -51,20 +57,20 @@ export default function POSSidebar() {
   ];
 
   return (
-    <aside className="w-[260px] bg-[var(--color-bg-secondary)] border-l border-[var(--color-border)] flex flex-col no-print h-screen overflow-hidden">
+    <aside className="w-[260px] bg-[var(--color-bg-secondary)] border-l border-[var(--color-border)] flex flex-col no-print h-screen max-h-screen overflow-hidden">
       {/* Brand Header */}
-      <div className="p-6 border-b border-[var(--color-border)] text-center">
+      <div className="p-6 border-b border-[var(--color-border)] text-center shrink-0">
         <div className="font-display text-2xl font-bold tracking-widest text-[var(--color-gold)] mb-1">DAHAB</div>
         <div className="text-[0.6rem] font-bold tracking-[0.2em] text-[var(--color-text-muted)] uppercase mb-4">PERFUMES</div>
         
         <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border-strong)] rounded-lg p-3">
           <div className="text-sm font-bold text-[var(--color-text-primary)] mb-1">{employee?.display_name || 'موظف مبيعات'}</div>
-          <div className="text-xs text-[var(--color-gold-light)]">{employee?.role === 'manager' ? 'مدير' : 'موظف'}</div>
+          <div className="text-xs text-[var(--color-gold-light)]">{employee?.role === 'manager' ? 'مدير فرع' : 'كاشير مبيعات'}</div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 flex flex-col gap-2 dir-ar overflow-y-auto">
+      <nav className="flex-1 p-4 flex flex-col gap-2 dir-ar overflow-y-auto sidebar-nav-scroll">
         {navItems.filter(item => item.show).map((item) => {
           const isActive = pathname.startsWith(item.path);
           const Icon = item.icon;
@@ -86,7 +92,7 @@ export default function POSSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-[var(--color-border)]">
+      <div className="p-4 border-t border-[var(--color-border)] shrink-0">
         <LuxuryButton
           onClick={handleLogout}
           variant="ghost"

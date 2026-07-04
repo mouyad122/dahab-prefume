@@ -6,25 +6,23 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   ChartBar, Package, Tag, UsersThree, Coins, 
   Warehouse, Percent, Gear, ShieldWarning, 
-  FileText, SignOut, List, X, CaretDown, Sparkle, Storefront, ChatTeardropText
+  FileText, SignOut, X, CaretDown, Storefront, ChatTeardropText
 } from '@phosphor-icons/react';
 import LuxuryButton from '../ui/LuxuryButton';
-
 
 export default function AdminSidebar({ user, open, setOpen }) {
   const pathname = usePathname();
   const router = useRouter();
   
-  // Track which sections are collapsed (roll up / roll down)
+  // Track which sections are collapsed
   const [collapsedSections, setCollapsedSections] = useState({
     'الرئيسية': false,
     'المتجر': false,
-    'المبيعات والموظفين': false,
+    'المبيعات والحسابات': false,
     'نظام الكاشير': false,
     'النظام': false
   });
 
-  // Load from localStorage on mount (hydration safe)
   useEffect(() => {
     const saved = localStorage.getItem('admin_sidebar_collapsed');
     if (saved) {
@@ -84,17 +82,17 @@ export default function AdminSidebar({ user, open, setOpen }) {
       ]
     },
     { 
-      section: 'المبيعات والموظفين', 
+      section: 'المبيعات والحسابات', 
       items: [
         { path: '/admin/sales', label: 'المبيعات', icon: Coins, show: isSuperAdmin || perms.can_view_invoices || perms.can_view_accounting },
         { path: '/admin/reports', label: 'التقارير', icon: FileText, show: isSuperAdmin || perms.can_print_reports || perms.can_view_accounting },
-        { path: '/admin/employees', label: 'الموظفين', icon: UsersThree, show: isSuperAdmin || perms.can_manage_employees },
+        { path: '/admin/accounts', label: 'إدارة الحسابات', icon: UsersThree, show: isSuperAdmin || perms.can_manage_employees },
       ]
     },
     { 
       section: 'نظام الكاشير',
       items: [
-        { path: '/pos/counter', label: 'كاونتر البيع', icon: Storefront, show: isSuperAdmin || perms.can_access_counter },
+        { path: '/admin/counter', label: 'كاونتر البيع', icon: Storefront, show: isSuperAdmin || perms.can_access_counter },
       ]
     },
     { 
@@ -123,10 +121,10 @@ export default function AdminSidebar({ user, open, setOpen }) {
         />
       )}
 
-      <aside className={`admin-sidebar ${open ? 'open' : ''} dir-ar`}>
+      <aside className={`admin-sidebar ${open ? 'open' : ''} dir-ar h-screen max-h-screen flex flex-col overflow-hidden`}>
         
         {/* Header */}
-        <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--color-border)] flex items-center justify-between shrink-0">
           <Link href="/admin/dashboard" className="flex flex-col">
             <span className="font-display text-2xl font-bold tracking-widest text-[var(--color-gold)] leading-none">
               DAHAB
@@ -134,7 +132,7 @@ export default function AdminSidebar({ user, open, setOpen }) {
             <span className="text-[0.6rem] font-bold tracking-[0.2em] text-[var(--color-text-muted)] uppercase mt-1">
               PERFUMES
             </span>
-            <span className="text-[0.6rem] text-[var(--color-gold-light)] mt-2 font-mono bg-[var(--color-gold-dim)] px-2 py-0.5 inline-block w-fit rounded">
+            <span className="text-[0.6rem] text-[var(--color-gold-light)] mt-1.5 font-mono bg-[var(--color-gold-dim)] px-2 py-0.5 inline-block w-fit rounded">
               ADMIN PANEL
             </span>
           </Link>
@@ -147,8 +145,8 @@ export default function AdminSidebar({ user, open, setOpen }) {
           </LuxuryButton>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 sidebar-nav-scroll">
+        {/* Navigation Section with Scrollbar */}
+        <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 sidebar-nav-scroll">
           {navItems.map((group, gIdx) => {
             const isCollapsed = collapsedSections[group.section];
             return (
@@ -165,7 +163,6 @@ export default function AdminSidebar({ user, open, setOpen }) {
                   />
                 </button>
                 
-                {/* Collapsible Submenu Container (Grid Height transition) */}
                 <div className={`sidebar-submenu ${isCollapsed ? 'collapsed' : ''}`}>
                   <div className="sidebar-submenu-inner">
                     <ul className="flex flex-col gap-1 mt-1">
@@ -194,17 +191,17 @@ export default function AdminSidebar({ user, open, setOpen }) {
         </nav>
 
         {/* Footer / User Info */}
-        <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-card)]">
-          <div className="flex items-center gap-3 mb-4 p-2 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)]">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-gold-dim)] border border-[var(--color-gold)] flex items-center justify-center text-[var(--color-gold-light)] font-bold">
+        <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-card)] shrink-0">
+          <div className="flex items-center gap-3 mb-3 p-2 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)]">
+            <div className="w-9 h-9 rounded-full bg-[var(--color-gold-dim)] border border-[var(--color-gold)] flex items-center justify-center text-[var(--color-gold-light)] font-bold text-sm shrink-0">
               {user?.username?.[0]?.toUpperCase() || 'A'}
             </div>
             <div className="flex-1 overflow-hidden">
-              <div className="text-sm font-bold text-[var(--color-text-primary)] truncate">
-                {user?.username || 'Admin User'}
+              <div className="text-xs font-bold text-[var(--color-text-primary)] truncate">
+                {user?.displayName || user?.username || 'المدير العام'}
               </div>
-              <div className="text-xs text-[var(--color-gold-light)]">
-                المدير العام
+              <div className="text-[11px] text-[var(--color-gold-light)] font-light">
+                {user?.isSuperAdmin ? 'المدير العام' : 'حساب الإدارة'}
               </div>
             </div>
           </div>
@@ -212,8 +209,8 @@ export default function AdminSidebar({ user, open, setOpen }) {
             onClick={handleLogout}
             variant="ghost"
             fullWidth
-            className="!text-[#f97171] hover:!bg-[rgba(180,30,30,0.12)] hover:!border-[rgba(180,30,30,0.3)]"
-            iconLeft={(props) => <SignOut size={18} weight="bold" {...props} />}
+            className="!text-[#f97171] hover:!bg-[rgba(180,30,30,0.12)] hover:!border-[rgba(180,30,30,0.3)] !py-2 text-xs"
+            iconLeft={(props) => <SignOut size={16} weight="bold" {...props} />}
           >
             تسجيل الخروج
           </LuxuryButton>
