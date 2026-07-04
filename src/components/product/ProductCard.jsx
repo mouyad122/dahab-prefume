@@ -153,7 +153,7 @@ export default function ProductCard({ product }) {
         {/* Category & Title */}
         <div className="flex flex-col gap-1 text-center items-center">
           <span className="text-[10px] uppercase tracking-widest text-[#c5a25d] font-bold">
-            {product.category || (isAr ? 'عطور نيش' : 'Niche Fragrance')}
+            {product.category?.name_ar || product.category?.name_en || (isAr ? 'عطور نيش' : 'Niche Fragrance')}
           </span>
           <Link href={`/products/${product.slug}`} className="focus:outline-none">
             <h3 className="font-serif text-base sm:text-lg font-bold text-white hover:text-[#c5a25d] transition-colors leading-snug line-clamp-2">
