@@ -7,6 +7,7 @@ import { LanguageContext } from '../../../contexts/LanguageContext';
 import { brandConfig } from '../../../config/brand';
 import { useCartStore } from '../../../stores/useCartStore';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
+import FragranceAccords from '../../../components/product/FragranceAccords';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
 
@@ -133,21 +134,22 @@ export default function ProductDetailClient({ product }) {
               <div className="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-[var(--color-border-subtle)]">
                 <span className="text-sm text-[var(--color-text-secondary)]">{isAr ? 'السعر الحالي' : 'Price'}</span>
                 <strong className="text-2xl font-mono text-[var(--color-gold-light)] font-bold">
-                  {formatJOD(activePrice_fils)}
+                  {activePrice_fils > 0 ? formatJOD(activePrice_fils) : (isAr ? 'السعر غير متوفر' : 'Price unavailable')}
                 </strong>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 mt-4">
                 {/* Add to Cart button */}
-                <LuxuryButton
-                  onClick={handleAddToCart}
-                  disabled={isOut}
-                  variant="primary"
-                  className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
-                  iconLeft={ShoppingCart}
-                >
-                  {isAr ? 'إضافة إلى السلة' : 'Add to Cart'}
-                </LuxuryButton>
+                {!isOut && (
+                  <LuxuryButton
+                    onClick={handleAddToCart}
+                    variant="primary"
+                    className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
+                    iconLeft={ShoppingCart}
+                  >
+                    {isAr ? 'إضافة إلى السلة' : 'Add to Cart'}
+                  </LuxuryButton>
+                )}
 
                 {/* Direct Whatsapp button */}
                 <LuxuryButton
@@ -230,25 +232,7 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {product.accords && product.accords.length > 0 && (
-              <div className="accords-panel text-right bg-[var(--color-bg-secondary)] p-6 rounded-2xl border border-[var(--color-border)] shadow-sm">
-                <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-4">{isAr ? 'البصمة العطرية (Accords)' : 'Main Accords'}</span>
-                <div className="flex flex-col gap-3">
-                  {product.accords.map((accord) => (
-                    <div key={accord.id} className="w-full">
-                      <div className="flex justify-between items-end mb-1">
-                        <span className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">{accord.strength}%</span>
-                        <span className="text-xs font-bold text-[var(--color-text-primary)]">{accord.name_ar}</span>
-                      </div>
-                      <div className="w-full bg-[var(--color-border-subtle)] h-1.5 rounded-full overflow-hidden flex justify-end">
-                        <div 
-                          className="bg-[var(--color-gold)] h-full transition-all duration-1000 ease-out" 
-                          style={{ width: `${accord.strength}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <FragranceAccords accords={product.accords} />
             )}
           </div>
         </section>

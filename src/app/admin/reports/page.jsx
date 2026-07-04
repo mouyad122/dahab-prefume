@@ -12,9 +12,10 @@ export default function AdminReports() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('all');
 
   // Exact Date & Time Range Filter States
-  const [fromDate, setFromDate] = useState('');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [fromDate, setFromDate] = useState(todayStr);
   const [fromTime, setFromTime] = useState('00:00');
-  const [toDate, setToDate] = useState('');
+  const [toDate, setToDate] = useState(todayStr);
   const [toTime, setToTime] = useState('23:59');
 
   useEffect(() => {
@@ -102,11 +103,11 @@ export default function AdminReports() {
   const formatJOD = (fils) => `${((fils || 0) / 1000).toFixed(3)} JOD`;
 
   return (
-    <div className="flex-grow p-6 md:p-10 bg-[var(--color-bg-primary)] h-full overflow-y-auto dir-ar text-white">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col gap-6 mb-8 no-print">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
+    <div className="flex-grow p-6 md:p-10 bg-[var(--color-bg-primary)] h-full overflow-y-auto dir-ar text-white text-center">
+      <div className="max-w-5xl mx-auto flex flex-col items-center">
+        <div className="flex flex-col gap-6 mb-8 no-print w-full">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center w-full">
+            <div className="flex-1">
               <h1 className="font-display text-2xl font-bold text-white mb-1">
                 تقرير المبيعات العام والتأكيدات
               </h1>

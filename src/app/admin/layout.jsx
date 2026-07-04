@@ -123,13 +123,13 @@ export default function AdminLayout({ children }) {
       <main className={`admin-content flex-1 flex flex-col h-screen overflow-hidden ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         {/* Universal Header with Toggle */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] no-print dir-ar">
-          <div className="w-10"></div> {/* spacer */}
-          <div className="font-display font-bold text-[var(--color-gold-light)] tracking-widest text-lg">
-            DAHAB ADMIN
-          </div>
           <LuxuryButton variant="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="!p-2 text-[var(--color-gold)] hover:!bg-[var(--color-gold-dim)] hover:!text-[var(--color-gold-light)] !w-auto !h-auto !min-h-0 !min-w-0 border-none">
             <List size={24} />
           </LuxuryButton>
+          <div className="font-display font-bold text-[var(--color-gold-light)] tracking-widest text-lg">
+            DAHAB ADMIN
+          </div>
+          <div className="w-10"></div> {/* spacer */}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 dir-ar relative">
