@@ -81,7 +81,7 @@ export default function AdminInventory() {
           body: JSON.stringify({
             productId: product.id,
             variantId: product.variants[0].id,
-            newStock: parseInt(bulkStock, 10),
+            newStock: (product.variants[0].stock || 0) + parseInt(bulkStock, 10),
             lowStockThreshold: product.low_stock_threshold || 5,
             reason: 'تحديث جماعي'
           })

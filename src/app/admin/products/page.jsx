@@ -4,18 +4,12 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Funnel, MagnifyingGlass, PencilSimple, Plus, Trash,
   X, ImageSquare, DownloadSimple, CaretLeft, CaretRight,
-  ArrowsClockwise, FunnelSimple, Eye, EyeSlash
+  ArrowsClockwise, FunnelSimple,
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
-import { getProductImageSrc } from '../../../lib/productDisplay';
-import {
-  ALLOWED_CATEGORY_SLUGS,
-  SEASON_OPTIONS,
-  normalizeSeason,
-} from '../../../lib/productClassification';
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ─────────────────────────────────────────────────────────────────
 function formatJOD(fils) {
   const v = Number.isFinite(fils) ? fils : 0;
   return `${(v / 1000).toFixed(3)} JOD`;
@@ -28,22 +22,22 @@ function getTotalStock(product) {
   return (product?.variants || []).reduce((s, v) => s + (v.stock ?? 0), 0);
 }
 
-// â”€â”€ Empty State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ onAdd }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4 text-[var(--color-text-muted)]">
       <ImageSquare size={48} className="opacity-20" />
       <p className="text-sm">لا توجد منتجات مطابقة لهذا البحث</p>
       <LuxuryButton variant="primary" onClick={onAdd} iconLeft={Plus} className="text-sm">
-        Ø¥Ø¶Ø§ÙØ© منتج Ø¬Ø¯ÙŠØ¯
+        إضافة منتج جديد
       </LuxuryButton>
     </div>
   );
 }
 
-// â”€â”€ Products page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Products page ────────────────────────────────────────────────────────────
 export default function AdminProducts() {
-  // â”€â”€ Data state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Data state ─────────────────────────────────────────────────────────────
   const [products, setProducts]     = useState([]);
   const [total, setTotal]           = useState(0);
   const [pages, setPages]           = useState(1);
@@ -51,7 +45,7 @@ export default function AdminProducts() {
   const [loading, setLoading]       = useState(true);
   const [exporting, setExporting]   = useState(false);
 
-  // â”€â”€ Filter state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Filter state ────────────────────────────────────────────────────────────
   const [search, setSearch]         = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterGender, setFilterGender]     = useState('');
@@ -60,11 +54,11 @@ export default function AdminProducts() {
   const [sort, setSort]                     = useState('newest');
   const [showFilters, setShowFilters]       = useState(false);
 
-  // â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const PAGE_SIZE = 1000;
+  // ── Pagination ──────────────────────────────────────────────────────────────
+  const PAGE_SIZE = 20;
   const [page, setPage]             = useState(1);
 
-  // â”€â”€ Product Form Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Product Form Modal ──────────────────────────────────────────────────────
   const [isFormOpen, setIsFormOpen]         = useState(false);
   const [formProductId, setFormProductId]   = useState(null);
   const [formSaving, setFormSaving]         = useState(false);
@@ -76,16 +70,16 @@ export default function AdminProducts() {
   const [inspiredBy, setInspiredBy]         = useState('');
   const [categoryId, setCategoryId]         = useState('');
   const [gender, setGender]                 = useState('unisex');
-  const [season, setSeason]                 = useState('');
+  const [season, setSeason]                 = useState('all');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
   const [imageFilename, setImageFilename]   = useState('');
-  const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '10' }]);
+  const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '0' }]);
   const [shortDescriptionAr, setShortDescriptionAr] = useState('');
   const [shortDescriptionEn, setShortDescriptionEn] = useState('');
   const [visibleOnWebsite, setVisibleOnWebsite]     = useState(true);
   const [featuredOnFrontend, setFeaturedOnFrontend] = useState(false);
 
-  // â”€â”€ Search debounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Search debounce ─────────────────────────────────────────────────────────
   const searchTimer = useRef(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
@@ -97,7 +91,7 @@ export default function AdminProducts() {
     return () => clearTimeout(searchTimer.current);
   }, [search]);
 
-  // â”€â”€ Fetch helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fetch helpers ────────────────────────────────────────────────────────────
   const buildParams = useCallback((overrides = {}) => {
     const p = new URLSearchParams({
       limit:  String(PAGE_SIZE),
@@ -143,11 +137,7 @@ export default function AdminProducts() {
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  const allowedCategories = categories
-    .filter((category) => ALLOWED_CATEGORY_SLUGS.includes(category.slug))
-    .sort((a, b) => ALLOWED_CATEGORY_SLUGS.indexOf(a.slug) - ALLOWED_CATEGORY_SLUGS.indexOf(b.slug));
-
-  // â”€â”€ Reset filters and go back to page 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Reset filters and go back to page 1 ────────────────────────────────────
   const resetFilters = () => {
     setSearch('');
     setFilterCategory('');
@@ -158,7 +148,7 @@ export default function AdminProducts() {
     setPage(1);
   };
 
-  // â”€â”€ CSV Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── CSV Export ──────────────────────────────────────────────────────────────
   const handleExportCSV = async () => {
     setExporting(true);
     try {
@@ -183,32 +173,13 @@ export default function AdminProducts() {
     }
   };
 
-  const handleToggleVisibility = async (e, product) => {
-    e.stopPropagation();
-    try {
-      const res = await fetch(`/api/products/${product.id}/visibility`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visible: !product.visible }),
-      });
-      if (res.ok) {
-        setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible: !product.visible } : p));
-      } else {
-        alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© الظهور');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© الظهور');
-    }
-  };
-
-  // â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Modal helpers ─────────────────────────────────────────────────────────
   const handleOpenAddModal = () => {
     setFormProductId(null);
     setSku(`SKU-${Math.floor(1000 + Math.random() * 9000)}`);
     setSlug(''); setNameAr(''); setNameEn(''); setInspiredBy('');
-    setCategoryId('');
-    setGender('unisex'); setSeason(''); setLowStockThreshold('5');
+    setCategoryId(categories[0]?.id || '');
+    setGender('unisex'); setSeason('all'); setLowStockThreshold('5');
     setImageFilename('');
     setVariants([{ volume: '100', price: '', stock: '10' }]);
     setShortDescriptionAr(''); setShortDescriptionEn('');
@@ -226,58 +197,50 @@ export default function AdminProducts() {
     setInspiredBy(product.inspired_by || '');
     setCategoryId(product.categoryId || product.category?.id || '');
     setGender(product.gender || 'unisex');
-    setSeason(normalizeSeason(product.season_slug || product.season)?.slug || '');
+    setSeason(product.season || 'all');
     setLowStockThreshold(String(product.low_stock_threshold || 5));
-    setImageFilename(product.image_name || '');
+    setImageFilename(product.image_filename || '');
     setVariants(product.variants?.length > 0
       ? product.variants.map(v => ({ volume: v.volume, price: String(v.price / 1000), stock: String(v.stock) }))
-      : [{ volume: '100', price: '', stock: '10' }]
+      : [{ volume: '100', price: '', stock: '0' }]
     );
-    setShortDescriptionAr(product.short_description || '');
+    setShortDescriptionAr(product.short_description_ar || '');
     setShortDescriptionEn(product.short_description_en || '');
-    setVisibleOnWebsite(product.visible !== false);
-    setFeaturedOnFrontend(product.featured === true);
+    setVisibleOnWebsite(product.visible_on_website !== false);
+    setFeaturedOnFrontend(product.featured_on_frontend === true);
     setIsFormOpen(true);
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!nameAr) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ ØªØ¹Ø¨Ø¦Ø© Ø§Ø³Ù… Ø§Ù„منتج Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ'); return; }
-    if (variants.length === 0) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¶Ø§ÙØ© Ø­Ø¬Ù… ÙˆØ§Ø­Ø¯ Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„'); return; }
+    if (!nameAr) { alert('الرجاء تعبئة اسم المنتج بالعربي'); return; }
+    if (variants.length === 0) { alert('الرجاء إضافة حجم واحد على الأقل'); return; }
     for (const v of variants) {
-      if (!v.volume || !v.price) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø­Ø¬Ù… Ùˆالسعر Ù„Ø¬Ù…ÙŠØ¹ الأحجام'); return; }
+      if (!v.volume || !v.price) { alert('الرجاء إدخال الحجم والسعر لجميع الأحجام'); return; }
     }
-
-    const selectedCat = allowedCategories.find(c => c.id === categoryId);
-    const selectedSeason = normalizeSeason(season);
-    if (!selectedCat) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ø®ØªÙŠØ§Ø± Ù‚Ø³Ù… ØµØ­ÙŠØ­: رجالي / نسائي / Ø¹ÙˆØ¯'); return; }
-    if (!selectedSeason) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ø®ØªÙŠØ§Ø± ÙØµÙ„ ØµØ­ÙŠØ­: ØµÙŠÙÙŠ / شتوي / ÙƒÙ„Ø§ Ø§Ù„ÙØµÙ„ÙŠÙ†'); return; }
 
     let finalSku  = sku.trim()  || `SKU-${Math.floor(1000 + Math.random() * 9000)}`;
     let finalSlug = slug.trim() || (nameEn.trim() || nameAr.trim() || finalSku)
       .toLowerCase().replace(/[^a-z0-9_]+/g, '-').replace(/(^-|-$)/g, '');
 
+    const selectedCat = categories.find(c => c.id === categoryId);
     const payload = {
       sku: finalSku, slug: finalSlug,
       name_ar: nameAr.trim(), name_en: nameEn.trim() || null,
       inspired_by: inspiredBy.trim() || null,
-      main_category: selectedCat.name_ar || selectedCat.slug,
-      categoryId: selectedCat.id,
-      category_slug: selectedCat.slug,
-      gender,
-      season: selectedSeason.name_ar,
-      season_slug: selectedSeason.slug,
+      main_category: selectedCat ? selectedCat.slug : 'private',
+      categoryId: categoryId || null, gender, season,
       low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
       variants: variants.map(v => ({
         volume: v.volume.trim(),
         price: Math.round(parseFloat(v.price) * 1000),
         stock: parseInt(v.stock, 10) || 0,
       })),
-      short_description: shortDescriptionAr.trim() || null,
+      short_description_ar: shortDescriptionAr.trim() || null,
       short_description_en: shortDescriptionEn.trim() || null,
-      image_name: imageFilename.trim() || null,
-      visible: visibleOnWebsite,
-      featured: featuredOnFrontend,
+      image_filename: imageFilename.trim() || null,
+      visible_on_website: visibleOnWebsite,
+      featured_on_frontend: featuredOnFrontend,
     };
 
     setFormSaving(true);
@@ -294,10 +257,10 @@ export default function AdminProducts() {
         fetchProducts();
       } else {
         const err = await res.json();
-        alert(err.error || 'ÙØ´Ù„ Ø­ÙØ¸ Ø§Ù„منتج');
+        alert(err.error || 'فشل حفظ المنتج');
       }
     } catch {
-      alert('Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø´Ø¨ÙƒØ©');
+      alert('خطأ في الشبكة');
     } finally {
       setFormSaving(false);
     }
@@ -305,11 +268,11 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (e, id) => {
     e.stopPropagation();
-    if (!confirm('Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ من Ø¥Ø®ÙØ§Ø¡ Ù‡Ø°Ø§ Ø§Ù„منتج من ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ù…ØªØ¬Ø±ØŸ')) return;
+    if (!confirm('هل أنت متأكد من إخفاء هذا المنتج من واجهة المتجر؟')) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) fetchProducts();
-      else alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø­Ø°Ù');
+      else alert('حدث خطأ أثناء الحذف');
     } catch { console.error('Failed to delete product'); }
   };
 
@@ -320,18 +283,18 @@ export default function AdminProducts() {
 
   const hasActiveFilters = filterCategory || filterGender || filterVisible || filterStock || search;
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-6 h-full dir-ar">
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] mb-1">
             إدارة المنتجات
           </h1>
           <p className="text-[var(--color-text-secondary)] text-sm">
-            Ø¥Ø¶Ø§ÙØ© Ùˆتعديل Ø¹Ø·ÙˆØ± Ø§Ù„Ù…ØªØ¬Ø± â€” Ø¥Ø¬Ù…Ø§Ù„ÙŠ <span className="text-[var(--color-gold-light)] font-mono">{total}</span> منتج
+            إضافة وتعديل عطور المتجر — إجمالي <span className="text-[var(--color-gold-light)] font-mono">{total}</span> منتج
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -342,7 +305,7 @@ export default function AdminProducts() {
             iconLeft={DownloadSimple}
             disabled={exporting}
           >
-            {exporting ? 'Ø¬Ø§Ø±Ù Ø§Ù„ØªØµØ¯ÙŠØ±...' : 'تصدير CSV'}
+            {exporting ? 'جارٍ التصدير...' : 'تصدير CSV'}
           </LuxuryButton>
           <LuxuryButton
             variant="primary"
@@ -350,12 +313,12 @@ export default function AdminProducts() {
             onClick={handleOpenAddModal}
             iconLeft={Plus}
           >
-            Ø¥Ø¶Ø§ÙØ© Ø¹Ø·Ø± Ø¬Ø¯ÙŠØ¯
+            إضافة عطر جديد
           </LuxuryButton>
         </div>
       </div>
 
-      {/* â”€â”€ Card â”€â”€ */}
+      {/* ── Card ── */}
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex flex-col overflow-hidden flex-1 bg-[var(--color-bg-surface)]">
 
         {/* Toolbar */}
@@ -380,8 +343,8 @@ export default function AdminProducts() {
             >
               <option value="newest">الأحدث أولاً</option>
               <option value="oldest">الأقدم أولاً</option>
-              <option value="name_asc">الاسم أ-ي</option>
-              <option value="name_desc">الاسم ي-أ</option>
+              <option value="name_asc">الاسم أ–ي</option>
+              <option value="name_desc">الاسم ي–أ</option>
             </select>
             {/* Filter toggle */}
             <div className="flex items-center gap-2 sm:mr-auto">
@@ -391,7 +354,7 @@ export default function AdminProducts() {
                 iconLeft={FunnelSimple}
                 onClick={() => setShowFilters(v => !v)}
               >
-                ÙÙ„ØªØ±{hasActiveFilters ? ' â—' : ''}
+                فلتر{hasActiveFilters ? ' ●' : ''}
               </LuxuryButton>
               {hasActiveFilters && (
                 <LuxuryButton variant="ghost" className="!py-2 px-3 text-xs" onClick={resetFilters} iconLeft={ArrowsClockwise}>
@@ -416,13 +379,13 @@ export default function AdminProducts() {
               </select>
               <select className="form-select text-xs py-1.5" value={filterVisible} onChange={e => { setFilterVisible(e.target.value); setPage(1); }}>
                 <option value="">كل حالات الظهور</option>
-                <option value="true">Ù…Ø±Ø¦ÙŠ ÙÙŠ Ø§Ù„Ù…ØªØ¬Ø±</option>
-                <option value="false">Ù…Ø®ÙÙŠ</option>
+                <option value="true">مرئي في المتجر</option>
+                <option value="false">مخفي</option>
               </select>
               <select className="form-select text-xs py-1.5" value={filterStock} onChange={e => { setFilterStock(e.target.value); setPage(1); }}>
                 <option value="">كل المخزونات</option>
-                <option value="low">Ù…Ø®Ø²ÙˆÙ† منØ®ÙØ¶</option>
-                <option value="out">Ù†ÙØ¯ المخزون</option>
+                <option value="low">مخزون منخفض</option>
+                <option value="out">نفد المخزون</option>
               </select>
             </div>
           )}
@@ -441,8 +404,8 @@ export default function AdminProducts() {
               <thead className="bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] text-xs sticky top-0 z-10 shadow-sm border-b border-[var(--color-border)]">
                 <tr>
                   <th className="py-3 px-4 font-bold w-14">الصورة</th>
-                  <th className="py-3 px-4 font-bold">Ø§Ù„منتج</th>
-                  <th className="py-3 px-4 font-bold hidden md:table-cell">Ø§Ù„ÙØ¦Ø©</th>
+                  <th className="py-3 px-4 font-bold">المنتج</th>
+                  <th className="py-3 px-4 font-bold hidden md:table-cell">الفئة</th>
                   <th className="py-3 px-4 font-bold hidden lg:table-cell">الأحجام</th>
                   <th className="py-3 px-4 font-bold">السعر</th>
                   <th className="py-3 px-4 font-bold">المخزون</th>
@@ -459,8 +422,8 @@ export default function AdminProducts() {
                       {/* Image */}
                       <td className="py-3 px-4">
                         <div className="w-10 h-10 rounded border border-[var(--color-border-subtle)] overflow-hidden bg-black/40 shrink-0">
-                          {product.image_name ? (
-                            <img src={getProductImageSrc(product)} alt="" className="w-full h-full object-cover" />
+                          {product.image_filename ? (
+                            <img src={product.image_filename} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <ImageSquare size={16} className="text-[var(--color-text-subtle)]" />
@@ -476,7 +439,7 @@ export default function AdminProducts() {
                       </td>
                       {/* Category */}
                       <td className="py-3 px-4 hidden md:table-cell text-[var(--color-text-secondary)] text-xs">
-                        {product.category?.name_ar || product.main_category || 'â€”'}
+                        {product.category?.name_ar || product.main_category || '—'}
                       </td>
                       {/* Sizes */}
                       <td className="py-3 px-4 hidden lg:table-cell">
@@ -504,20 +467,13 @@ export default function AdminProducts() {
                       </td>
                       {/* Visibility */}
                       <td className="py-3 px-4 hidden sm:table-cell">
-                        <span className={`text-[0.65rem] font-bold ${product.visible ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
-                          {product.visible ? 'â— Ù…Ø±Ø¦ÙŠ' : 'â—‹ Ù…Ø®ÙÙŠ'}
+                        <span className={`text-[0.65rem] font-bold ${product.visible_on_website ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
+                          {product.visible_on_website ? '● مرئي' : '○ مخفي'}
                         </span>
                       </td>
                       {/* Actions */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5  transition-opacity">
-                          <button
-                            className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
-                            title={product.visible ? 'Ø¥Ø®ÙØ§Ø¡' : 'إظهار'}
-                            onClick={e => handleToggleVisibility(e, product)}
-                          >
-                            {product.visible ? <Eye size={18} /> : <EyeSlash size={18} />}
-                          </button>
+                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
                             title="تعديل"
@@ -527,7 +483,7 @@ export default function AdminProducts() {
                           </button>
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-error-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
-                            title="Ø­Ø°Ù"
+                            title="حذف"
                             onClick={e => handleDeleteProduct(e, product.id)}
                           >
                             <Trash size={16} />
@@ -546,7 +502,7 @@ export default function AdminProducts() {
         {!loading && total > PAGE_SIZE && (
           <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex items-center justify-between gap-4">
             <span className="text-xs text-[var(--color-text-muted)]">
-              عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)}â€“{Math.min(page * PAGE_SIZE, total)} من {total}
+              عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)}–{Math.min(page * PAGE_SIZE, total)} من {total}
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -571,9 +527,9 @@ export default function AdminProducts() {
         )}
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          Product Add/Edit Modal â€” preserved original logic exactly
-          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* ══════════════════════════════════════════════════════════════════
+          Product Add/Edit Modal — preserved original logic exactly
+          ══════════════════════════════════════════════════════════════════ */}
       {isFormOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <form
@@ -582,7 +538,7 @@ export default function AdminProducts() {
           >
             <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
-                {formProductId ? 'تعديل Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ø·Ø±' : 'Ø¥Ø¶Ø§ÙØ© Ø¹Ø·Ø± Ø¬Ø¯ÙŠØ¯'}
+                {formProductId ? 'تعديل بيانات العطر' : 'إضافة عطر جديد'}
               </h2>
               <button
                 type="button"
@@ -598,7 +554,7 @@ export default function AdminProducts() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="form-label text-white">الاسم بالعربي (مطلوب)</label>
-                  <input type="text" className="form-input text-white bg-black/30" value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="Ù…Ø«Ø§Ù„: Ù…Ø³Ùƒ Ø§Ù„ÙØ§Ù†ÙŠÙ„ÙŠØ§" required />
+                  <input type="text" className="form-input text-white bg-black/30" value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="مثال: مسك الفانيليا" required />
                 </div>
                 <div>
                   <label className="form-label">الاسم بالإنجليزي (اختياري)</label>
@@ -616,8 +572,8 @@ export default function AdminProducts() {
                   <input type="text" className="form-input text-left font-mono text-white bg-black/30" dir="ltr" value={slug} onChange={e => setSlug(e.target.value)} placeholder="vanilla-musk" />
                 </div>
                 <div>
-                  <label className="form-label">Ù…Ø³ØªÙˆØ­Ù‰ من (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)</label>
-                  <input type="text" className="form-input text-white bg-black/30" value={inspiredBy} onChange={e => setInspiredBy(e.target.value)} placeholder="Ù…Ø«Ø§Ù„: Creed Aventus" />
+                  <label className="form-label">مستوحى من (اختياري)</label>
+                  <input type="text" className="form-input text-white bg-black/30" value={inspiredBy} onChange={e => setInspiredBy(e.target.value)} placeholder="مثال: Creed Aventus" />
                 </div>
               </div>
 
@@ -627,11 +583,11 @@ export default function AdminProducts() {
                   <label className="form-label">القسم (مطلوب)</label>
                   <select className="form-select text-white bg-black/30" value={categoryId} onChange={e => setCategoryId(e.target.value)} required>
                     <option value="" className="bg-[var(--color-bg-surface)]">-- اختر القسم --</option>
-                    {allowedCategories.map(c => <option key={c.id} value={c.id} className="bg-[var(--color-bg-surface)]">{c.name_ar}</option>)}
+                    {categories.map(c => <option key={c.id} value={c.id} className="bg-[var(--color-bg-surface)]">{c.name_ar}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Ø§Ù„Ø¬Ù†Ø³ Ø§Ù„Ù…Ø³ØªÙ‡Ø¯Ù</label>
+                  <label className="form-label">الجنس المستهدف</label>
                   <select className="form-select text-white bg-black/30" value={gender} onChange={e => setGender(e.target.value)}>
                     <option value="unisex" className="bg-[var(--color-bg-surface)]">للجنسين</option>
                     <option value="male" className="bg-[var(--color-bg-surface)]">رجالي</option>
@@ -644,25 +600,23 @@ export default function AdminProducts() {
                     <option value="" className="bg-[var(--color-bg-surface)]">-- اختر الموسم --</option>
                     <option value="both" className="bg-[var(--color-bg-surface)]">كلا الفصلين</option>
                     <option value="winter" className="bg-[var(--color-bg-surface)]">شتوي</option>
-                    <option value="summer" className="bg-[var(--color-bg-surface)]">ØµÙŠÙÙŠ</option>
-                    
-                    
+                    <option value="summer" className="bg-[var(--color-bg-surface)]">صيفي</option>
                   </select>
                 </div>
               </div>
 
               {/* Image */}
               <div className="border-t border-[var(--color-border)] pt-4">
-                <ImageUpload label="ØµÙˆØ±Ø© Ø§Ù„منتج" value={imageFilename} onChange={setImageFilename} />
+                <ImageUpload label="صورة المنتج" value={imageFilename} onChange={setImageFilename} />
               </div>
 
               {/* Variants */}
               <div className="border-t border-[var(--color-border)] pt-4">
                 <div className="flex justify-between items-center mb-3">
-                  <label className="form-label !mb-0 text-white font-bold">الأحجام ÙˆØ§Ù„Ø£Ø³Ø¹Ø§Ø± Ùˆالمخزون</label>
+                  <label className="form-label !mb-0 text-white font-bold">الأحجام والأسعار والمخزون</label>
                   <LuxuryButton type="button" variant="secondary" className="!py-1 px-3 text-xs"
                     onClick={() => setVariants([...variants, { volume: '', price: '', stock: '10' }])}>
-                    + Ø¥Ø¶Ø§ÙØ© Ø­Ø¬Ù…
+                    + إضافة حجم
                   </LuxuryButton>
                 </div>
                 <div className="space-y-3">
@@ -670,7 +624,7 @@ export default function AdminProducts() {
                     <div key={i} className="flex items-end gap-3 p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20">
                       <div className="flex-1 grid grid-cols-3 gap-3">
                         <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">Ø§Ù„Ø­Ø¬Ù… (مل)</label>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">الحجم (مل)</label>
                           <input type="text" className="form-input py-1.5 text-white bg-black/30" placeholder="100" value={v.volume}
                             onChange={e => { const n = [...variants]; n[i].volume = e.target.value; setVariants(n); }} required />
                         </div>
@@ -699,7 +653,7 @@ export default function AdminProducts() {
               {/* Stock threshold */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-4">
                 <div>
-                  <label className="form-label">Ø­Ø¯ ØªÙ†Ø¨ÙŠÙ‡ Ø§Ù†Ø®ÙØ§Ø¶ المخزون</label>
+                  <label className="form-label">حد تنبيه انخفاض المخزون</label>
                   <input type="number" className="form-input text-white bg-black/30" value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} />
                 </div>
               </div>
@@ -707,11 +661,11 @@ export default function AdminProducts() {
               {/* Descriptions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">ÙˆØµÙ Ù‚ØµÙŠØ± Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ</label>
+                  <label className="form-label">وصف قصير بالعربي</label>
                   <textarea className="form-input h-20 resize-none text-white bg-black/30" value={shortDescriptionAr} onChange={e => setShortDescriptionAr(e.target.value)} placeholder="نبذة مختصرة..." />
                 </div>
                 <div>
-                  <label className="form-label">Ø§Ù„ÙˆØµÙ Ø§Ù„Ù‚ØµÙŠØ± Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠ</label>
+                  <label className="form-label">الوصف القصير بالإنجليزي</label>
                   <textarea className="form-input h-20 resize-none text-left text-white bg-black/30" dir="ltr" value={shortDescriptionEn} onChange={e => setShortDescriptionEn(e.target.value)} placeholder="A brief summary..." />
                 </div>
               </div>
@@ -720,11 +674,11 @@ export default function AdminProducts() {
               <div className="flex gap-6 border-t border-[var(--color-border)] pt-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={visibleOnWebsite} onChange={e => setVisibleOnWebsite(e.target.checked)} className="rounded" />
-                  <span className="text-sm font-semibold">عرض Ø¹Ù„Ù‰ ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ù…ØªØ¬Ø±</span>
+                  <span className="text-sm font-semibold">عرض على واجهة المتجر</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={featuredOnFrontend} onChange={e => setFeaturedOnFrontend(e.target.checked)} className="rounded" />
-                  <span className="text-sm font-semibold">ØªÙ…ÙŠÙŠØ² Ø§Ù„منتج ÙÙŠ Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</span>
+                  <span className="text-sm font-semibold">تمييز المنتج في الصفحة الرئيسية</span>
                 </label>
               </div>
             </div>
@@ -732,10 +686,10 @@ export default function AdminProducts() {
             {/* Form actions */}
             <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
               <LuxuryButton variant="secondary" className="px-4 py-2 text-sm" onClick={() => setIsFormOpen(false)} type="button">
-                Ø¥Ù„ØºØ§Ø¡
+                إلغاء
               </LuxuryButton>
               <LuxuryButton type="submit" variant="primary" className="px-4 py-2 text-sm" disabled={formSaving}>
-                {formSaving ? 'Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸...' : 'Ø­ÙØ¸ Ø§Ù„منتج'}
+                {formSaving ? 'جارٍ الحفظ...' : 'حفظ المنتج'}
               </LuxuryButton>
             </div>
           </form>
@@ -744,4 +698,3 @@ export default function AdminProducts() {
     </div>
   );
 }
-
