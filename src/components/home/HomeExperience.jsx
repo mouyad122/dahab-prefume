@@ -53,9 +53,7 @@ export default function HomeExperience() {
         </div>
         <div className="premium-container home-hero-grid">
           <div className="home-hero-copy">
-            <div className="hero-logo-lockup" aria-hidden="true">
-              <img src="/brand/dahab-logo.png" alt="" loading="eager" fetchPriority="high" />
-            </div>
+
             <div className="eyebrow">
               <Sparkle size={15} weight="fill" />
               <span>{isAr ? 'دار عطور فاخرة في عمّان' : 'Luxury fragrance house in Amman'}</span>

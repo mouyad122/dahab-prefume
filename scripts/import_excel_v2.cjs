@@ -6,18 +6,36 @@ const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
-const excelPath = path.join(__dirname, '..', 'dahab_perfumes_import_template.xlsx');
-const sourceImagesPath = path.join(__dirname, '..', 'products');
-const destImagesPath = path.join(__dirname, '..', 'public', 'uploads', 'products');
-
-async function importData() {
+async function main() {
   console.log('--- DAHAB PERFUMES STRICT IMPORT SYSTEM V2 ---');
 
-  if (!fs.existsSync(destImagesPath)) {
-    fs.mkdirSync(destImagesPath, { recursive: true });
-  }
+  const args = process.argv.slice(2);
+  const isDryRun = args.includes('--dry-run');
+  const isForceVisible = args.includes('--force-visible');
 
-  // 1. Enforce Global Pricing
+  console.log(`Working directory: ${process.cwd()}`);
+  if (isDryRun) console.log('Mode: DRY-RUN (No database writes will occur)');
+  if (isForceVisible) console.log('Mode: FORCE-VISIBLE (Visible if image and price are valid)');
+
+  const excelPath = path.join(process.cwd(), 'import', 'dahab_perfumes_import_template.xlsx');
+  console.log(`Excel path: ${excelPath}`);
+
+  if (!fs.existsSync(excelPath)) {
+    throw new Error(`Excel file not found at ${excelPath}`);
+  }
+  console.log('Excel exists: YES');
+
+  const wb = xlsx.readFile(excelPath);
+  if (!wb.SheetNames.includes('Products')) {
+    throw new Error(`Products sheet not found. Available sheets: ${wb.SheetNames.join(', ')}`);
+  }
+  console.log('Products sheet found: YES');
+
+  const data = xlsx.utils.sheet_to_json(wb.Sheets['Products'], { defval: '' });
+  console.log(`Rows detected: ${data.length}`);
+
+  console.log('Connecting to database: OK');
+
   const globalPricing = await prisma.globalPricingSettings.findFirst({
     where: { active: true },
     orderBy: { created_at: 'desc' }
@@ -27,25 +45,44 @@ async function importData() {
   const price100 = globalPricing?.price_100ml_fils;
   const price200 = globalPricing?.price_200ml_fils;
 
+  console.log('Global prices:');
+  console.log(`50ml: ${(price50 || 0) / 1000} JOD`);
+  console.log(`100ml: ${(price100 || 0) / 1000} JOD`);
+  console.log(`200ml: ${(price200 || 0) / 1000} JOD`);
+
   if (!price50 || price50 <= 0 || !price100 || price100 <= 0 || !price200 || price200 <= 0) {
-    console.error('\n[ERROR] Global prices are missing, invalid, or zero.');
-    console.error('Please configure 50ml, 100ml, and 200ml prices in Admin Settings before importing.');
-    process.exit(1);
+    throw new Error('Global prices are missing or invalid.\nPlease configure 50ml, 100ml, and 200ml prices in /admin/settings before importing.');
   }
 
-  const wb = xlsx.readFile(excelPath);
-  const sheetName = wb.SheetNames[0];
-  const data = xlsx.utils.sheet_to_json(wb.Sheets[sheetName], { defval: '' });
+  const sourceImagesDir = path.join(process.cwd(), 'products');
+  const publicImagesDir = path.join(process.cwd(), 'public', 'products');
+  console.log(`Images directory: public/products`);
+
+  if (!fs.existsSync(publicImagesDir)) {
+    fs.mkdirSync(publicImagesDir, { recursive: true });
+  }
+
+  let imagesFound = 0;
+  if (fs.existsSync(publicImagesDir)) {
+    imagesFound = fs.readdirSync(publicImagesDir).filter(f => f.endsWith('.webp') || f.endsWith('.jpg') || f.endsWith('.png')).length;
+  }
+  console.log(`Images found: ${imagesFound}`);
+
+  console.log('Importing products...');
 
   const report = {
     totalRows: data.length,
     importedProducts: 0,
     updatedProducts: 0,
     skippedRows: 0,
-    missingImages: 0,
-    missingPrices: 0, // Should be 0 since global prices are enforced
-    hiddenProducts: 0,
+    missingImages: [],
+    hiddenBecauseExcelVisibilityNo: [],
+    hiddenBecauseMissingImage: [],
+    missingPrices: [], 
+    createdVariants: 0,
+    createdAccords: 0,
     visibleProducts: 0,
+    hiddenProducts: 0,
     invalidData: 0
   };
 
@@ -61,9 +98,7 @@ async function importData() {
 
     try {
       const name_ar = row['اسم العطر']?.toString().trim() || 'عطر مجهول';
-      if (name_ar === 'عطر مجهول') {
-        report.invalidData++;
-      }
+      if (name_ar === 'عطر مجهول') report.invalidData++;
 
       const inspired_by = row['Inspired By']?.toString().trim() || null;
       const main_category = row['التصنيف الرئيسي']?.toString().trim() || 'general';
@@ -78,27 +113,39 @@ async function importData() {
       const isFeatured = row['مميز بالواجهة؟'] === 'نعم';
 
       let isVisible = row['ظاهر بالموقع؟'] === 'نعم';
-
-      // 2. Process Image
+      
       const imageName = row['اسم الصورة']?.toString().trim();
       let image_filename = null;
       let hasImage = false;
 
       if (imageName) {
-        const sourceImg = path.join(sourceImagesPath, imageName);
-        const destImg = path.join(destImagesPath, imageName);
+        const publicImgPath = path.join(publicImagesDir, imageName);
+        const sourceImgPath = path.join(sourceImagesDir, imageName);
         
-        if (fs.existsSync(sourceImg)) {
-          fs.copyFileSync(sourceImg, destImg);
-          image_filename = `products/${imageName}`;
+        if (fs.existsSync(publicImgPath)) {
+          image_filename = `/products/${imageName}`;
+          hasImage = true;
+        } else if (fs.existsSync(sourceImgPath)) {
+          if (!isDryRun) {
+            fs.copyFileSync(sourceImgPath, publicImgPath);
+          }
+          image_filename = `/products/${imageName}`;
           hasImage = true;
         }
       }
 
-      // 3. Strict Visibility Logic: Must have image to be visible
+      if (isForceVisible && hasImage) {
+        isVisible = true;
+      }
+
       if (!hasImage) {
-        report.missingImages++;
-        isVisible = false; // Force hide if no image
+        report.missingImages.push(sku);
+        if (isVisible) {
+          report.hiddenBecauseMissingImage.push(sku);
+          isVisible = false;
+        }
+      } else if (!isVisible && !isForceVisible) {
+        report.hiddenBecauseExcelVisibilityNo.push(sku);
       }
 
       if (isVisible) {
@@ -131,78 +178,101 @@ async function importData() {
       const existingId = existingSkuMap.get(sku);
       let productId = existingId;
 
-      if (existingId) {
-        // Remove slug from update data so we don't keep changing the URL for existing products
-        delete productData.slug;
-        await prisma.product.update({ where: { id: existingId }, data: productData });
-        
-        // Clean up relations for recreation
-        await prisma.$transaction([
-          prisma.productVariant.deleteMany({ where: { productId: existingId } }),
-          prisma.productAccord.deleteMany({ where: { productId: existingId } }),
-          prisma.productFamilyTag.deleteMany({ where: { productId: existingId } }),
-        ]);
-        report.updatedProducts++;
-      } else {
-        const newProduct = await prisma.product.create({ data: productData });
-        productId = newProduct.id;
-        report.importedProducts++;
-      }
-
-      // 4. Create Accords
-      const accordsData = [];
-      for (let i = 1; i <= 5; i++) {
-        const accordName = row[`البصمة العطرية ${i}`]?.toString().trim();
-        const accordStrength = parseInt(row[`قوة البصمة ${i}`]);
-        if (accordName && !isNaN(accordStrength)) {
-          accordsData.push({ productId, position: i, name_ar: accordName, strength: accordStrength });
+      if (!isDryRun) {
+        if (existingId) {
+          delete productData.slug;
+          await prisma.product.update({ where: { id: existingId }, data: productData });
+          
+          await prisma.$transaction([
+            prisma.productVariant.deleteMany({ where: { productId: existingId } }),
+            prisma.productAccord.deleteMany({ where: { productId: existingId } }),
+            prisma.productFamilyTag.deleteMany({ where: { productId: existingId } }),
+          ]);
+          report.updatedProducts++;
+        } else {
+          const newProduct = await prisma.product.create({ data: productData });
+          productId = newProduct.id;
+          report.importedProducts++;
         }
+
+        const accordsData = [];
+        for (let i = 1; i <= 5; i++) {
+          const accordName = row[`البصمة العطرية ${i}`]?.toString().trim();
+          const accordStrength = parseInt(row[`قوة البصمة ${i}`]);
+          if (accordName && !isNaN(accordStrength)) {
+            accordsData.push({ productId, position: i, name_ar: accordName, strength: accordStrength });
+          }
+        }
+        report.createdAccords += accordsData.length;
+
+        const tagsRaw = keywords_ar.split('،').map(t => t.trim()).filter(t => t);
+        const uniqueTags = [...new Set(tagsRaw)].map(tag => ({ productId, tag_ar: tag }));
+
+        const variantsData = [
+          { productId, volume: '50', price: price50, stock: totalStock },
+          { productId, volume: '100', price: price100, stock: totalStock },
+          { productId, volume: '200', price: price200, stock: totalStock },
+        ];
+        report.createdVariants += variantsData.length;
+
+        await prisma.$transaction([
+          prisma.productVariant.createMany({ data: variantsData, skipDuplicates: true }),
+          prisma.productAccord.createMany({ data: accordsData, skipDuplicates: true }),
+          prisma.productFamilyTag.createMany({ data: uniqueTags, skipDuplicates: true })
+        ]);
+      } else {
+        // Dry run counting
+        if (existingId) {
+          report.updatedProducts++;
+        } else {
+          report.importedProducts++;
+        }
+        for (let i = 1; i <= 5; i++) {
+          const accordName = row[`البصمة العطرية ${i}`]?.toString().trim();
+          const accordStrength = parseInt(row[`قوة البصمة ${i}`]);
+          if (accordName && !isNaN(accordStrength)) report.createdAccords++;
+        }
+        report.createdVariants += 3;
       }
-
-      // 5. Create Tags
-      const tagsRaw = keywords_ar.split('،').map(t => t.trim()).filter(t => t);
-      const uniqueTags = [...new Set(tagsRaw)].map(tag => ({ productId, tag_ar: tag }));
-
-      // 6. Strict Global Pricing Variants Creation
-      // Ignores Excel specific price columns completely
-      const variantsData = [
-        { productId, volume: '50', price: price50, stock: totalStock }, // Assign stock to 50ml, or distribute
-        { productId, volume: '100', price: price100, stock: totalStock },
-        { productId, volume: '200', price: price200, stock: totalStock },
-      ];
-
-      await prisma.$transaction([
-        prisma.productVariant.createMany({ data: variantsData, skipDuplicates: true }),
-        prisma.productAccord.createMany({ data: accordsData, skipDuplicates: true }),
-        prisma.productFamilyTag.createMany({ data: uniqueTags, skipDuplicates: true })
-      ]);
-
     } catch (error) {
       console.error(`[Error] Failed on SKU ${sku}:`, error.message);
       report.invalidData++;
     }
   }
 
-  // 7. Generate Terminal Report
-  console.log('\n--- Import Process Completed ---');
-  console.log(`Total rows scanned: ${report.totalRows}`);
-  console.log(`Imported products: ${report.importedProducts}`);
-  console.log(`Updated products: ${report.updatedProducts}`);
-  console.log(`Skipped rows (empty): ${report.skippedRows}`);
-  console.log(`Missing images: ${report.missingImages}`);
-  console.log(`Products with missing prices: ${report.missingPrices}`); // Will be 0 due to strict abort
-  console.log(`Hidden products: ${report.hiddenProducts}`);
+  console.log(`Imported: ${report.importedProducts}`);
+  console.log(`Updated: ${report.updatedProducts}`);
+  console.log(`Missing images: ${report.missingImages.length}`);
   console.log(`Visible products: ${report.visibleProducts}`);
-  console.log(`Products with invalid data/errors: ${report.invalidData}`);
-  
-  fs.writeFileSync(path.join(__dirname, 'import-report.json'), JSON.stringify(report, null, 2));
+  console.log(`Hidden products: ${report.hiddenProducts}`);
+
+  const reportPath = path.join(process.cwd(), 'scripts', 'import-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  console.log(`Report saved: import-report.json`);
+
+  if (!isDryRun) {
+    const totalProducts = await prisma.product.count();
+    const totalVariants = await prisma.productVariant.count();
+    const totalAccords = await prisma.productAccord.count();
+    const visibleCount = await prisma.product.count({ where: { visible_on_website: true } });
+    const hiddenCount = await prisma.product.count({ where: { visible_on_website: false } });
+
+    console.log('\nDatabase verification:');
+    console.log(`Products count: ${totalProducts}`);
+    console.log(`Variants count: ${totalVariants}`);
+    console.log(`Accords count: ${totalAccords}`);
+    console.log(`Visible storefront products: ${visibleCount}`);
+    console.log(`Hidden products: ${hiddenCount}`);
+  }
 }
 
-importData()
-  .catch(e => {
-    console.error('\n[FATAL ERROR]', e.message);
-    process.exit(1);
+main()
+  .then(() => {
+    console.log('DONE');
+    process.exit(0);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .catch((error) => {
+    console.error('IMPORT FAILED:');
+    console.error(error.message);
+    process.exit(1);
   });
