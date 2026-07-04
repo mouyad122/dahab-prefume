@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Funnel, MagnifyingGlass, PencilSimple, Plus, Trash,
   X, ImageSquare, DownloadSimple, CaretLeft, CaretRight,
-  ArrowsClockwise, FunnelSimple,
+  ArrowsClockwise, FunnelSimple, Eye, EyeSlash
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
@@ -170,6 +170,25 @@ export default function AdminProducts() {
       console.error('CSV export failed', e);
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleToggleVisibility = async (e, product) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/products/${product.id}/visibility`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visible_on_website: !product.visible_on_website }),
+      });
+      if (res.ok) {
+        fetchProducts();
+      } else {
+        alert('حدث خطأ أثناء تغيير حالة الظهور');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء تغيير حالة الظهور');
     }
   };
 
@@ -474,6 +493,13 @@ export default function AdminProducts() {
                       {/* Actions */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
+                            title={product.visible_on_website ? 'إخفاء' : 'إظهار'}
+                            onClick={e => handleToggleVisibility(e, product)}
+                          >
+                            {product.visible_on_website ? <Eye size={18} /> : <EyeSlash size={18} />}
+                          </button>
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
                             title="تعديل"

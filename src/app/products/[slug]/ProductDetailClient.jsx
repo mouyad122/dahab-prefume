@@ -178,20 +178,78 @@ export default function ProductDetailClient({ product }) {
           </div>
         </section>
 
-        {/* Notes Story */}
-        <section className="product-story-grid mt-16 border-t border-[var(--color-border)] pt-12">
+        {/* Notes Story & Profile */}
+        <section className="mt-16 border-t border-[var(--color-border)] pt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+          
+          {/* Story & Specs */}
           <div className="story-block text-right">
             <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-2">{isAr ? 'قصة العطر' : 'Fragrance Story'}</span>
-            <h2 className="text-2xl font-display font-bold text-white mb-4">{isAr ? 'الأثر قبل التفاصيل.' : 'The impression before the details.'}</h2>
+            <h2 className="text-2xl font-display font-bold text-[var(--color-text-primary)] mb-4">{isAr ? 'الأثر قبل التفاصيل.' : 'The impression before the details.'}</h2>
             <p className="text-[var(--color-text-secondary)] leading-relaxed">{story || (isAr ? 'عطر مصمم ليحمل فخامة شرقية بلمسة عصرية، مناسب لمن يريد حضورًا هادئًا وواضحًا في الوقت نفسه.' : 'A scent designed around Eastern luxury with a modern restraint, made for a quiet yet unmistakable presence.')}</p>
-          </div>
-          <div className="notes-panel flex flex-col gap-4 text-right bg-black/20 p-6 rounded-2xl border border-[var(--color-border-subtle)]">
-            {notes.map((note) => (
-              <div key={note.label} className="border-b border-[var(--color-border-subtle)] pb-3 last:border-0 last:pb-0">
-                <span className="text-xs text-[var(--color-text-muted)] font-bold block mb-1">{note.label}</span>
-                <strong className="text-white font-medium">{note.value}</strong>
+
+            <div className="mt-8 grid grid-cols-2 gap-4">
+              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الجنس' : 'Gender'}</span>
+                <strong className="text-sm font-bold text-[var(--color-text-primary)]">
+                  {product.gender === 'unisex' ? (isAr ? 'للجنسين' : 'Unisex') : (product.gender === 'men' ? (isAr ? 'رجالي' : 'Men') : (isAr ? 'نسائي' : 'Women'))}
+                </strong>
               </div>
-            ))}
+              <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الموسم' : 'Season'}</span>
+                <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.season === 'all' ? (isAr ? 'جميع المواسم' : 'All Seasons') : product.season}</strong>
+              </div>
+              {product.fragrance_family_raw && (
+                <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right col-span-2">
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'العائلة العطرية' : 'Fragrance Family'}</span>
+                  <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.fragrance_family_raw}</strong>
+                </div>
+              )}
+            </div>
+
+            {product.family_tags && product.family_tags.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2 justify-end">
+                {product.family_tags.map(tag => (
+                  <span key={tag.id} className="px-3 py-1 bg-[var(--color-gold-dim)] text-[var(--color-gold)] border border-[var(--color-gold)]/20 rounded-full text-xs font-bold">
+                    {tag.tag_ar}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Accords & Notes */}
+          <div className="flex flex-col gap-8">
+            <div className="notes-panel text-right bg-[var(--color-bg-secondary)] p-6 rounded-2xl border border-[var(--color-border)] shadow-sm">
+              <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-4">{isAr ? 'الهرم العطري' : 'Olfactory Pyramid'}</span>
+              {notes.map((note) => (
+                <div key={note.label} className="border-b border-[var(--color-border-subtle)] pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 flex justify-between items-center">
+                  <span className="text-[0.65rem] text-[var(--color-text-muted)] font-bold uppercase tracking-widest">{note.label}</span>
+                  <strong className="text-[var(--color-text-primary)] font-medium text-sm">{note.value}</strong>
+                </div>
+              ))}
+            </div>
+
+            {product.accords && product.accords.length > 0 && (
+              <div className="accords-panel text-right bg-[var(--color-bg-secondary)] p-6 rounded-2xl border border-[var(--color-border)] shadow-sm">
+                <span className="section-label text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-4">{isAr ? 'البصمة العطرية (Accords)' : 'Main Accords'}</span>
+                <div className="flex flex-col gap-3">
+                  {product.accords.map((accord) => (
+                    <div key={accord.id} className="w-full">
+                      <div className="flex justify-between items-end mb-1">
+                        <span className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">{accord.strength}%</span>
+                        <span className="text-xs font-bold text-[var(--color-text-primary)]">{accord.name_ar}</span>
+                      </div>
+                      <div className="w-full bg-[var(--color-border-subtle)] h-1.5 rounded-full overflow-hidden flex justify-end">
+                        <div 
+                          className="bg-[var(--color-gold)] h-full transition-all duration-1000 ease-out" 
+                          style={{ width: `${accord.strength}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

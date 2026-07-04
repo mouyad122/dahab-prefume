@@ -26,7 +26,11 @@ export default async function ProductPage({ params }) {
     where: { slug },
     include: {
       category: true,
-      variants: true
+      variants: true,
+      accords: {
+        orderBy: { position: 'asc' }
+      },
+      family_tags: true
     }
   });
 

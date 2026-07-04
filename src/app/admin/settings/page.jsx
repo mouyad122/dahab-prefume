@@ -269,38 +269,37 @@ export default function AdminSettings() {
 
                   <div>
                     <label className="form-label flex items-center gap-2">
-                      <span>رابط خرائط جوجل المباشر (Google Maps Link)</span>
+                      <span>رابط موقعنا على Google Maps المباشر *</span>
                     </label>
                     <input 
                       type="text" 
                       className="form-input text-left dir-ltr text-xs font-mono" 
-                      placeholder="https://maps.app.goo.gl/..." 
+                      placeholder="ضع رابط موقعك هنا: https://maps.app.goo.gl/... أو اسم المكان" 
                       value={formData.store_google_maps_url || ''} 
-                      onChange={e => handleChange('store_google_maps_url', e.target.value)} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        handleChange('store_google_maps_url', val);
+                        if (!val.includes('output=embed')) {
+                          const computedEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(val)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+                          handleChange('store_map_embed_url', computedEmbed);
+                        }
+                      }} 
                     />
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">الرابط الذي يتم فتحه عند انقاد العميل لعرض الخريطة في تطبيق Google Maps</p>
-                  </div>
-
-                  <div>
-                    <label className="form-label flex items-center gap-2">
-                      <span>رابط تضمين الخريطة (Embed Map iFrame URL)</span>
-                    </label>
-                    <input 
-                      type="text" 
-                      className="form-input text-left dir-ltr text-xs font-mono" 
-                      placeholder="https://maps.google.com/maps?q=Amman..." 
-                      value={formData.store_map_embed_url || ''} 
-                      onChange={e => handleChange('store_map_embed_url', e.target.value)} 
-                    />
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">رابط Embed الذي يظهر كخريطة تفاعلية على شاشة العميل في صفحة المتجر والموقع</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1">انسخ رابط مكانك من خرائط جوجل والصقه هنا، وسيتم تعيينه كخريطة حية للموقع تلقائيًا.</p>
                   </div>
 
                   {/* Live Map Preview */}
                   <div className="mt-4">
-                    <label className="block text-xs font-bold text-gray-300 mb-2">معاينة الخريطة الحية للموقع (Live Map Preview)</label>
-                    <div className="relative h-[220px] rounded-xl overflow-hidden border border-[#c5a25d]/30 bg-black/40">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-bold text-gray-300">معاينة الخريطة الحية للموقع (Live Map Preview)</label>
+                      <span className="text-[10px] text-[var(--color-gold-light)] font-mono">تحديث فوري عند اللصق</span>
+                    </div>
+                    <div className="relative h-[240px] rounded-xl overflow-hidden border border-[#c5a25d]/40 bg-black/60 shadow-xl">
                       <iframe 
-                        src={formData.store_map_embed_url || "https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed"} 
+                        src={
+                          formData.store_map_embed_url || 
+                          (formData.store_google_maps_url ? `https://maps.google.com/maps?q=${encodeURIComponent(formData.store_google_maps_url)}&t=&z=16&ie=UTF8&iwloc=&output=embed` : "https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed")
+                        } 
                         className="w-full h-full border-0 grayscale invert contrast-[0.9] hover:grayscale-0 hover:invert-0 transition-all duration-500"
                         allowFullScreen="" 
                         loading="lazy"

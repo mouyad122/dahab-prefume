@@ -138,7 +138,8 @@ body {
   font-family: var(--font-sans-en);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
+  line-height: 1.85; /* Increased for better readability */
+  letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5 { text-wrap: balance; line-height: 1.15; }
@@ -215,8 +216,8 @@ button, input, select, textarea { font: inherit; }
 .font-sans-ar  { font-family: var(--font-sans-ar); }
 .font-sans-en  { font-family: var(--font-sans-en); }
 
-[dir='rtl'], .dir-ar { direction: rtl; text-align: right; font-family: var(--font-sans-ar); }
-[dir='ltr'], .dir-en { direction: ltr; text-align: left;  font-family: var(--font-sans-en); }
+[dir='rtl'], .dir-ar { direction: rtl; text-align: right; font-family: var(--font-sans-ar); line-height: 2; letter-spacing: 0.015em; }
+[dir='ltr'], .dir-en { direction: ltr; text-align: left;  font-family: var(--font-sans-en); line-height: 1.85; }
 .text-center-safe { direction: inherit; text-align: center; }
 
 /* Display sizes */

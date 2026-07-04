@@ -19,12 +19,18 @@ export default function StaticPages() {
     fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
-        if (data?.contact?.store_map_embed_url) {
-          setMapEmbedUrl(data.contact.store_map_embed_url);
+        const mapsUrl = data?.contact?.store_google_maps_url;
+        const embedUrl = data?.contact?.store_map_embed_url;
+
+        if (mapsUrl) {
+          setMapsLink(mapsUrl);
         }
-        if (data?.contact?.store_google_maps_url) {
-          setMapsLink(data.contact.store_google_maps_url);
+        if (embedUrl) {
+          setMapEmbedUrl(embedUrl);
+        } else if (mapsUrl) {
+          setMapEmbedUrl(`https://maps.google.com/maps?q=${encodeURIComponent(mapsUrl)}&t=&z=16&ie=UTF8&iwloc=&output=embed`);
         }
+
         if (data?.contact?.address_ar) {
           setStoreAddressAr(data.contact.address_ar);
         }
@@ -42,8 +48,8 @@ export default function StaticPages() {
           title: t('about'),
           eyebrow: isAr ? 'قصتنا وتاريخنا' : 'Our Story & Heritage',
           desc: isAr 
-            ? 'تأسس متجر دهب للعطور في قلب العاصمة الأردنية عمان بوسط البلد لتقديم أفخم خلطات المسك ومعطرات الشعر الفخمة وعطور النيش التي تتميز بثبات أسطوري يدوم لأيام وفوحان يترك انطباعاً لا ينسى.'
-            : 'DAHAB PERFUMES was established in the historic heart of Amman (Downtown) to offer luxury hand-blended scent oils, hair mists, and niche fragrances renowned for eternal longevity and sillage.'
+            ? 'منذ عام 2007، حُفرت رحلتنا بالشغف والإبداع والتميّز. بدأت الحكاية من متجر صغير في وسط البلد تحت اسم "دهب"، حيث أصبح وجهة لعشاق العطور وخلطات العطور الفريدة.\n\nمع مرور الوقت، توسّعنا، لنبدأ فصلًا جديدًا من النمو والتميّز. واليوم، نحن إحدى كبرى محلات العطور في المملكة الأردنية الهاشمية، شهادةً على عقود من العمل المتفاني والالتزام بالجودة.\n\nنستمدّ إرثنا من علاقتنا العميقة مع عملائنا. بالأمس، قدمنا أجود العطور المصممة لتتناسب مع ذائقتكم الفريدة. واليوم، أعدنا تعريف هويتنا باسم "DAHAB"، رمزًا للابتكار وسهولة الوصول، لضمان بقاء اسمنا في الذاكرة وإرثنا في القلوب.\n\nمع "DAHAB"، نواصل ريادتنا في فن العطور، ونرسم معايير جديدة للتميّز، ونلهم عصرًا جديدًا من الأناقة العطرية.\n\nمن نحن:\nنحن عشاق العطور وصناع الذكريات، نؤمن بأن كل عطر يحمل قصة، وكل شعور له نفحة.\nنمزج بين أصالة تراثنا وشغفنا بالابتكار لنخلق روائح تلامس القلب وتبقى للأبد.'
+            : 'Since 2007, our journey has been engraved with passion, creativity, and excellence. The story began in a small shop in Downtown Amman under the name "Dahab", becoming a destination for perfume lovers. Today, we are one of the leading perfume houses in Jordan. We blend our authentic heritage with a passion for innovation to create scents that touch the heart forever.'
         };
       case '/contact':
         return {
@@ -134,8 +140,8 @@ export default function StaticPages() {
 
       {/* Double-Bezel Premium Enclosure */}
       <div className="rounded-[2rem] bg-black/5 dark:bg-white/5 p-2.5 ring-1 ring-black/5 dark:ring-white/10 max-w-3xl w-full mt-4 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.01]">
-        <div className="rounded-[calc(2rem-0.625rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 md:p-12 shadow-main text-start flex flex-col gap-6">
-          <p className="text-sm md:text-base text-[var(--color-text-secondary)] font-light leading-relaxed dir-auto whitespace-pre-line">
+        <div className="rounded-[calc(2rem-0.625rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-8 md:p-12 shadow-main text-center flex flex-col items-center gap-6">
+          <p className="text-sm md:text-base text-[var(--color-text-secondary)] font-light leading-relaxed dir-auto whitespace-pre-line text-center">
             {content.desc}
           </p>
           {pathname === '/store-location' && (
