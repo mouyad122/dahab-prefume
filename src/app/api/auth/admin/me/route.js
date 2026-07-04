@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../../../lib/session';
 import { prisma } from '../../../../../lib/prisma';
 
+
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const adminSession = await verifyAdminSession();

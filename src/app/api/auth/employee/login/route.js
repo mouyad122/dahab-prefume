@@ -11,6 +11,8 @@ import {
 import { createEmployeeSession } from '../../../../../lib/session';
 import { prisma } from '../../../../../lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   const ip = getClientIp(request);
 

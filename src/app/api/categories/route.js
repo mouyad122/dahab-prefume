@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/categories — Public ───────────────────────────────────────────
 // Returns all active categories with product count, ordered by display_order.
 export async function GET() {

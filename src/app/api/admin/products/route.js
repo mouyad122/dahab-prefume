@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { verifyAdminSession } from '../../../../lib/session';
 
+
+export const dynamic = 'force-dynamic';
 /**
  * GET /api/admin/products
  * Admin-only product list with server-side pagination, filtering, and CSV export.

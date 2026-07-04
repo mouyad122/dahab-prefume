@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyEmployeeSession } from '../../../../../lib/session';
 import { prisma } from '../../../../../lib/prisma';
 
+
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // ── 1. Verify Session ─────────────────────────────────────────────────────

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../../lib/session';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/sales/[id] ──────────────────────────────────────────────────────
 // Returns a single sale with full items and employee info.
 // Employees can only view their own sales.

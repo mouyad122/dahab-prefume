@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 
+
+export const dynamic = 'force-dynamic';
 // ─── Discount Price Calculator ────────────────────────────────────────────────
 /**
  * Compute discounted_price in fils.

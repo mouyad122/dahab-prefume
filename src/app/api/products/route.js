@@ -6,6 +6,8 @@ import {
   normalizeSeason,
 } from '@/lib/productClassification';
 
+export const dynamic = 'force-dynamic';
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**

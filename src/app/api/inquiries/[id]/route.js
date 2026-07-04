@@ -3,6 +3,8 @@ import { prisma } from '../../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../../lib/session';
 import { sanitize } from '../../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 // ─── PATCH /api/inquiries/[id] (Update status or notes) ──────────────────────
 export async function PATCH(request, { params }) {
   try {

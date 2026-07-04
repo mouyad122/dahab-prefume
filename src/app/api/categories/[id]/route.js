@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/categories/[id] — Public ──────────────────────────────────────
 // Returns category with its visible products.
 export async function GET(request, { params }) {

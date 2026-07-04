@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/reports ─────────────────────────────────────────────────────────
 export async function GET(request) {
   try {

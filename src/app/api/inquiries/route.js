@@ -3,6 +3,8 @@ import { prisma } from '../../../lib/prisma';
 import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session';
 import { sanitize } from '../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 const VALID_INQUIRY_TYPES = [
   'استفسار عن عطر',
   'توفر منتج',

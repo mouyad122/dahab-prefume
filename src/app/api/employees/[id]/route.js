@@ -4,6 +4,8 @@ import { verifyAdminSession } from '../../../../lib/session';
 import { prisma } from '../../../../lib/prisma';
 import { sanitize } from '../../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 const PERMISSION_FIELDS = [
   'can_access_counter',
   'can_view_invoices',

@@ -3,6 +3,8 @@ import { prisma } from '../../../lib/prisma';
 import { verifyAdminSession } from '../../../lib/session';
 import { sanitize } from '../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/settings ────────────────────────────────────────────────────────
 // Public endpoint — returns all site settings as a nested key-value map.
 // Keys are organized by their category.

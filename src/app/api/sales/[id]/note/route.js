@@ -3,6 +3,8 @@ import { prisma } from '../../../../../lib/prisma';
 import { verifyEmployeeSession } from '../../../../../lib/session';
 import { sanitize } from '../../../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 // ─── PUT /api/sales/[id]/note ─────────────────────────────────────────────────
 // Employees can add or edit a note on their own completed sales.
 // Voided sales cannot be edited.

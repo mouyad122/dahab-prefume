@@ -3,6 +3,8 @@ import { prisma } from '../../../lib/prisma';
 import { verifyAdminSession } from '../../../lib/session';
 import { sanitize } from '../../../lib/security';
 
+
+export const dynamic = 'force-dynamic';
 // ─── GET /api/security ────────────────────────────────────────────────────────
 export async function GET(request) {
   try {
