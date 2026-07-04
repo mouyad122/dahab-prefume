@@ -22,11 +22,26 @@ export default async function ShopPage() {
         name_en: true,
         slug: true,
         image_name: true,
+        image_url: true,
+        gender: true,
+        season: true,
+        fragrance_family: true,
+        short_description: true,
+        featured: true,
         categoryId: true,
         category: {
           select: { id: true, name_ar: true, name_en: true },
         },
         visible: true,
+        accords: {
+          orderBy: { position: 'asc' },
+          select: {
+            id: true,
+            name_ar: true,
+            strength: true,
+            position: true,
+          },
+        },
         variants: {
           select: {
             id: true,

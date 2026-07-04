@@ -8,6 +8,7 @@ import { brandConfig } from '../../../config/brand';
 import { useCartStore } from '../../../stores/useCartStore';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 import FragranceAccords from '../../../components/product/FragranceAccords';
+import { getProductImageSrc } from '../../../lib/productDisplay';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
 
@@ -23,7 +24,7 @@ export default function ProductDetailClient({ product }) {
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
   const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
-  const image = product.image_url || FALLBACK_IMAGE;
+  const image = getProductImageSrc(product, FALLBACK_IMAGE);
   const name = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
   const description = (isAr ? product.short_description : product.short_description_en) || product.short_description;
   const story = (isAr ? product.long_description_ar : product.long_description_en) || product.long_description_ar;
@@ -38,7 +39,7 @@ export default function ProductDetailClient({ product }) {
   })).sort((a, b) => parseInt(a.key) - parseInt(b.key));
 
   const totalStock = sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
-  const isOut = totalStock <= 0;
+  const hasStock = totalStock > 0;
 
   // Default to first available size
   const [selectedSize, setSelectedSize] = useState(sizes.length > 0 ? sizes[1]?.key || sizes[0]?.key : '100ml');
@@ -62,7 +63,7 @@ export default function ProductDetailClient({ product }) {
       category: isAr ? product.category?.name_ar : product.category?.name_en,
       volume: activeSizeObj.label,
       price: parseFloat(activePrice_fils / 1000),
-      stock: activeSizeObj.stock || 99,
+      stock: activeSizeObj.stock > 0 ? activeSizeObj.stock : null,
       thumbnail: image
     };
     
@@ -88,7 +89,7 @@ export default function ProductDetailClient({ product }) {
           <div className="flex flex-col gap-4">
             <div className="product-gallery-main relative border border-[var(--color-border)] rounded-3xl overflow-hidden bg-black/40 aspect-square">
               <img src={image} alt={name} className="w-full h-full object-cover" />
-              {isOut && <span className="stock-pill large absolute top-4 right-4">{isAr ? 'نفذت الكمية' : 'Out of stock'}</span>}
+              {!hasStock && <span className="stock-pill large absolute top-4 right-4">{isAr ? 'متوفر للطلب' : 'Available to order'}</span>}
             </div>
           </div>
 
@@ -159,7 +160,7 @@ export default function ProductDetailClient({ product }) {
 
               <div className="flex flex-col sm:flex-row gap-3 mt-4">
                 {/* Add to Cart button */}
-                {!isOut && (
+                {isPriceValid && (
                   <LuxuryButton
                     onClick={handleAddToCart}
                     variant="primary"

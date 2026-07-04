@@ -4,17 +4,9 @@ import React, { useContext } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../../contexts/LanguageContext';
+import { getProductImageSrc } from '../../../lib/productDisplay';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=700';
-
-function parseImages(value) {
-  try {
-    const parsed = value ? JSON.parse(value) : [];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
 
 function price(product) {
   if (product.variants && product.variants.length > 0) {
@@ -70,7 +62,7 @@ export default function CollectionDetailClient({ category, products = [] }) {
           <div className="shop-grid">
             {products.map((product) => {
               const productName = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
-              const image = parseImages(product.images_360)[0] || fallbackImage;
+              const image = getProductImageSrc(product, fallbackImage);
                 const totalStock = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
                 return (
                   <Link href={`/products/${product.slug}`} key={product.id} className="fragrance-card">
@@ -80,7 +72,7 @@ export default function CollectionDetailClient({ category, products = [] }) {
                         <span className="media-pill">{isAr ? 'عرض 360' : '360 View'}</span>
                       )}
                       {totalStock <= 0 && (
-                        <span className="stock-pill">{isAr ? 'نفذت الكمية' : 'Out of stock'}</span>
+                        <span className="stock-pill">{isAr ? 'متوفر للطلب' : 'Available to order'}</span>
                       )}
                     </div>
                     <div className="fragrance-body">
@@ -88,7 +80,7 @@ export default function CollectionDetailClient({ category, products = [] }) {
                       <h2>{productName}</h2>
                       <div>
                         <strong>{formatJOD(price(product))}</strong>
-                        <small>{totalStock > 0 ? (isAr ? 'متوفر الآن' : 'Available now') : (isAr ? 'غير متوفر' : 'Unavailable')}</small>
+                        <small>{totalStock > 0 ? (isAr ? 'متوفر الآن' : 'Available now') : (isAr ? 'متوفر للطلب' : 'Available to order')}</small>
                       </div>
                     </div>
                   </Link>

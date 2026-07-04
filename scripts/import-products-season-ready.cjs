@@ -6,284 +6,261 @@ const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('--- DAHAB PERFUMES PRODUCT IMPORT ---');
-  console.log(`Working directory: ${process.cwd()}`);
+function firstValue(row, keys, fallback = '') {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return value;
+    }
+  }
+  return fallback;
+}
 
+function isYes(value) {
+  return ['نعم', 'yes', 'true', '1'].includes(String(value || '').trim().toLowerCase());
+}
+
+function slugify(value, fallback) {
+  const slug = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0600-\u06ff]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || fallback;
+}
+
+function normalizeImageName(value) {
+  const raw = String(value || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!raw || raw === 'missing') return raw;
+  if (raw.startsWith('products/')) return raw.slice('products/'.length);
+  if (raw.startsWith('uploads/products/')) return raw.slice('uploads/products/'.length);
+  return path.basename(raw);
+}
+
+function resolveImagePath(imageName, publicImagesDir) {
+  if (!imageName || imageName === 'missing') return null;
+
+  const candidates = [
+    path.join(publicImagesDir, imageName),
+    path.join(process.cwd(), 'public', 'uploads', 'products', imageName),
+    path.join(process.cwd(), 'products', imageName),
+  ];
+
+  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+}
+
+async function main() {
   const args = process.argv.slice(2);
   const isDryRun = args.includes('--dry-run');
   const isForceVisible = args.includes('--force-visible');
-
-  // Extract --images argument
-  const imagesArg = args.find(a => a.startsWith('--images='));
-  const sourceImagesPath = imagesArg ? imagesArg.split('=')[1] : null;
-
-  if (isDryRun) console.log('Mode: DRY-RUN (No database writes will occur)');
-  if (isForceVisible) console.log('Mode: FORCE-VISIBLE');
+  const shouldPruneCategories = args.includes('--prune-categories');
+  const imagesArg = args.find((arg) => arg.startsWith('--images='));
+  const sourceImagesPath = imagesArg ? imagesArg.split('=').slice(1).join('=') : null;
 
   const excelPath = path.join(process.cwd(), 'import', 'dahab_perfumes_import_template_season_ready.xlsx');
-  console.log(`Excel path: ${excelPath}`);
-
   if (!fs.existsSync(excelPath)) {
     throw new Error(`Excel file not found at ${excelPath}`);
   }
-  console.log('Excel exists: YES');
 
-  const wb = xlsx.readFile(excelPath);
-  if (!wb.SheetNames.includes('Products')) {
-    throw new Error(`Products sheet not found. Available sheets: ${wb.SheetNames.join(', ')}`);
+  const workbook = xlsx.readFile(excelPath);
+  if (!workbook.SheetNames.includes('Products')) {
+    throw new Error(`Products sheet not found. Available sheets: ${workbook.SheetNames.join(', ')}`);
   }
-  console.log('Sheet found: Products');
 
-  const data = xlsx.utils.sheet_to_json(wb.Sheets['Products'], { defval: '' });
-  console.log(`Rows detected: ${data.length}`);
-
+  const rows = xlsx.utils.sheet_to_json(workbook.Sheets.Products, { defval: '' });
   const publicImagesDir = path.join(process.cwd(), 'public', 'products');
-  console.log(`Images directory: ${publicImagesDir}`);
-
-  if (!fs.existsSync(publicImagesDir)) {
-    fs.mkdirSync(publicImagesDir, { recursive: true });
-  }
-
-  let imagesFound = fs.readdirSync(publicImagesDir).filter(f => f.endsWith('.webp') || f.endsWith('.jpg') || f.endsWith('.png')).length;
-  console.log(`Images found: ${imagesFound}`);
-
-  console.log('Database connection: OK');
+  fs.mkdirSync(publicImagesDir, { recursive: true });
 
   const globalPricing = await prisma.globalPricingSettings.findFirst({
     where: { active: true },
-    orderBy: { created_at: 'desc' }
+    orderBy: { created_at: 'desc' },
   });
 
   const price50 = globalPricing?.price_50ml_fils;
   const price100 = globalPricing?.price_100ml_fils;
   const price200 = globalPricing?.price_200ml_fils;
-
-  console.log('Global prices:');
-  console.log(`50ml: ${(price50 || 0) / 1000} JOD`);
-  console.log(`100ml: ${(price100 || 0) / 1000} JOD`);
-  console.log(`200ml: ${(price200 || 0) / 1000} JOD`);
-
-  if (!price50 || price50 <= 0 || !price100 || price100 <= 0 || !price200 || price200 <= 0) {
-    throw new Error('IMPORT FAILED:\nGlobal prices are missing or invalid.\nPlease configure 50ml, 100ml, and 200ml prices in Admin Settings before importing.');
+  if (!price50 || !price100 || !price200) {
+    throw new Error('Global prices are missing. Configure 50ml, 100ml, and 200ml prices first.');
   }
 
   const report = {
-    totalRows: data.length,
+    totalRows: rows.length,
     importedProducts: 0,
     updatedProducts: 0,
     skippedRows: 0,
     createdCategories: [],
-    updatedCategories: [],
+    prunedCategories: [],
     missingImages: [],
     invalidRows: [],
-    hiddenBecauseMissingImage: [],
-    hiddenBecauseVisibilityNo: [],
     visibleProducts: 0,
     hiddenProducts: 0,
     createdVariants: 0,
     createdAccords: 0,
-    globalPrices: {
-      "50ml": price50,
-      "100ml": price100,
-      "200ml": price200
-    },
-    databaseCounts: {}
+    databaseCounts: {},
   };
 
-  const existingCategories = await prisma.category.findMany();
-  const categorySlugMap = new Map(existingCategories.map(c => [c.slug, c.id]));
+  const categories = await prisma.category.findMany();
+  const categorySlugMap = new Map(categories.map((category) => [category.slug, category.id]));
+  const existingProducts = await prisma.product.findMany({ select: { id: true, sku: true, slug: true } });
+  const existingSkuMap = new Map(existingProducts.map((product) => [product.sku, product]));
+  const excelCategorySlugs = new Set();
 
-  const existingProducts = await prisma.product.findMany({ select: { id: true, sku: true } });
-  const existingSkuMap = new Map(existingProducts.map(p => [p.sku, p.id]));
-
-  for (const row of data) {
-    const sku = row['SKU']?.toString().trim();
+  for (const row of rows) {
+    const sku = String(firstValue(row, ['SKU'], '')).trim();
     if (!sku) {
       report.skippedRows++;
       continue;
     }
 
     try {
-      const name_ar = row['اسم العطر']?.toString().trim() || 'عطر مجهول';
-      if (name_ar === 'عطر مجهول') report.invalidRows.push(sku);
+      const name_ar = String(firstValue(row, ['اسم العطر'], 'عطر مجهول')).trim();
+      const inspired_by = String(firstValue(row, ['Inspired By'], '')).trim() || null;
+      const main_category = String(firstValue(row, ['تصنيف المتجر', 'التصنيف الرئيسي'], 'عطور')).trim();
+      const categorySlug = String(firstValue(row, ['category_slug'], 'perfumes')).trim().toLowerCase();
+      const categoryName = main_category || categorySlug;
+      const gender = String(firstValue(row, ['الجنس'], 'unisex')).trim();
+      const season = String(firstValue(row, ['فصل العطر', 'الموسم'], 'all')).trim();
+      const season_slug = String(firstValue(row, ['season_slug'], 'both')).trim();
+      const fragrance_family = String(firstValue(row, ['العائلة العطرية'], '')).trim();
+      const keywords = String(firstValue(row, ['الكلمات المفتاحية'], '')).trim();
+      const short_description = String(firstValue(row, ['وصف قصير'], '')).trim();
+      const notes = String(firstValue(row, ['ملاحظات'], '')).trim() || null;
+      const isFeatured = isYes(firstValue(row, ['مميز بالواجهة؟'], ''));
+      const totalStock = parseInt(firstValue(row, ['المخزون الكلي'], 0), 10) || 0;
+      const lowStockThreshold = parseInt(firstValue(row, ['حد تنبيه المخزون'], 5), 10) || 5;
 
-      const inspired_by = row['Inspired By']?.toString().trim() || null;
-      const gender = row['الجنس']?.toString().trim() || 'unisex';
-      const seasonRaw = row['الموسم']?.toString().trim() || 'all'; // Legacy
-      const seasonAr = row['فصل العطر']?.toString().trim() || seasonRaw;
-      const season_slug = row['season_slug']?.toString().trim() || 'both';
-      const fragrance_family = row['العائلة العطرية']?.toString().trim() || '';
-      const keywords = row['الكلمات المفتاحية']?.toString().trim() || '';
-      const short_description = row['وصف قصير']?.toString().trim() || '';
-      const isFeatured = row['مميز بالواجهة؟'] === 'نعم';
-      
-      const totalStock = parseInt(row['المخزون الكلي']) || 0;
-      const lowStockThreshold = parseInt(row['حد تنبيه المخزون']) || 5;
-
-      const categoryName = row['تصنيف المتجر']?.toString().trim() || 'عطور';
-      const categorySlug = row['category_slug']?.toString().trim() || 'perfumes';
+      excelCategorySlugs.add(categorySlug);
 
       let categoryId = categorySlugMap.get(categorySlug);
-      if (!categoryId) {
-        if (!isDryRun) {
-          const newCat = await prisma.category.create({
-            data: {
-              slug: categorySlug,
-              name_ar: categoryName,
-              name_en: categoryName,
-              is_active: true
-            }
-          });
-          categoryId = newCat.id;
-          categorySlugMap.set(categorySlug, categoryId);
-          report.createdCategories.push(categorySlug);
-        } else {
-          categoryId = 'mock-cat-id';
-          if (!report.createdCategories.includes(categorySlug)) {
-            report.createdCategories.push(categorySlug);
-          }
-        }
+      if (!categoryId && !isDryRun) {
+        const created = await prisma.category.create({
+          data: {
+            slug: categorySlug,
+            name_ar: categoryName,
+            name_en: categorySlug,
+            is_active: true,
+            display_order: categorySlugMap.size + 1,
+          },
+        });
+        categoryId = created.id;
+        categorySlugMap.set(categorySlug, categoryId);
+        report.createdCategories.push(categorySlug);
       }
 
-      let readyForStorefront = row['جاهز للظهور؟'] === 'نعم';
-      let isVisible = row['ظاهر بالموقع؟'] === 'نعم';
-      
-      const imageName = row['اسم الصورة']?.toString().trim();
+      let imageName = normalizeImageName(firstValue(row, ['اسم الصورة'], ''));
       let image_url = null;
       let has_image = false;
+      const resolvedImagePath = resolveImagePath(imageName, publicImagesDir);
 
-      if (imageName) {
-        const publicImgPath = path.join(publicImagesDir, imageName);
-        
-        if (fs.existsSync(publicImgPath)) {
+      if (resolvedImagePath) {
+        const publicImagePath = path.join(publicImagesDir, imageName);
+        if (!isDryRun && resolvedImagePath !== publicImagePath && !fs.existsSync(publicImagePath)) {
+          fs.copyFileSync(resolvedImagePath, publicImagePath);
+        }
+        image_url = `/products/${imageName}`;
+        has_image = true;
+      } else if (sourceImagesPath && imageName && imageName !== 'missing') {
+        const sourceImagePath = path.join(sourceImagesPath, imageName);
+        const publicImagePath = path.join(publicImagesDir, imageName);
+        if (fs.existsSync(sourceImagePath)) {
+          if (!isDryRun) fs.copyFileSync(sourceImagePath, publicImagePath);
           image_url = `/products/${imageName}`;
           has_image = true;
-        } else if (sourceImagesPath) {
-          const sourceImgPath = path.join(sourceImagesPath, imageName);
-          if (fs.existsSync(sourceImgPath)) {
-            if (!isDryRun) {
-              fs.copyFileSync(sourceImgPath, publicImgPath);
-            }
-            image_url = `/products/${imageName}`;
-            has_image = true;
-          }
         }
-      }
-
-      if (isForceVisible && has_image) {
-        isVisible = true;
-        readyForStorefront = true;
       }
 
       if (!has_image) {
         report.missingImages.push(sku);
-        has_image = false;
-        image_url = '/products/placeholder-dahab.webp';
-        if (isVisible || readyForStorefront) {
-          report.hiddenBecauseMissingImage.push(sku);
-          isVisible = false;
-        }
-      } else if ((!isVisible || !readyForStorefront) && !isForceVisible) {
-        report.hiddenBecauseVisibilityNo.push(sku);
+        imageName = imageName || 'missing';
       }
 
-      if (isVisible && readyForStorefront) {
-        report.visibleProducts++;
-      } else {
-        report.hiddenProducts++;
-      }
+      const requestedVisible = isYes(firstValue(row, ['ظاهر بالموقع؟'], ''));
+      const requestedReady = isYes(firstValue(row, ['جاهز للظهور؟'], ''));
+      const isVisible = isForceVisible ? true : requestedVisible && has_image;
+      const readyForStorefront = isForceVisible ? true : requestedReady && has_image;
+
+      if (isVisible) report.visibleProducts++;
+      else report.hiddenProducts++;
 
       const productData = {
         name_ar,
         inspired_by,
+        main_category,
         categoryId,
         category_slug: categorySlug,
         gender,
-        season: seasonAr,
+        season,
         season_slug,
         fragrance_family,
         keywords,
         short_description,
-        image_name: imageName || '',
+        notes,
+        image_name: imageName,
         image_url,
         has_image,
         visible: isVisible,
         ready_for_storefront: readyForStorefront,
         featured: isFeatured,
-        low_stock_threshold: lowStockThreshold
+        low_stock_threshold: lowStockThreshold,
+        needs_image: !has_image,
       };
 
-      const existingProductId = existingSkuMap.get(sku);
-
-      if (!isDryRun) {
+      const existingProduct = existingSkuMap.get(sku);
+      if (isDryRun) {
+        if (existingProduct) report.updatedProducts++;
+        else report.importedProducts++;
+      } else {
         let productId;
-
-        if (existingProductId) {
+        if (existingProduct) {
           await prisma.product.update({ where: { sku }, data: productData });
-          productId = existingProductId;
-          
-          await prisma.$transaction([
-            prisma.productVariant.deleteMany({ where: { productId } }),
-            prisma.productAccord.deleteMany({ where: { productId } }),
-            prisma.productFamilyTag.deleteMany({ where: { productId } }),
-          ]);
+          productId = existingProduct.id;
           report.updatedProducts++;
         } else {
-          productData.sku = sku;
-          productData.slug = name_ar.toLowerCase().replace(/\s+/g, '-') + '-' + sku.toLowerCase() + '-' + crypto.randomBytes(3).toString('hex');
-          const newProduct = await prisma.product.create({ data: productData });
-          productId = newProduct.id;
+          const product = await prisma.product.create({
+            data: {
+              ...productData,
+              sku,
+              slug: `${slugify(name_ar, sku.toLowerCase())}-${sku.toLowerCase()}-${crypto.randomBytes(3).toString('hex')}`,
+            },
+          });
+          productId = product.id;
           report.importedProducts++;
         }
 
+        await prisma.$transaction([
+          prisma.productVariant.deleteMany({ where: { productId } }),
+          prisma.productAccord.deleteMany({ where: { productId } }),
+          prisma.productFamilyTag.deleteMany({ where: { productId } }),
+        ]);
+
         const accordsData = [];
         const defaultStrengths = [100, 85, 70, 55, 40];
-        let accordSortOrder = 1;
-
         for (let i = 1; i <= 5; i++) {
-          const accordName = row[`البصمة العطرية ${i}`]?.toString().trim();
-          let accordStrength = parseInt(row[`قوة البصمة ${i}`]);
-          
-          if (accordName) {
-            if (isNaN(accordStrength) || accordStrength <= 0) {
-               accordStrength = defaultStrengths[i-1] || 40;
-            }
-            accordsData.push({ 
-              productId, 
-              position: accordSortOrder++, 
-              name_ar: accordName, 
-              strength: accordStrength 
-            });
-          }
+          const accordName = String(firstValue(row, [`البصمة العطرية ${i}`], '')).trim();
+          if (!accordName) continue;
+
+          const parsedStrength = parseInt(firstValue(row, [`قوة البصمة ${i}`], ''), 10);
+          accordsData.push({
+            productId,
+            position: accordsData.length + 1,
+            name_ar: accordName,
+            strength: Number.isFinite(parsedStrength) && parsedStrength > 0 ? parsedStrength : defaultStrengths[i - 1],
+          });
         }
-        report.createdAccords += accordsData.length;
 
         const variantsData = [
           { productId, volume: '50ml', price: price50, stock: totalStock },
           { productId, volume: '100ml', price: price100, stock: totalStock },
           { productId, volume: '200ml', price: price200, stock: totalStock },
         ];
+
+        report.createdAccords += accordsData.length;
         report.createdVariants += variantsData.length;
 
         await prisma.$transaction([
           prisma.productVariant.createMany({ data: variantsData, skipDuplicates: true }),
-          prisma.productAccord.createMany({ data: accordsData, skipDuplicates: true })
+          prisma.productAccord.createMany({ data: accordsData, skipDuplicates: true }),
         ]);
-
-      } else {
-        // DRY RUN Counting
-        if (existingProductId) {
-          report.updatedProducts++;
-        } else {
-          report.importedProducts++;
-        }
-        for (let i = 1; i <= 5; i++) {
-          if (row[`البصمة العطرية ${i}`]?.toString().trim()) {
-            report.createdAccords++;
-          }
-        }
-        report.createdVariants += 3;
       }
     } catch (error) {
       console.error(`[Error] Failed on SKU ${sku}:`, error.message);
@@ -291,39 +268,34 @@ async function main() {
     }
   }
 
-  const reportPath = path.join(process.cwd(), 'import-report.json');
+  if (shouldPruneCategories && !isDryRun) {
+    const extras = await prisma.category.findMany({
+      where: { slug: { notIn: [...excelCategorySlugs] } },
+      select: { id: true, slug: true },
+    });
 
-  if (!isDryRun) {
-    const totalProducts = await prisma.product.count();
-    const totalVariants = await prisma.productVariant.count();
-    const totalAccords = await prisma.productAccord.count();
-    const visibleCount = await prisma.product.count({ where: { visible: true, ready_for_storefront: true } });
-    const hiddenCount = await prisma.product.count({ where: { OR: [{ visible: false }, { ready_for_storefront: false }] } });
-    const totalCategories = await prisma.category.count();
-    const missingImgCount = await prisma.product.count({ where: { has_image: false } });
-
-    report.databaseCounts = {
-      products: totalProducts,
-      categories: totalCategories,
-      variants: totalVariants,
-      accords: totalAccords,
-      visibleStorefrontProducts: visibleCount,
-      hiddenProducts: hiddenCount,
-      missingImageProducts: missingImgCount
-    };
-
-    console.log('\nDatabase verification:');
-    console.log(`Products count: ${totalProducts}`);
-    console.log(`Categories count: ${totalCategories}`);
-    console.log(`Variants count: ${totalVariants}`);
-    console.log(`Accords count: ${totalAccords}`);
-    console.log(`Visible storefront products: ${visibleCount}`);
-    console.log(`Hidden products: ${hiddenCount}`);
-    console.log(`Missing image products: ${missingImgCount}`);
+    for (const category of extras) {
+      const productCount = await prisma.product.count({ where: { categoryId: category.id } });
+      if (productCount === 0) {
+        await prisma.category.delete({ where: { id: category.id } });
+        report.prunedCategories.push(category.slug);
+      }
+    }
   }
 
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  if (!isDryRun) {
+    report.databaseCounts = {
+      products: await prisma.product.count(),
+      categories: await prisma.category.count(),
+      variants: await prisma.productVariant.count(),
+      accords: await prisma.productAccord.count(),
+      visibleStorefrontProducts: await prisma.product.count({ where: { visible: true } }),
+      missingImageProducts: await prisma.product.count({ where: { has_image: false } }),
+    };
+  }
 
+  fs.writeFileSync(path.join(process.cwd(), 'import-report.json'), JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
 }
 
 main()
@@ -335,4 +307,7 @@ main()
     console.error('IMPORT FAILED:');
     console.error(error);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

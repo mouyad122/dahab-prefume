@@ -195,19 +195,6 @@ export async function PUT(request, { params }) {
     }
 
     // ── images_360 (array → JSON string) ──────────────────────────────────────
-    if (images_360 !== undefined) {
-      if (images_360 === null) {
-        data.images_360 = null;
-      } else if (Array.isArray(images_360)) {
-        data.images_360 = JSON.stringify(images_360);
-      } else if (typeof images_360 === 'string') {
-        try { JSON.parse(images_360); data.images_360 = images_360; }
-        catch { return Response.json({ error: 'images_360 must be an array or valid JSON string' }, { status: 400 }); }
-      } else {
-        return Response.json({ error: 'images_360 must be an array or JSON string' }, { status: 400 });
-      }
-    }
-
     // ── categoryId ────────────────────────────────────────────────────────────
     if (categoryId !== undefined) {
       if (categoryId === null) {

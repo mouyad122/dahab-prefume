@@ -8,6 +8,7 @@ import {
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
+import { getProductImageSrc } from '../../../lib/productDisplay';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function formatJOD(fils) {
@@ -442,7 +443,7 @@ export default function AdminProducts() {
                       <td className="py-3 px-4">
                         <div className="w-10 h-10 rounded border border-[var(--color-border-subtle)] overflow-hidden bg-black/40 shrink-0">
                           {product.image_name ? (
-                            <img src={product.image_name} alt="" className="w-full h-full object-cover" />
+                            <img src={getProductImageSrc(product)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <ImageSquare size={16} className="text-[var(--color-text-subtle)]" />

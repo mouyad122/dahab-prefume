@@ -4,6 +4,17 @@ import { StorageService } from '../services/StorageService';
 const CART_KEY = 'dahab_cart';
 const WISHLIST_KEY = 'dahab_wishlist';
 
+function clampCartQuantity(qty, stock) {
+  const requested = Math.max(1, parseInt(qty, 10) || 1);
+  const maxStock = Number(stock);
+
+  if (Number.isFinite(maxStock) && maxStock > 0) {
+    return Math.min(requested, maxStock);
+  }
+
+  return requested;
+}
+
 export const useCartStore = create((set, get) => ({
   // Initialize as empty arrays — data hydrated on client via useEffect in components
   cartItems: [],
@@ -29,14 +40,9 @@ export const useCartStore = create((set, get) => ({
     const index = items.findIndex(item => item.id === product.id);
 
     if (index > -1) {
-      const newQty = items[index].quantity + qty;
-      if (newQty <= product.stock) {
-        items[index].quantity = newQty;
-      } else {
-        items[index].quantity = product.stock; // Cap at max stock
-      }
+      items[index].quantity = clampCartQuantity(items[index].quantity + qty, product.stock);
     } else {
-      items.push({ ...product, quantity: Math.min(qty, product.stock) });
+      items.push({ ...product, quantity: clampCartQuantity(qty, product.stock) });
     }
 
     set({ cartItems: items, isCartOpen: true });
@@ -48,8 +54,7 @@ export const useCartStore = create((set, get) => ({
     const index = items.findIndex(item => item.id === productId);
 
     if (index > -1) {
-      const targetQty = Math.max(1, Math.min(qty, maxStock));
-      items[index].quantity = targetQty;
+      items[index].quantity = clampCartQuantity(qty, maxStock);
       set({ cartItems: items });
       StorageService.set(CART_KEY, items);
     }

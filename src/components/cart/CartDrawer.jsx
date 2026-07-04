@@ -6,6 +6,7 @@ import { X, Trash, Plus, Minus, ShoppingBag, WhatsappLogo, ArrowRight } from '@p
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
 import LuxuryButton from '../ui/LuxuryButton';
+import { getProductImageSrc } from '../../lib/productDisplay';
 
 export default function CartDrawer() {
   const { language, t } = useContext(LanguageContext);
@@ -17,8 +18,8 @@ export default function CartDrawer() {
   const setCartOpen = useCartStore(state => state.setCartOpen);
   const drawerRef = useRef(null);
 
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const cartCount = cartItems.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+  const subtotal = cartItems.reduce((acc, item) => acc + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
 
   // Close on Escape
   useEffect(() => {
@@ -109,7 +110,11 @@ export default function CartDrawer() {
           ) : (
             /* Items List */
             <div className="flex flex-col gap-4">
-              {cartItems.map(item => (
+              {cartItems.map(item => {
+                const title = (isAr ? item.title_ar : item.title_en) || item.title || item.name_ar || item.name_en || '';
+                const maxStock = Number(item.stock);
+                const hasStockCap = Number.isFinite(maxStock) && maxStock > 0;
+                return (
                 <div
                   key={item.id}
                   className="rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4 flex items-start gap-4 transition-all duration-300 hover:border-[var(--color-gold)]/20"
@@ -121,8 +126,8 @@ export default function CartDrawer() {
                     className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)]"
                   >
                     <img
-                      src={item.thumbnail}
-                      alt={t(item.title)}
+                      src={getProductImageSrc(item)}
+                      alt={title}
                       className="w-full h-full object-cover"
                     />
                   </Link>
@@ -138,7 +143,7 @@ export default function CartDrawer() {
                         onClick={() => setCartOpen(false)}
                         className="font-display text-sm font-bold text-[var(--color-text-primary)] leading-tight hover:text-[var(--color-gold)] transition-colors truncate"
                       >
-                        {t(item.title)}
+                        {title}
                       </Link>
                       <span className="text-[9px] text-[var(--color-text-muted)] tracking-wider">
                         {item.volume}
@@ -163,7 +168,7 @@ export default function CartDrawer() {
                         <button
                           type="button"
                           onClick={() => updateQty(item.id, item.quantity + 1, item.stock)}
-                          disabled={item.quantity >= item.stock}
+                          disabled={hasStockCap && item.quantity >= maxStock}
                           className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-500 hover:text-[var(--color-text-primary)] disabled:opacity-30 transition-colors cursor-pointer"
                           aria-label={isAr ? 'زيادة الكمية' : 'Increase quantity'}
                         >
@@ -173,7 +178,7 @@ export default function CartDrawer() {
 
                       {/* Price */}
                       <span className="text-xs font-bold text-[var(--color-text-primary)]">
-                        {(item.price * item.quantity).toFixed(2)} JOD
+                        {((Number(item.price) || 0) * (Number(item.quantity) || 0)).toFixed(2)} JOD
                       </span>
                     </div>
                   </div>
@@ -188,7 +193,7 @@ export default function CartDrawer() {
                     <Trash size={14} />
                   </button>
                 </div>
-              ))}
+              );})}
             </div>
           )}
         </div>

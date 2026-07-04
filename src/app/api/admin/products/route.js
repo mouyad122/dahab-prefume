@@ -46,7 +46,6 @@ export async function GET(request) {
       { name_ar:    { contains: search } },
       { name_en:    { contains: search } },
       { sku:        { contains: search, mode: 'insensitive' } },
-      { barcode:    { contains: search } },
       { inspired_by:{ contains: search } },
     ];
   }
@@ -81,7 +80,6 @@ export async function GET(request) {
   const select = {
     id: true,
     sku: true,
-    barcode: true,
     slug: true,
     name_ar: true,
     name_en: true,
@@ -92,6 +90,7 @@ export async function GET(request) {
     featured: true,
     low_stock_threshold: true,
     image_name: true,
+    image_url: true,
     created_at: true,
     updated_at: true,
     category: { select: { id: true, name_ar: true } },

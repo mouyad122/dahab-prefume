@@ -7,6 +7,13 @@ import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
 import LuxuryButton from '../ui/LuxuryButton';
 import { brandConfig } from '../../config/brand';
+import {
+  buildCartProduct,
+  getDefaultVariant,
+  getPriceJod,
+  getProductImageSrc,
+  getTotalStock,
+} from '../../lib/productDisplay';
 
 export default function ProductCard({ product }) {
   const { language, t } = useContext(LanguageContext);
@@ -20,25 +27,11 @@ export default function ProductCard({ product }) {
 
   const isWishlisted = wishlist.includes(product.id);
 
-  // Price formatting & validation (Support V3 variants)
-  let rawPrice = Number(product.price) || 0;
-  if (rawPrice === 0 && product.variants?.length > 0) {
-    // Sort by volume ascending, grab smallest price or just [0]
-    const sortedVariants = [...product.variants].sort((a, b) => parseInt(a.volume) - parseInt(b.volume));
-    rawPrice = (sortedVariants[0].price || 0) / 1000;
-  } else if (rawPrice > 100) {
-    rawPrice = rawPrice / 1000; // If it's still in fils directly on product for some reason
-  }
-
+  const defaultVariant = getDefaultVariant(product);
+  const rawPrice = getPriceJod(product, defaultVariant);
   const isPriceValid = rawPrice > 0;
-
-  // Stock availability logic (Support V3 variants)
-  let stockCount = Number(product.stock) || 0;
-  if (stockCount === 0 && product.variants?.length > 0) {
-    stockCount = product.variants.reduce((acc, v) => acc + (v.stock || 0), 0);
-  }
-  
-  const isOutOfStock = stockCount <= 0 || product.inStock === false || !isPriceValid;
+  const stockCount = getTotalStock(product);
+  const isUnavailable = product.inStock === false || !isPriceValid;
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -49,21 +42,9 @@ export default function ProductCard({ product }) {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
-    
-    // Add default variant to cart
-    let variantToCart = product;
-    if (product.variants?.length > 0) {
-      const sortedVariants = [...product.variants].sort((a, b) => parseInt(a.volume) - parseInt(b.volume));
-      variantToCart = {
-        ...product,
-        id: `${product.id}-${sortedVariants[0].volume}`,
-        volume: sortedVariants[0].volume,
-        price: sortedVariants[0].price / 1000
-      };
-    }
-    
-    addToCart(variantToCart, 1);
+    if (isUnavailable) return;
+
+    addToCart(buildCartProduct(product, defaultVariant), 1);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -76,8 +57,8 @@ export default function ProductCard({ product }) {
     
   const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean || '962785050655'}?text=${whatsappMessage}`;
 
-  const hasImage = Boolean(product.image_url || product.thumbnail || product.image_name) && !imageError;
-  const imageSource = product.image_url || product.thumbnail || (product.image_name ? `/products/${product.image_name}` : null);
+  const imageSource = getProductImageSrc(product);
+  const hasImage = Boolean(imageSource) && !imageError;
 
   return (
     <div className="rounded-3xl bg-[#121216]/90 backdrop-blur-xl border border-[#c5a25d]/20 p-4 sm:p-5 flex flex-col justify-between h-full relative group hover:border-[#c5a25d]/50 hover:shadow-[0_12px_35px_rgba(197,162,93,0.12)] transition-all duration-300">
@@ -86,7 +67,7 @@ export default function ProductCard({ product }) {
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5 z-10">
           {/* Availability / Offer Badge */}
-          {isOutOfStock ? (
+          {isUnavailable ? (
             <span className="bg-red-500/15 border border-red-500/30 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
               {isAr ? 'غير متوفر' : 'Out of Stock'}
             </span>
@@ -96,7 +77,7 @@ export default function ProductCard({ product }) {
             </span>
           ) : stockCount <= 4 ? (
             <span className="bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-              {isAr ? `باقي ${stockCount} قطع` : `Only ${stockCount} left`}
+              {stockCount > 0 ? (isAr ? `باقي ${stockCount} قطع` : `Only ${stockCount} left`) : (isAr ? 'متوفر للطلب' : 'Available to order')}
             </span>
           ) : (
             <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -191,7 +172,7 @@ export default function ProductCard({ product }) {
 
         {/* Action Buttons */}
         <div className="w-full">
-          {isOutOfStock ? (
+          {isUnavailable ? (
             /* Out of Stock or Price Invalid: Only WhatsApp Inquiry Button */
             <LuxuryButton 
               href={whatsappUrl}

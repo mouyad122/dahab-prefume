@@ -54,6 +54,7 @@ export default async function ProductPage({ params }) {
       name_en: true,
       slug: true,
       image_name: true,
+      image_url: true,
       variants: {
         select: {
           id: true,

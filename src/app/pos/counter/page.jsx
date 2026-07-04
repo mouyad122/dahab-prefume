@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlass, Plus, Minus, X, CheckCircle, Printer, ArrowRight, Receipt, Package, ShoppingCart } from '@phosphor-icons/react';
 import { usePosContext } from '../../../contexts/PosContext';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
+import { getProductImageSrc } from '../../../lib/productDisplay';
 
 export default function PosCounter({ saleSource = 'STAFF_POS' }) {
   const { employee } = usePosContext();
@@ -353,7 +354,7 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
                 >
                   <div className="w-full aspect-square rounded-md overflow-hidden bg-black/40 border border-[var(--color-border-subtle)] relative">
                     {product.image_name ? (
-                       <img src={product.image_name} alt="" className="w-full h-full object-cover" />
+                       <img src={getProductImageSrc(product)} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)] text-xs">صورة</div>
                     )}

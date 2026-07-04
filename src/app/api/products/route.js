@@ -36,6 +36,7 @@ const publicProductSelect = {
   short_description: true,
   short_description_en: true,
   image_name: true,
+  image_url: true,
   featured: true,
   low_stock_threshold: true,
   notes_top: true,
