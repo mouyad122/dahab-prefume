@@ -31,10 +31,14 @@ export async function GET(request) {
     const where = {};
 
     if (reqEmployeeId) {
-      where.OR = [
-        { employeeId: reqEmployeeId },
-        { seller_user_id: reqEmployeeId }
-      ];
+      if (reqEmployeeId === 'admin') {
+        where.employeeId = null; // Admin sales have no linked employee ID
+      } else {
+        where.OR = [
+          { employeeId: reqEmployeeId },
+          { seller_user_id: reqEmployeeId }
+        ];
+      }
     }
 
     if (status && status !== 'all') {

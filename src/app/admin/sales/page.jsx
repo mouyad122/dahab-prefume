@@ -114,7 +114,8 @@ export default function AdminSales() {
   };
 
   return (
-    <div className="flex flex-col gap-6 h-full relative dir-ar">
+    <>
+    <div className="flex flex-col gap-6 h-full relative dir-ar no-print">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] mb-1">
@@ -163,7 +164,8 @@ export default function AdminSales() {
                 value={selectedEmployeeId}
                 onChange={e => setSelectedEmployeeId(e.target.value)}
               >
-                <option value="all">جميع الموظفين والمدراء</option>
+                <option value="all">كل الحسابات (الكل)</option>
+                <option value="admin">المدير العام (Admin)</option>
                 {employees.map(emp => (
                   <option key={emp.id} value={emp.id}>{emp.display_name} ({emp.username})</option>
                 ))}
@@ -417,5 +419,62 @@ export default function AdminSales() {
         </div>
       )}
     </div>
+
+    {/* Hidden Print Layout */}
+    <div className="hidden print-only print-report" dir="rtl">
+      <div className="print-header">
+        <h1>DAHAB PERFUMES</h1>
+        <p>تقرير مبيعات المتجر</p>
+        <p>تاريخ الطباعة: {new Date().toLocaleString('ar-JO')}</p>
+        {fromDate && toDate && (
+          <p>الفترة: من {fromDate} {fromTime} إلى {toDate} {toTime}</p>
+        )}
+      </div>
+      
+      <div className="print-summary-box mb-6">
+        <table className="w-full text-right" style={{ border: 'none' }}>
+          <tbody>
+            <tr>
+              <td style={{ border: 'none', padding: '4px' }}><strong>إجمالي المبيعات:</strong> {formatJOD(filteredSales.reduce((acc, s) => acc + (s.total || 0), 0))}</td>
+              <td style={{ border: 'none', padding: '4px' }}><strong>عدد الفواتير:</strong> {filteredSales.length}</td>
+            </tr>
+            <tr>
+              <td style={{ border: 'none', padding: '4px' }}><strong>إجمالي المنتجات:</strong> {filteredSales.reduce((acc, s) => acc + (s.items?.length || 0), 0)}</td>
+              <td style={{ border: 'none', padding: '4px' }}><strong>البائع:</strong> {selectedEmployeeId === 'all' ? 'الكل' : selectedEmployeeId === 'admin' ? 'المدير العام' : employees.find(e => e.id === selectedEmployeeId)?.display_name || 'محدد'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="mb-2 font-bold" style={{ color: '#8a6222' }}>تفاصيل الفواتير:</h3>
+      <table className="print-table w-full">
+        <thead>
+          <tr>
+            <th className="w-24">رقم الفاتورة</th>
+            <th className="w-32">التاريخ والوقت</th>
+            <th className="w-24">البائع</th>
+            <th className="w-16">الدفع</th>
+            <th className="w-24">المجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredSales.map(sale => (
+            <tr key={sale.id}>
+              <td style={{ fontFamily: 'monospace' }}>{sale.invoice_number}</td>
+              <td>{new Date(sale.created_at).toLocaleString('ar-JO')}</td>
+              <td>{sale.seller_name_snapshot || sale.employee?.display_name || 'غير محدد'}</td>
+              <td>{sale.payment_method === 'cash' ? 'نقدي' : 'بطاقة'}</td>
+              <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{formatJOD(sale.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="print-signature-area">
+        <div className="print-signature-line">توقيع المسؤول</div>
+        <div className="print-signature-line">تدقيق الإدارة / المحاسبة</div>
+      </div>
+    </div>
+    </>
   );
 }
