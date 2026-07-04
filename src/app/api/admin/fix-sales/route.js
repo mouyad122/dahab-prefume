@@ -14,19 +14,21 @@ export async function GET(req) {
       return NextResponse.json({ error: 'No active employee found' }, { status: 400 });
     }
 
-    // 2. Find all sales assigned to 'admin' that were made from 'STAFF_POS'
-    const adminSales = await prisma.sale.findMany({
-      where: {
-        seller_user_id: 'admin',
-        sale_source: 'STAFF_POS'
-      }
-    });
+    // 2. Find all sales made today from STAFF_POS that are NOT assigned to this employee
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
     // 3. Update them to belong to the employee
     const updateResult = await prisma.sale.updateMany({
       where: {
-        seller_user_id: 'admin',
-        sale_source: 'STAFF_POS'
+        sale_source: 'STAFF_POS',
+        created_at: {
+          gte: startOfToday
+        },
+        // Only update if it wasn't already assigned to this employee
+        seller_user_id: {
+          not: firstEmployee.id
+        }
       },
       data: {
         employeeId: firstEmployee.id,
@@ -40,7 +42,7 @@ export async function GET(req) {
       success: true, 
       count: updateResult.count,
       employee_assigned: firstEmployee.username,
-      message: 'Fixed admin sales.' 
+      message: 'Fixed sales assignment.' 
     });
   } catch (error) {
     console.error('Fix sales error:', error);
