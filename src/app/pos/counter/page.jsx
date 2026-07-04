@@ -352,8 +352,8 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
                   type="button"
                 >
                   <div className="w-full aspect-square rounded-md overflow-hidden bg-black/40 border border-[var(--color-border-subtle)] relative">
-                    {product.image_filename ? (
-                       <img src={product.image_filename} alt="" className="w-full h-full object-cover" />
+                    {product.image_name ? (
+                       <img src={product.image_name} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)] text-xs">صورة</div>
                     )}

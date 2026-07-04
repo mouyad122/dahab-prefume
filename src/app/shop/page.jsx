@@ -14,19 +14,19 @@ export default async function ShopPage() {
 
   try {
     initialProducts = await prisma.product.findMany({
-      where: { visible_on_website: true },
+      where: { visible: true },
       orderBy: { created_at: 'desc' },
       select: {
         id: true,
         name_ar: true,
         name_en: true,
         slug: true,
-        image_filename: true,
+        image_name: true,
         categoryId: true,
         category: {
           select: { id: true, name_ar: true, name_en: true },
         },
-        visible_on_website: true,
+        visible: true,
         variants: {
           select: {
             id: true,

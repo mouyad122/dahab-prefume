@@ -59,8 +59,8 @@ export async function GET(request) {
     where.gender = gender;
   }
 
-  if (visible === 'true')  where.visible_on_website = true;
-  if (visible === 'false') where.visible_on_website = false;
+  if (visible === 'true')  where.visible = true;
+  if (visible === 'false') where.visible = false;
 
   if (stockFilter === 'low') {
     where.variants = { some: { stock: { lte: 5 } } };
@@ -88,10 +88,10 @@ export async function GET(request) {
     inspired_by: true,
     main_category: true,
     gender: true,
-    visible_on_website: true,
-    featured_on_frontend: true,
+    visible: true,
+    featured: true,
     low_stock_threshold: true,
-    image_filename: true,
+    image_name: true,
     created_at: true,
     updated_at: true,
     category: { select: { id: true, name_ar: true } },
@@ -128,7 +128,7 @@ export async function GET(request) {
         p.name_en ?? '',
         p.category?.name_ar ?? p.main_category ?? '',
         p.gender === 'male' ? 'رجالي' : p.gender === 'female' ? 'نسائي' : 'للجميع',
-        p.visible_on_website ? 'نعم' : 'لا',
+        p.visible ? 'نعم' : 'لا',
         totalStock,
         minPrice,
         maxPrice,

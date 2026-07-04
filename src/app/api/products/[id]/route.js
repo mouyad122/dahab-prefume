@@ -40,7 +40,7 @@ export async function GET(request, { params }) {
     const product = await prisma.product.findFirst({
       where: {
         OR: [{ id }, { slug: id }],
-        visible_on_website: true,
+        visible: true,
       },
       include: fullProductInclude,
     });
@@ -91,16 +91,16 @@ export async function PUT(request, { params }) {
       main_category,
       gender,
       season,
-      fragrance_family_raw,
-      short_description_ar,
+      fragrance_family,
+      short_description,
       short_description_en,
       long_description_ar,
       long_description_en,
-      keywords_ar,
-      image_filename,
+      keywords,
+      image_name,
       needs_image,
-      visible_on_website,
-      featured_on_frontend,
+      visible,
+      featured,
       low_stock_threshold,
       notes_top,
       notes_heart,
@@ -156,13 +156,13 @@ export async function PUT(request, { params }) {
     if (main_category       !== undefined) data.main_category       = String(main_category).trim();
     if (gender              !== undefined) data.gender              = String(gender).trim();
     if (season              !== undefined) data.season              = String(season).trim();
-    if (fragrance_family_raw !== undefined) data.fragrance_family_raw = String(fragrance_family_raw);
-    if (short_description_ar !== undefined) data.short_description_ar = String(short_description_ar);
+    if (fragrance_family !== undefined) data.fragrance_family = String(fragrance_family);
+    if (short_description !== undefined) data.short_description = String(short_description);
     if (short_description_en !== undefined) data.short_description_en = short_description_en ? String(short_description_en) : null;
     if (long_description_ar  !== undefined) data.long_description_ar  = long_description_ar ? String(long_description_ar) : null;
     if (long_description_en  !== undefined) data.long_description_en  = long_description_en ? String(long_description_en) : null;
-    if (keywords_ar          !== undefined) data.keywords_ar          = String(keywords_ar);
-    if (image_filename       !== undefined) data.image_filename       = String(image_filename);
+    if (keywords          !== undefined) data.keywords          = String(keywords);
+    if (image_name       !== undefined) data.image_name       = String(image_name);
     if (notes_top            !== undefined) data.notes_top            = notes_top ? String(notes_top) : null;
     if (notes_heart          !== undefined) data.notes_heart          = notes_heart ? String(notes_heart) : null;
     if (notes_base           !== undefined) data.notes_base           = notes_base ? String(notes_base) : null;
@@ -171,8 +171,8 @@ export async function PUT(request, { params }) {
 
     // ── Boolean fields ────────────────────────────────────────────────────────
     if (needs_image          !== undefined) data.needs_image          = Boolean(needs_image);
-    if (visible_on_website   !== undefined) data.visible_on_website   = Boolean(visible_on_website);
-    if (featured_on_frontend !== undefined) data.featured_on_frontend = Boolean(featured_on_frontend);
+    if (visible   !== undefined) data.visible   = Boolean(visible);
+    if (featured !== undefined) data.featured = Boolean(featured);
     if (needs_review         !== undefined) data.needs_review         = Boolean(needs_review);
 
     // ── Integer / threshold fields ────────────────────────────────────────────
@@ -247,7 +247,7 @@ export async function PUT(request, { params }) {
 }
 
 // ─── DELETE /api/products/[id] — Admin only ───────────────────────────────────
-// Soft delete: sets visible_on_website = false (product stays in DB).
+// Soft delete: sets visible = false (product stays in DB).
 export async function DELETE(request, { params }) {
   try {
     // ── Auth ─────────────────────────────────────────────────────────────────
@@ -267,8 +267,8 @@ export async function DELETE(request, { params }) {
     // ── Soft delete ───────────────────────────────────────────────────────────
     const product = await prisma.product.update({
       where: { id },
-      data: { visible_on_website: false },
-      select: { id: true, sku: true, slug: true, name_ar: true, visible_on_website: true },
+      data: { visible: false },
+      select: { id: true, sku: true, slug: true, name_ar: true, visible: true },
     });
 
     return Response.json(

@@ -25,7 +25,7 @@ export default async function sitemap() {
 
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
-      where: { visible_on_website: true },
+      where: { visible: true },
       select: { slug: true, updated_at: true },
     }),
     prisma.category.findMany({

@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
       where: { id },
       include: {
         products: {
-          where: { visible_on_website: true },
+          where: { visible: true },
           orderBy: { name_ar: 'asc' },
           select: {
             id: true,
@@ -19,9 +19,9 @@ export async function GET(request, { params }) {
             slug: true,
             name_ar: true,
             name_en: true,
-            image_filename: true,
+            image_name: true,
             gender: true,
-            featured_on_frontend: true,
+            featured: true,
             variants: {
               select: {
                 id: true,

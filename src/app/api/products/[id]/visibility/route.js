@@ -11,15 +11,15 @@ export async function PATCH(req, { params }) {
 
     const { id } = await params;
     const body = await req.json();
-    const { visible_on_website } = body;
+    const { visible } = body;
 
-    if (typeof visible_on_website !== 'boolean') {
-      return NextResponse.json({ error: 'visible_on_website must be a boolean' }, { status: 400 });
+    if (typeof visible !== 'boolean') {
+      return NextResponse.json({ error: 'visible must be a boolean' }, { status: 400 });
     }
 
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: { visible_on_website }
+      data: { visible }
     });
 
     return NextResponse.json(updatedProduct, { status: 200 });

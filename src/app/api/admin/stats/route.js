@@ -74,7 +74,7 @@ export async function GET() {
     }),
 
     // 5. Total visible products
-    prisma.product.count({ where: { visible_on_website: true } }),
+    prisma.product.count({ where: { visible: true } }),
 
     // 6. Low-stock product variants (stock <= low_stock_threshold)
     prisma.productVariant.findMany({

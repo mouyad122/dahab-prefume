@@ -83,19 +83,19 @@ export class ProductDbService {
       main_category: product.main_category,
       gender: product.gender,
       season: product.season,
-      fragrance_family_raw: product.fragrance_family_raw,
+      fragrance_family: product.fragrance_family,
       family_tags: (product.family_tags || []).map(t => t.tag_ar),
       accords: (product.accords || []).map(a => ({
         position: a.position,
         name_ar: a.name_ar,
         strength: a.strength,
       })),
-      short_description_ar: product.short_description_ar,
-      keywords_ar: product.keywords_ar,
-      image_filename: product.image_filename,
+      short_description: product.short_description,
+      keywords: product.keywords,
+      image_name: product.image_name,
       needs_image: product.needs_image,
-      visible_on_website: product.visible_on_website,
-      featured_on_frontend: product.featured_on_frontend,
+      visible: product.visible,
+      featured: product.featured,
       prices,
     };
   }
@@ -124,7 +124,7 @@ export class ProductDbService {
 
   /**
    * Get paginated, filtered, sorted public products.
-   * Only returns visible_on_website = true.
+   * Only returns visible = true.
    *
    * @param {Object} options
    * @param {number} [options.page=1]
@@ -144,7 +144,7 @@ export class ProductDbService {
     const skip = (page - 1) * limit;
     const sort = this._parseSort(options.sort);
 
-    const where = { visible_on_website: true };
+    const where = { visible: true };
 
     // Search query
     if (options.q && typeof options.q === 'string') {
@@ -152,7 +152,7 @@ export class ProductDbService {
       if (q.length > 0) {
         where.OR = [
           { name_ar: { contains: q } },
-          { keywords_ar: { contains: q } },
+          { keywords: { contains: q } },
         ];
       }
     }
@@ -169,7 +169,7 @@ export class ProductDbService {
     }
 
     if (options.featured === true || options.featured === 'true') {
-      where.featured_on_frontend = true;
+      where.featured = true;
     }
 
     const globalPricing = await prisma.globalPricingSettings.findFirst({
@@ -210,7 +210,7 @@ export class ProductDbService {
       include: this._includeRelations(),
     });
 
-    if (!product || !product.visible_on_website) return null;
+    if (!product || !product.visible) return null;
 
     const globalPricing = await prisma.globalPricingSettings.findFirst({
       where: { active: true },
@@ -235,8 +235,8 @@ export class ProductDbService {
 
     const products = await prisma.product.findMany({
       where: {
-        visible_on_website: true,
-        featured_on_frontend: true,
+        visible: true,
+        featured: true,
       },
       include: this._includeRelations(),
       orderBy: { sku: 'asc' },
@@ -248,7 +248,7 @@ export class ProductDbService {
 
   /**
    * Search public products by name or keywords.
-   * Only returns visible_on_website = true.
+   * Only returns visible = true.
    *
    * @param {string} query - Search text (max 200 chars).
    * @param {Object} [options] - Pagination options.
@@ -268,7 +268,7 @@ export class ProductDbService {
    */
   static async getPublicFilters() {
     const visibleProducts = await prisma.product.findMany({
-      where: { visible_on_website: true },
+      where: { visible: true },
       select: {
         main_category: true,
         gender: true,
@@ -426,16 +426,16 @@ export class ProductDbService {
    * @returns {Object} Updated product.
    */
   static async adminUpdateProduct(id, data) {
-    const { visible_on_website, featured_on_frontend, image_filename, needs_review } = data;
+    const { visible, featured, image_name, needs_review } = data;
 
     const updateData = {};
-    if (visible_on_website !== undefined) updateData.visible_on_website = visible_on_website;
-    if (featured_on_frontend !== undefined) updateData.featured_on_frontend = featured_on_frontend;
+    if (visible !== undefined) updateData.visible = visible;
+    if (featured !== undefined) updateData.featured = featured;
     if (needs_review !== undefined) updateData.needs_review = needs_review;
 
-    if (image_filename !== undefined) {
-      updateData.image_filename = image_filename;
-      updateData.needs_image = image_filename === 'missing';
+    if (image_name !== undefined) {
+      updateData.image_name = image_name;
+      updateData.needs_image = image_name === 'missing';
     }
 
     return prisma.product.update({

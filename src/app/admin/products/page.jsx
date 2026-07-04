@@ -179,7 +179,7 @@ export default function AdminProducts() {
       const res = await fetch(`/api/products/${product.id}/visibility`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visible_on_website: !product.visible_on_website }),
+        body: JSON.stringify({ visible: !product.visible }),
       });
       if (res.ok) {
         fetchProducts();
@@ -218,15 +218,15 @@ export default function AdminProducts() {
     setGender(product.gender || 'unisex');
     setSeason(product.season || 'all');
     setLowStockThreshold(String(product.low_stock_threshold || 5));
-    setImageFilename(product.image_filename || '');
+    setImageFilename(product.image_name || '');
     setVariants(product.variants?.length > 0
       ? product.variants.map(v => ({ volume: v.volume, price: String(v.price / 1000), stock: String(v.stock) }))
       : [{ volume: '100', price: '', stock: '0' }]
     );
-    setShortDescriptionAr(product.short_description_ar || '');
+    setShortDescriptionAr(product.short_description || '');
     setShortDescriptionEn(product.short_description_en || '');
-    setVisibleOnWebsite(product.visible_on_website !== false);
-    setFeaturedOnFrontend(product.featured_on_frontend === true);
+    setVisibleOnWebsite(product.visible !== false);
+    setFeaturedOnFrontend(product.featured === true);
     setIsFormOpen(true);
   };
 
@@ -255,11 +255,11 @@ export default function AdminProducts() {
         price: Math.round(parseFloat(v.price) * 1000),
         stock: parseInt(v.stock, 10) || 0,
       })),
-      short_description_ar: shortDescriptionAr.trim() || null,
+      short_description: shortDescriptionAr.trim() || null,
       short_description_en: shortDescriptionEn.trim() || null,
-      image_filename: imageFilename.trim() || null,
-      visible_on_website: visibleOnWebsite,
-      featured_on_frontend: featuredOnFrontend,
+      image_name: imageFilename.trim() || null,
+      visible: visibleOnWebsite,
+      featured: featuredOnFrontend,
     };
 
     setFormSaving(true);
@@ -441,8 +441,8 @@ export default function AdminProducts() {
                       {/* Image */}
                       <td className="py-3 px-4">
                         <div className="w-10 h-10 rounded border border-[var(--color-border-subtle)] overflow-hidden bg-black/40 shrink-0">
-                          {product.image_filename ? (
-                            <img src={product.image_filename} alt="" className="w-full h-full object-cover" />
+                          {product.image_name ? (
+                            <img src={product.image_name} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <ImageSquare size={16} className="text-[var(--color-text-subtle)]" />
@@ -486,8 +486,8 @@ export default function AdminProducts() {
                       </td>
                       {/* Visibility */}
                       <td className="py-3 px-4 hidden sm:table-cell">
-                        <span className={`text-[0.65rem] font-bold ${product.visible_on_website ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
-                          {product.visible_on_website ? '● مرئي' : '○ مخفي'}
+                        <span className={`text-[0.65rem] font-bold ${product.visible ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
+                          {product.visible ? '● مرئي' : '○ مخفي'}
                         </span>
                       </td>
                       {/* Actions */}
@@ -495,10 +495,10 @@ export default function AdminProducts() {
                         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
-                            title={product.visible_on_website ? 'إخفاء' : 'إظهار'}
+                            title={product.visible ? 'إخفاء' : 'إظهار'}
                             onClick={e => handleToggleVisibility(e, product)}
                           >
-                            {product.visible_on_website ? <Eye size={18} /> : <EyeSlash size={18} />}
+                            {product.visible ? <Eye size={18} /> : <EyeSlash size={18} />}
                           </button>
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"

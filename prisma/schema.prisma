@@ -43,6 +43,19 @@ model Product {
   created_at            DateTime            @default(now())
   updated_at            DateTime            @updatedAt
 
+  // --- NEW V3 FIELDS ---
+  category_slug         String?
+  season_slug           String?
+  has_image             Boolean             @default(false)
+  image_url             String?
+  ready_for_storefront  Boolean             @default(false)
+  visible               Boolean             @default(false)
+  featured              Boolean             @default(false)
+  fragrance_family      String              @default("")
+  keywords              String              @default("")
+  short_description     String              @default("")
+  image_name            String?
+
   categoryId            String?
   category              Category?           @relation(fields: [categoryId], references: [id])
   variants              ProductVariant[]

@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
         items: {
           include: {
             product: {
-              select: { name_ar: true, name_en: true, sku: true, image_filename: true },
+              select: { name_ar: true, name_en: true, sku: true, image_name: true },
             },
           },
         },

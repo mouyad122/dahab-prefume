@@ -51,7 +51,7 @@ export async function GET() {
             slug: true,
             name_ar: true,
             name_en: true,
-            image_filename: true,
+            image_name: true,
             variants: {
               select: {
                 id: true,

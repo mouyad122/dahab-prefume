@@ -13,7 +13,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${product.name_ar} | DAHAB PERFUMES`,
-    description: product.short_description_ar,
+    description: product.short_description,
   };
 }
 
@@ -34,7 +34,7 @@ export default async function ProductPage({ params }) {
     }
   });
 
-  if (!product || !product.visible_on_website) {
+  if (!product || !product.visible) {
     notFound();
   }
 
@@ -43,7 +43,7 @@ export default async function ProductPage({ params }) {
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
-      visible_on_website: true
+      visible: true
     },
     take: 4,
     select: {
@@ -51,7 +51,7 @@ export default async function ProductPage({ params }) {
       name_ar: true,
       name_en: true,
       slug: true,
-      image_filename: true,
+      image_name: true,
       variants: {
         select: {
           id: true,

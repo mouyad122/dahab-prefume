@@ -32,11 +32,11 @@ const publicProductSelect = {
   main_category: true,
   gender: true,
   season: true,
-  fragrance_family_raw: true,
-  short_description_ar: true,
+  fragrance_family: true,
+  short_description: true,
   short_description_en: true,
-  image_filename: true,
-  featured_on_frontend: true,
+  image_name: true,
+  featured: true,
   low_stock_threshold: true,
   notes_top: true,
   notes_heart: true,
@@ -68,7 +68,7 @@ const publicProductSelect = {
 };
 
 // ─── GET /api/products — Public (storefront) ─────────────────────────────────
-// Only returns visible_on_website=true products.
+// Only returns visible=true products.
 // Query params: category, search, gender, featured, visible, limit, offset
 export async function GET(request) {
   try {
@@ -89,14 +89,14 @@ export async function GET(request) {
     const featuredParam = searchParams.get('featured');
 
     // Build where clause — always visible on website for public route
-    const where = { visible_on_website: true };
+    const where = { visible: true };
 
     if (genderParam && ['male', 'female', 'unisex'].includes(genderParam)) {
       where.gender = genderParam;
     }
 
     if (featuredParam === 'true') {
-      where.featured_on_frontend = true;
+      where.featured = true;
     }
 
     if (categoryParam) {
@@ -123,7 +123,7 @@ export async function GET(request) {
         { name_en: { contains: q } },
         { sku: { contains: q } },
         { inspired_by: { contains: q } },
-        { keywords_ar: { contains: q } },
+        { keywords: { contains: q } },
       ];
     }
 
@@ -172,16 +172,16 @@ export async function POST(request) {
       main_category,
       gender,
       season,
-      fragrance_family_raw,
-      short_description_ar,
+      fragrance_family,
+      short_description,
       short_description_en,
       long_description_ar,
       long_description_en,
-      keywords_ar,
-      image_filename,
+      keywords,
+      image_name,
       needs_image,
-      visible_on_website,
-      featured_on_frontend,
+      visible,
+      featured,
       low_stock_threshold,
       notes_top,
       notes_heart,
@@ -241,16 +241,16 @@ export async function POST(request) {
       ...(main_category          !== undefined && { main_category: String(main_category).trim() }),
       ...(gender                 !== undefined && { gender: String(gender).trim() }),
       ...(season                 !== undefined && { season: String(season).trim() }),
-      ...(fragrance_family_raw   !== undefined && { fragrance_family_raw: String(fragrance_family_raw) }),
-      ...(short_description_ar   !== undefined && { short_description_ar: String(short_description_ar) }),
+      ...(fragrance_family   !== undefined && { fragrance_family: String(fragrance_family) }),
+      ...(short_description   !== undefined && { short_description: String(short_description) }),
       ...(short_description_en   !== undefined && { short_description_en: short_description_en ? String(short_description_en) : null }),
       ...(long_description_ar    !== undefined && { long_description_ar: long_description_ar ? String(long_description_ar) : null }),
       ...(long_description_en    !== undefined && { long_description_en: long_description_en ? String(long_description_en) : null }),
-      ...(keywords_ar            !== undefined && { keywords_ar: String(keywords_ar) }),
-      ...(image_filename         !== undefined && { image_filename: String(image_filename) }),
+      ...(keywords            !== undefined && { keywords: String(keywords) }),
+      ...(image_name         !== undefined && { image_name: String(image_name) }),
       ...(needs_image            !== undefined && { needs_image: Boolean(needs_image) }),
-      ...(visible_on_website     !== undefined && { visible_on_website: Boolean(visible_on_website) }),
-      ...(featured_on_frontend   !== undefined && { featured_on_frontend: Boolean(featured_on_frontend) }),
+      ...(visible     !== undefined && { visible: Boolean(visible) }),
+      ...(featured   !== undefined && { featured: Boolean(featured) }),
       ...(low_stock_threshold    !== undefined && { low_stock_threshold: parseInt(low_stock_threshold, 10) || 5 }),
       ...(notes_top              !== undefined && { notes_top: notes_top ? String(notes_top) : null }),
       ...(notes_heart            !== undefined && { notes_heart: notes_heart ? String(notes_heart) : null }),

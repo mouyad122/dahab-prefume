@@ -26,7 +26,7 @@ export default async function CollectionsPage() {
       image: true,
       _count: {
         select: {
-          products: { where: { visible_on_website: true } },
+          products: { where: { visible: true } },
         },
       },
     },

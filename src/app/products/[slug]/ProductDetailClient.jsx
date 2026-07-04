@@ -23,27 +23,28 @@ export default function ProductDetailClient({ product }) {
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
   const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
-  const image = product.image_filename || FALLBACK_IMAGE;
+  const image = product.image_url || FALLBACK_IMAGE;
   const name = (isAr ? product.name_ar : product.name_en) || product.name_ar || product.name_en;
-  const description = (isAr ? product.short_description_ar : product.short_description_en) || product.short_description_ar;
+  const description = (isAr ? product.short_description : product.short_description_en) || product.short_description;
   const story = (isAr ? product.long_description_ar : product.long_description_en) || product.long_description_ar;
 
   // Determine available sizes and prices dynamically
-  const sizes = Object.entries(product.prices?.sizes || {}).map(([key, value]) => ({
-    key, // "50ml", "100ml", "60ml", "1000ml", etc.
-    label: isAr ? `${key.replace('ml', '')} مل` : key,
-    price: value.fils,
-    stock: value.stock,
-    id: value.id
-  }));
+  const sizes = (product.variants || []).map(v => ({
+    key: v.volume, // "50ml", "100ml", "200ml"
+    label: isAr ? `${v.volume.replace('ml', '')} مل` : v.volume,
+    price: v.price,
+    stock: v.stock,
+    id: v.id
+  })).sort((a, b) => parseInt(a.key) - parseInt(b.key));
 
   const totalStock = sizes.reduce((acc, s) => acc + (s.stock || 0), 0);
   const isOut = totalStock <= 0;
 
   // Default to first available size
-  const [selectedSize, setSelectedSize] = useState(sizes[0]?.key || '100ml');
+  const [selectedSize, setSelectedSize] = useState(sizes.length > 0 ? sizes[1]?.key || sizes[0]?.key : '100ml');
   const activeSizeObj = sizes.find(s => s.key === selectedSize) || sizes[0];
   const activePrice_fils = activeSizeObj ? activeSizeObj.price : 0;
+  const isPriceValid = activePrice_fils > 0;
 
   const whatsappText = isAr
     ? `مرحبًا، أريد طلب عطر ${name} (حجم: ${activeSizeObj?.label || ''}) - SKU: ${product.sku}`
@@ -91,20 +92,38 @@ export default function ProductDetailClient({ product }) {
             </div>
           </div>
 
-          {/* Product Details */}
-          <div className="product-info flex flex-col gap-6 text-right">
-            <div>
-              <div className="eyebrow flex items-center gap-1.5 justify-end">
-                <Sparkle size={15} weight="fill" className="text-[var(--color-gold)]" />
-                <span>{product.category?.name_ar || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
-              </div>
-              <h1 className="text-3xl font-display font-bold mt-2 text-white">{name}</h1>
-              <p className="text-[var(--color-text-secondary)] mt-3 leading-relaxed">
-                {description || (isAr ? 'تركيبة عطرية مختارة بعناية لحضور واضح وثبات أنيق.' : 'A carefully curated fragrance with elegant presence and lasting character.')}
-              </p>
-            </div>
+            {/* Product Details */}
+            <div className="product-info flex flex-col gap-6 text-right">
+              <div>
+                <div className="eyebrow flex items-center gap-1.5 justify-end">
+                  <Sparkle size={15} weight="fill" className="text-[var(--color-gold)]" />
+                  <span>{product.category?.name_ar || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
+                </div>
+                <h1 className="text-3xl font-display font-bold mt-2 text-white">{name}</h1>
+                {product.inspired_by && (
+                  <p className="text-sm text-[var(--color-gold-dim)] mt-1 font-bold">
+                    {isAr ? 'مستوحى من:' : 'Inspired by:'} {product.inspired_by}
+                  </p>
+                )}
+                
+                <div className="flex gap-2 justify-end mt-3 flex-wrap">
+                  {product.gender && (
+                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.gender}</span>
+                  )}
+                  {product.season && (
+                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.season}</span>
+                  )}
+                  {product.fragrance_family && (
+                     <span className="text-xs bg-[var(--color-gold-dim)]/20 border border-[var(--color-gold-dim)]/30 px-2 py-1 rounded-md text-[var(--color-gold-light)]">{product.fragrance_family}</span>
+                  )}
+                </div>
 
-            {/* Size Selector */}
+                <p className="text-[var(--color-text-secondary)] mt-4 leading-relaxed">
+                  {description || (isAr ? 'تركيبة عطرية مختارة بعناية لحضور واضح وثبات أنيق.' : 'A carefully curated fragrance with elegant presence and lasting character.')}
+                </p>
+              </div>
+
+              {/* Size Selector */}
             {sizes.length > 0 && (
               <div className="border-t border-b border-[var(--color-border)] py-4 my-2">
                 <span className="text-xs text-[var(--color-text-muted)] font-bold mb-3 block">
@@ -159,7 +178,6 @@ export default function ProductDetailClient({ product }) {
                   variant="whatsapp"
                   className="flex-1 !py-4 font-sans-ar uppercase tracking-[0.1em]"
                   iconLeft={WhatsappLogo}
-                  disabled={isOut}
                 >
                   {isAr ? 'اطلب سريعاً عبر واتساب' : 'Order via WhatsApp'}
                 </LuxuryButton>
@@ -200,10 +218,10 @@ export default function ProductDetailClient({ product }) {
                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الموسم' : 'Season'}</span>
                 <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.season === 'all' ? (isAr ? 'جميع المواسم' : 'All Seasons') : product.season}</strong>
               </div>
-              {product.fragrance_family_raw && (
+              {product.fragrance_family && (
                 <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-right col-span-2">
                   <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'العائلة العطرية' : 'Fragrance Family'}</span>
-                  <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.fragrance_family_raw}</strong>
+                  <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.fragrance_family}</strong>
                 </div>
               )}
             </div>

@@ -139,7 +139,7 @@ export default async function CollectionDetailPage({ params }) {
         { main_category: { contains: altSlug } },
         { main_category: { contains: cleanSlug } }
       ],
-      visible_on_website: true,
+      visible: true,
     },
     orderBy: { created_at: 'desc' },
     select: {
@@ -147,7 +147,7 @@ export default async function CollectionDetailPage({ params }) {
       name_ar: true,
       name_en: true,
       slug: true,
-      image_filename: true,
+      image_name: true,
       category: {
         select: { id: true, name_ar: true, name_en: true },
       },

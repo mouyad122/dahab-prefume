@@ -20,12 +20,24 @@ export default function ProductCard({ product }) {
 
   const isWishlisted = wishlist.includes(product.id);
 
-  // Price formatting & validation
-  const rawPrice = Number(product.price) || 0;
+  // Price formatting & validation (Support V3 variants)
+  let rawPrice = Number(product.price) || 0;
+  if (rawPrice === 0 && product.variants?.length > 0) {
+    // Sort by volume ascending, grab smallest price or just [0]
+    const sortedVariants = [...product.variants].sort((a, b) => parseInt(a.volume) - parseInt(b.volume));
+    rawPrice = (sortedVariants[0].price || 0) / 1000;
+  } else if (rawPrice > 100) {
+    rawPrice = rawPrice / 1000; // If it's still in fils directly on product for some reason
+  }
+
   const isPriceValid = rawPrice > 0;
 
-  // Stock availability logic
-  const stockCount = Number(product.stock) || 0;
+  // Stock availability logic (Support V3 variants)
+  let stockCount = Number(product.stock) || 0;
+  if (stockCount === 0 && product.variants?.length > 0) {
+    stockCount = product.variants.reduce((acc, v) => acc + (v.stock || 0), 0);
+  }
+  
   const isOutOfStock = stockCount <= 0 || product.inStock === false || !isPriceValid;
 
   const handleWishlist = (e) => {
@@ -38,12 +50,25 @@ export default function ProductCard({ product }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    addToCart(product, 1);
+    
+    // Add default variant to cart
+    let variantToCart = product;
+    if (product.variants?.length > 0) {
+      const sortedVariants = [...product.variants].sort((a, b) => parseInt(a.volume) - parseInt(b.volume));
+      variantToCart = {
+        ...product,
+        id: `${product.id}-${sortedVariants[0].volume}`,
+        volume: sortedVariants[0].volume,
+        price: sortedVariants[0].price / 1000
+      };
+    }
+    
+    addToCart(variantToCart, 1);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
-  const titleText = t(product.title) || product.title || (isAr ? 'عطر دهب الفاخر' : 'DAHAB Luxury Fragrance');
+  const titleText = t(product.title) || product.title || product.name_ar || (isAr ? 'عطر دهب الفاخر' : 'DAHAB Luxury Fragrance');
 
   const whatsappMessage = isAr 
     ? `مرحباً دهب للعطور ✨%0Aأود الاستفسار عن عطر: ${encodeURIComponent(titleText)}${isPriceValid ? ` بسعر ${rawPrice.toFixed(2)} دينار أردني` : ''}.` 
@@ -51,7 +76,8 @@ export default function ProductCard({ product }) {
     
   const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean || '962785050655'}?text=${whatsappMessage}`;
 
-  const hasImage = Boolean(product.thumbnail) && !imageError;
+  const hasImage = Boolean(product.image_url || product.thumbnail || product.image_name) && !imageError;
+  const imageSource = product.image_url || product.thumbnail || (product.image_name ? `/products/${product.image_name}` : null);
 
   return (
     <div className="rounded-3xl bg-[#121216]/90 backdrop-blur-xl border border-[#c5a25d]/20 p-4 sm:p-5 flex flex-col justify-between h-full relative group hover:border-[#c5a25d]/50 hover:shadow-[0_12px_35px_rgba(197,162,93,0.12)] transition-all duration-300">
@@ -96,7 +122,7 @@ export default function ProductCard({ product }) {
         >
           {hasImage ? (
             <img 
-              src={product.thumbnail} 
+              src={imageSource} 
               alt={titleText} 
               onError={() => setImageError(true)}
               className="w-full h-full object-cover opacity-90 group-hover/img:scale-105 group-hover/img:opacity-100 transition-all duration-500"

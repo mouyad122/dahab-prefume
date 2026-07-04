@@ -1,0 +1,29 @@
+{
+  "totalRows": 331,
+  "importedProducts": 0,
+  "updatedProducts": 331,
+  "skippedRows": 0,
+  "createdCategories": [
+    "men",
+    "women",
+    "oud"
+  ],
+  "updatedCategories": [],
+  "missingImages": [
+    "DHB-0004",
+    "DHB-0102"
+  ],
+  "invalidRows": [],
+  "hiddenBecauseMissingImage": [],
+  "hiddenBecauseVisibilityNo": [],
+  "visibleProducts": 329,
+  "hiddenProducts": 2,
+  "createdVariants": 993,
+  "createdAccords": 1655,
+  "globalPrices": {
+    "50ml": 10000,
+    "100ml": 15000,
+    "200ml": 25000
+  },
+  "databaseCounts": {}
+}
