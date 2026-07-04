@@ -10,7 +10,7 @@ export default async function sitemap() {
     '/shop',
     '/collections',
     '/about',
-    '/contact',
+
     '/reviews',
     '/store-location',
     '/faq',

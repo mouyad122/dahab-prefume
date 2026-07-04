@@ -35,7 +35,7 @@ export default function Header() {
     { label: isAr ? 'المجموعات' : 'Collections', path: '/collections' },
     { label: isAr ? 'عن دهب' : 'About', path: '/about' },
     { label: isAr ? 'موقعنا' : 'Location', path: '/store-location' },
-    { label: isAr ? 'تواصل معنا' : 'Contact', path: '/contact' },
+
   ];
 
   const whatsappText = isAr

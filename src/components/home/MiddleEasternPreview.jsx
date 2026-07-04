@@ -85,7 +85,7 @@ export default function MiddleEasternPreview() {
               ))}
             </ul>
 
-            <Link href="/collections/middle-eastern-houses" className="btn-secondary">
+            <Link href="/collections/oud" className="btn-secondary">
               <span>{isAr ? 'عرض جميع العطور الشرقية' : 'View All Eastern Perfumes'}</span>
               <Arrow size={16} />
             </Link>

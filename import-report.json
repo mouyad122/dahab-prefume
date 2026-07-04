@@ -1,47 +1,51 @@
 {
   "totalRows": 331,
-  "importedProducts": 0,
-  "updatedProducts": 331,
+  "importedProducts": 331,
+  "updatedProducts": 0,
   "skippedRows": 0,
-  "createdCategories": [],
-  "prunedCategories": [
-    "hair-mists",
-    "middle-eastern",
-    "perfumes",
-    "private",
-    "private-collection"
-  ],
+  "visibleProducts": 329,
+  "hiddenProducts": 2,
   "missingImages": [
     "DHB-0004",
     "DHB-0102"
   ],
+  "missingCategory": [],
+  "invalidCategory": [],
+  "missingSeason": [],
+  "invalidSeason": [],
   "invalidRows": [],
-  "visibleProducts": 331,
-  "hiddenProducts": 0,
+  "createdCategories": [],
+  "productsReadyForStorefront": 329,
+  "productsNotReadyForStorefront": 2,
+  "createdVariants": 993,
+  "createdAccords": 1655,
   "databaseCounts": {
     "products": 331,
     "categories": 3,
     "variants": 993,
     "accords": 1655,
-    "visibleStorefrontProducts": 331,
+    "visibleStorefrontProducts": 329,
     "missingImageProducts": 2,
     "categoryBreakdown": [
       {
         "slug": "men",
+        "name_ar": "رجالي",
         "_count": {
           "products": 152
         }
       },
       {
-        "slug": "oud",
+        "slug": "women",
+        "name_ar": "نسائي",
         "_count": {
-          "products": 3
+          "products": 176
         }
       },
       {
-        "slug": "women",
+        "slug": "oud",
+        "name_ar": "عود",
         "_count": {
-          "products": 176
+          "products": 3
         }
       }
     ]

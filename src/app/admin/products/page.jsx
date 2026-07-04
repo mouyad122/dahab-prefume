@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
@@ -76,7 +76,7 @@ export default function AdminProducts() {
   const [inspiredBy, setInspiredBy]         = useState('');
   const [categoryId, setCategoryId]         = useState('');
   const [gender, setGender]                 = useState('unisex');
-  const [season, setSeason]                 = useState('both');
+  const [season, setSeason]                 = useState('');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
   const [imageFilename, setImageFilename]   = useState('');
   const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '0' }]);
@@ -207,8 +207,8 @@ export default function AdminProducts() {
     setFormProductId(null);
     setSku(`SKU-${Math.floor(1000 + Math.random() * 9000)}`);
     setSlug(''); setNameAr(''); setNameEn(''); setInspiredBy('');
-    setCategoryId(allowedCategories[0]?.id || '');
-    setGender('unisex'); setSeason('both'); setLowStockThreshold('5');
+    setCategoryId('');
+    setGender('unisex'); setSeason(''); setLowStockThreshold('5');
     setImageFilename('');
     setVariants([{ volume: '100', price: '', stock: '0' }]);
     setShortDescriptionAr(''); setShortDescriptionEn('');
@@ -226,7 +226,7 @@ export default function AdminProducts() {
     setInspiredBy(product.inspired_by || '');
     setCategoryId(product.categoryId || product.category?.id || '');
     setGender(product.gender || 'unisex');
-    setSeason(normalizeSeason(product.season_slug || product.season)?.slug || 'both');
+    setSeason(normalizeSeason(product.season_slug || product.season)?.slug || '');
     setLowStockThreshold(String(product.low_stock_threshold || 5));
     setImageFilename(product.image_name || '');
     setVariants(product.variants?.length > 0
@@ -640,7 +640,8 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label className="form-label">Ø§Ù„Ù…ÙˆØ³Ù…</label>
-                  <select className="form-select text-white bg-black/30" value={season} onChange={e => setSeason(e.target.value)}>
+                  <select className="form-select text-white bg-black/30" value={season} onChange={e => setSeason(e.target.value)} required>
+                    <option value="" className="bg-[var(--color-bg-surface)]">-- اختر الموسم --</option>
                     <option value="both" className="bg-[var(--color-bg-surface)]">كلا الفصلين</option>
                     <option value="winter" className="bg-[var(--color-bg-surface)]">Ø´ØªÙˆÙŠ</option>
                     <option value="summer" className="bg-[var(--color-bg-surface)]">ØµÙŠÙÙŠ</option>

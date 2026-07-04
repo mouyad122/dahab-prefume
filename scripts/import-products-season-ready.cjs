@@ -26,9 +26,6 @@ const CATEGORY_LOOKUP = new Map([
 const SEASON_LOOKUP = new Map([
   ...SEASON_OPTIONS.map((option) => [option.slug, option]),
   ...SEASON_OPTIONS.map((option) => [option.name_ar, option]),
-  ['all', SEASON_OPTIONS[2]],
-  ['كل المواسم', SEASON_OPTIONS[2]],
-  ['جميع المواسم', SEASON_OPTIONS[2]],
 ]);
 
 function key(value) {
@@ -171,11 +168,11 @@ async function main() {
     season: { valid: 0, missing: 0, invalid: 0 },
   };
 
-  for (const row of rows) {
+  async function processRow(row) {
     const sku = String(firstValue(row, ['SKU'], '')).trim();
     if (!sku) {
       report.skippedRows++;
-      continue;
+      return;
     }
 
     try {
@@ -184,7 +181,7 @@ async function main() {
         addSku(report.invalidRows, sku, 'missing name');
         report.hiddenProducts++;
         report.productsNotReadyForStorefront++;
-        continue;
+        return;
       }
 
       const categoryRaw = firstValue(row, ['category_slug', 'تصنيف المتجر', 'التصنيف الرئيسي'], '');
@@ -275,7 +272,7 @@ async function main() {
       if (isDryRun) {
         if (existingProduct) report.updatedProducts++;
         else report.importedProducts++;
-        continue;
+        return;
       }
 
       let productId;
@@ -331,6 +328,12 @@ async function main() {
       console.error(`[Error] Failed on SKU ${sku}:`, error.message);
       addSku(report.invalidRows, sku, error.message);
     }
+  }
+
+  const batchSize = 10;
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const batch = rows.slice(i, i + batchSize);
+    await Promise.all(batch.map((row) => processRow(row)));
   }
 
   if (!isDryRun) {

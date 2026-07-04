@@ -3,6 +3,7 @@ import React from 'react';
 const sizeClass = {
   default: 'page-container-default',
   narrow: 'page-container-narrow',
+  contact: 'page-container-contact',
   wide: 'page-container-wide',
   admin: 'page-container-admin',
   full: 'page-container-full',

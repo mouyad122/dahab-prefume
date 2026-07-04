@@ -10,7 +10,7 @@ import LuxuryButton from '../../../components/ui/LuxuryButton';
 import FragranceAccords from '../../../components/product/FragranceAccords';
 import { getProductImageSrc } from '../../../lib/productDisplay';
 import PageContainer from '../../../components/layout/PageContainer';
-import { getSeasonLabel } from '../../../lib/productClassification';
+import { getCategoryLabel, getSeasonLabel } from '../../../lib/productClassification';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
 
@@ -21,7 +21,9 @@ function formatJOD(fils) {
 export default function ProductDetailClient({ product }) {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
+  const categoryLabel = getCategoryLabel(product, language);
   const seasonLabel = getSeasonLabel(product, language);
+  const genderLabel = product.gender === 'men' ? (isAr ? 'رجالي' : 'Men') : product.gender === 'women' ? (isAr ? 'نسائي' : 'Women') : (isAr ? 'للجنسين' : 'Unisex');
   const addToCart = useCartStore(state => state.addToCart);
   
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
@@ -101,7 +103,7 @@ export default function ProductDetailClient({ product }) {
               <div>
                 <div className="eyebrow flex items-center gap-1.5 justify-center">
                   <Sparkle size={15} weight="fill" className="text-[var(--color-gold)]" />
-                  <span>{product.category?.name_ar || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
+                  <span>{categoryLabel || (isAr ? 'عطر فاخر' : 'Luxury fragrance')}</span>
                 </div>
                 <h1 className="text-3xl font-display font-bold mt-2 text-white">{name}</h1>
                 {product.inspired_by && (
@@ -112,7 +114,7 @@ export default function ProductDetailClient({ product }) {
                 
                 <div className="flex gap-2 justify-center mt-3 flex-wrap">
                   {product.gender && (
-                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.gender}</span>
+                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{genderLabel}</span>
                   )}
                   {seasonLabel && (
                      <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{seasonLabel}</span>

@@ -193,6 +193,10 @@ export async function DELETE(request, { params }) {
       return Response.json({ error: 'Category not found' }, { status: 404 });
     }
 
+    if (['men', 'women', 'oud'].includes(existing.slug)) {
+      return Response.json({ error: 'Core categories (men, women, oud) cannot be deleted' }, { status: 403 });
+    }
+
     // ── Parse body ───────────────────────────────────────────────────────────
     let deleteProducts = false;
     try {

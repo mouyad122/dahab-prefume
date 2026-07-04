@@ -17,6 +17,8 @@ import {
 import { brandConfig } from '../../config/brand';
 import LuxuryButton from '../ui/LuxuryButton';
 
+import PageContainer from '../layout/PageContainer';
+
 const INQUIRY_TYPES = [
   { value: 'استفسار عن عطر', label: 'استفسار عن عطر' },
   { value: 'توفر منتج', label: 'توفر منتج' },
@@ -111,7 +113,7 @@ export default function LuxuryContactView() {
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#c5a25d]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/4 w-[450px] h-[450px] bg-[#d4af37]/5 rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16 md:space-y-20">
+      <PageContainer size="contact" className="relative z-10 space-y-16 md:space-y-20">
 
         {/* 1. COMPACT PREMIUM HERO SECTION */}
         <section className="text-center pt-4 pb-2 flex flex-col items-center">
@@ -527,8 +529,7 @@ export default function LuxuryContactView() {
             </LuxuryButton>
           </motion.div>
         </section>
-
-      </div>
+      </PageContainer>
     </div>
   );
 }

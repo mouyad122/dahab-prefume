@@ -31,7 +31,7 @@ const FEATURED_PRODUCTS = [
     slug: 'lattafa-adeeb',
     name: { ar: 'أديب لطافة', en: 'Lattafa Adeeb 80ml' },
     price_fils: 9000,
-    category: { slug: 'middle-eastern' },
+    category: { slug: 'oud' },
     image: 'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&q=80&w=600',
     stock: 15
   },
@@ -40,7 +40,7 @@ const FEATURED_PRODUCTS = [
     slug: 'kalemat',
     name: { ar: 'كلمات العود العربي', en: 'Arabian Oud Kalemat 100ml' },
     price_fils: 15000,
-    category: { slug: 'middle-eastern' },
+    category: { slug: 'oud' },
     image: 'https://images.unsplash.com/photo-1547005327-4f5a2a60e93e?auto=format&fit=crop&q=80&w=600',
     stock: 10
   }

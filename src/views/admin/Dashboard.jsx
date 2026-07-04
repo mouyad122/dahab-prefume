@@ -659,7 +659,7 @@ export default function Dashboard() {
                       <option value="">{isAr ? 'جميع الفئات' : 'All Categories'}</option>
                       <option value="hair-mists">{isAr ? 'معطرات الشعر' : 'Hair Mists'}</option>
                       <option value="private-collection">{isAr ? 'المجموعة الخاصة' : 'Private Collection'}</option>
-                      <option value="middle-eastern">{isAr ? 'العطور الشرقية' : 'Middle Eastern'}</option>
+                      <option value="oud">{isAr ? 'العطور الشرقية' : 'Middle Eastern (Oud)'}</option>
                     </select>
                   </div>
 
@@ -1094,7 +1094,7 @@ export default function Dashboard() {
                   >
                     <option value="hair-mists">hair-mists</option>
                     <option value="private-collection">private-collection</option>
-                    <option value="middle-eastern">middle-eastern</option>
+                    <option value="oud">oud</option>
                   </select>
                 </div>
 
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
                   >
                     <option value="hair-mists">hair-mists</option>
                     <option value="private-collection">private-collection</option>
-                    <option value="middle-eastern">middle-eastern</option>
+                    <option value="oud">oud</option>
                   </select>
                 </div>
 

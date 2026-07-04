@@ -20,7 +20,7 @@ export default function Footer() {
     { label: isAr ? 'عن دهب' : 'About', href: '/about' },
     { label: isAr ? 'سياسة الإرجاع' : 'Returns', href: '/returns' },
     { label: isAr ? 'الشحن' : 'Shipping', href: '/shipping' },
-    { label: isAr ? 'تواصل معنا' : 'Contact', href: '/contact' },
+
   ];
 
   return (

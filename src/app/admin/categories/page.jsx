@@ -79,6 +79,11 @@ export default function AdminCategories() {
   };
 
   const handleDelete = async (id) => {
+    const cat = categories.find(c => c.id === id);
+    if (cat && ['men', 'women', 'oud'].includes(cat.slug)) {
+      alert('لا يمكن حذف المجموعات الأساسية (رجالي، نسائي، عود) للحفاظ على استقرار النظام.');
+      return;
+    }
     if (!confirm('هل أنت متأكد من حذف هذه المجموعة؟ (لن يتم حذف المنتجات المرتبطة بها)')) return;
     try {
       const res = await fetch(`/api/categories/${id}`, {

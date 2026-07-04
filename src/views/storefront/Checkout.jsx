@@ -37,6 +37,8 @@ const DELIVERY_CONFIG = {
   maan: { fee: 4.00, labelAr: 'معان', labelEn: "Ma'an", timeAr: '72+ ساعة', timeEn: '72+ hours' },
 };
 
+import PageContainer from '../../components/layout/PageContainer';
+
 export default function Checkout() {
   const { language, t } = useContext(LanguageContext);
   const cartItems = useCartStore(state => state.cartItems);
@@ -208,7 +210,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-24 flex flex-col gap-12">
+    <PageContainer size="default" className="py-24 flex flex-col gap-12">
       
       {/* Page Header */}
       <div className="text-center flex flex-col items-center gap-4">
@@ -537,6 +539,6 @@ export default function Checkout() {
 
       </div>
 
-    </div>
+    </PageContainer>
   );
 }

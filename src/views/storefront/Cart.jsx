@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Trash, Plus, Minus, WhatsappLogo, ArrowUpRight, ShoppingBag, ArrowLeft } from '@phosphor-icons/react';
 import LuxuryButton from '../../components/ui/LuxuryButton';
 
+import PageContainer from '../../components/layout/PageContainer';
+
 export default function Cart() {
   const { language, t } = useContext(LanguageContext);
   const cartItems = useCartStore(state => state.cartItems);
@@ -28,7 +30,7 @@ export default function Cart() {
   const whatsappUrl = `https://wa.me/962785050655?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-24 flex flex-col gap-12">
+    <PageContainer size="default" className="py-24 flex flex-col gap-12">
       
       {/* Page Header */}
       <div className="text-center flex flex-col items-center gap-4">
@@ -233,6 +235,6 @@ export default function Cart() {
         </div>
       )}
 
-    </div>
+    </PageContainer>
   );
 }

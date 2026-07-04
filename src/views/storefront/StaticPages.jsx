@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
 
+import PageContainer from '../../components/layout/PageContainer';
+
 export default function StaticPages() {
   const pathname = usePathname();
   const { language, t } = useContext(LanguageContext);
@@ -51,14 +53,7 @@ export default function StaticPages() {
             ? 'منذ عام 2007، حُفرت رحلتنا بالشغف والإبداع والتميّز. بدأت الحكاية من متجر صغير في وسط البلد تحت اسم "دهب"، حيث أصبح وجهة لعشاق العطور وخلطات العطور الفريدة.\n\nمع مرور الوقت، توسّعنا، لنبدأ فصلًا جديدًا من النمو والتميّز. واليوم، نحن إحدى كبرى محلات العطور في المملكة الأردنية الهاشمية، شهادةً على عقود من العمل المتفاني والالتزام بالجودة.\n\nنستمدّ إرثنا من علاقتنا العميقة مع عملائنا. بالأمس، قدمنا أجود العطور المصممة لتتناسب مع ذائقتكم الفريدة. واليوم، أعدنا تعريف هويتنا باسم "DAHAB"، رمزًا للابتكار وسهولة الوصول، لضمان بقاء اسمنا في الذاكرة وإرثنا في القلوب.\n\nمع "DAHAB"، نواصل ريادتنا في فن العطور، ونرسم معايير جديدة للتميّز، ونلهم عصرًا جديدًا من الأناقة العطرية.\n\nمن نحن:\nنحن عشاق العطور وصناع الذكريات، نؤمن بأن كل عطر يحمل قصة، وكل شعور له نفحة.\nنمزج بين أصالة تراثنا وشغفنا بالابتكار لنخلق روائح تلامس القلب وتبقى للأبد.'
             : 'Since 2007, our journey has been engraved with passion, creativity, and excellence. The story began in a small shop in Downtown Amman under the name "Dahab", becoming a destination for perfume lovers. Today, we are one of the leading perfume houses in Jordan. We blend our authentic heritage with a passion for innovation to create scents that touch the heart forever.'
         };
-      case '/contact':
-        return {
-          title: t('contact'),
-          eyebrow: isAr ? 'تواصل معنا' : 'Get in Touch',
-          desc: isAr
-            ? `يمكنكم التواصل معنا مباشرة لطلب العطور أو الاستفسار عبر الهاتف والواتساب على الرقم ${brandConfig.phoneLocal} أو زيارة معرضنا بوسط البلد شارع الأمير محمد.`
-            : `Contact us directly for fragrance inquiries or custom consultations via Phone and WhatsApp at ${brandConfig.phoneFormatted} or visit our Downtown showroom.`
-        };
+
       case '/store-location':
         return {
           title: t('storeLocation'),
@@ -97,7 +92,7 @@ export default function StaticPages() {
           eyebrow: isAr ? 'سياسة الاستبدال والاسترجاع' : 'Returns & Exchange Policy',
           desc: isAr
             ? 'نثق بجودة عطورنا، ولذلك نتيح للعميل فحص واختبار العطر مباشرة عند الاستلام مع موظف التوصيل وقبل دفع الحساب.'
-            : 'We trust our quality. Customers are fully welcome to inspect and test the fragrance with the delivery agent prior to paying.'
+            : 'We trust our quality. Customers are welcome to inspect and test the fragrance with the delivery agent prior to paying.'
         };
       case '/privacy-policy':
         return {
@@ -127,7 +122,7 @@ export default function StaticPages() {
   const content = getPageContent();
 
   return (
-    <div className="premium-container py-28 flex flex-col items-center justify-center text-center gap-8">
+    <PageContainer size="narrow" className="py-28 flex flex-col items-center justify-center text-center gap-8">
       {/* Eyebrow badge */}
       <span className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-extrabold text-[var(--color-gold)] border border-[var(--color-gold)]/20 bg-[var(--color-gold-dim)]">
         {content.eyebrow}
@@ -167,6 +162,6 @@ export default function StaticPages() {
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

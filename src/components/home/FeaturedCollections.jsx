@@ -27,8 +27,8 @@ const COLLECTIONS = [
     tag: { ar: 'حصري', en: 'Exclusive' },
   },
   {
-    id: 'middle-eastern-houses',
-    slug: 'middle-eastern-houses',
+    id: 'oud',
+    slug: 'oud',
     name: { ar: 'دور الشرق الأوسط', en: 'Middle Eastern Houses' },
     desc: { ar: 'أجمل العطور من دور الشرق الأوسط المرموقة', en: 'The finest scents from prestigious Middle Eastern fragrance houses' },
     count: 8,

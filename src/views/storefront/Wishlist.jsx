@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { Heart, ShoppingBag, WhatsappLogo, Trash, ArrowRight } from '@phosphor-icons/react';
 import LuxuryButton from '../../components/ui/LuxuryButton';
 
+import PageContainer from '../../components/layout/PageContainer';
+
 export default function Wishlist() {
   const { language, t } = useContext(LanguageContext);
   const wishlist = useCartStore(state => state.wishlist);
@@ -24,7 +26,7 @@ export default function Wishlist() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 py-24 flex flex-col gap-12">
+    <PageContainer size="default" className="py-24 flex flex-col gap-12">
       
       {/* Page Header */}
       <div className="text-center flex flex-col items-center gap-4">
@@ -173,6 +175,6 @@ export default function Wishlist() {
         </div>
       )}
 
-    </div>
+    </PageContainer>
   );
 }

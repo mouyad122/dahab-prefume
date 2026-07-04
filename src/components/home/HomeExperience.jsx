@@ -16,7 +16,7 @@ export default function HomeExperience() {
     {
       title: isAr ? 'العطور الشرقية' : 'Oriental Signatures',
       text: isAr ? 'عود، عنبر، مسك وتوابل دافئة بحضور واضح.' : 'Oud, amber, musk, and warm spices with a confident trail.',
-      href: '/collections/middle-eastern',
+      href: '/collections/oud',
       image: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&q=80&w=900',
     },
     {

@@ -19,8 +19,8 @@ export default function Collections() {
       title: { ar: 'المجموعة الخاصة', en: 'Private Collection' },
       desc: { ar: 'خلطات عطرية حصرية تم تركيبها يدوياً بتركيزات زيتية عالية للمناسبات الخاصة.', en: 'Exclusive hand-blended scents with high oil concentrations for special occasions.' }
     },
-    'middle-eastern': {
-      title: { ar: 'العطور الشرقية', en: 'Middle Eastern Collection' },
+    'oud': {
+      title: { ar: 'العطور الشرقية (عود)', en: 'Middle Eastern Collection (Oud)' },
       desc: { ar: 'أشهر عطور دور العطور الشرقية المميزة بالثبات والفوحان العالي.', en: 'Famous Middle Eastern scents renowned for high longevity and projection.' }
     }
   };
