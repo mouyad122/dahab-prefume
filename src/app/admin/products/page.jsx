@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Funnel, MagnifyingGlass, PencilSimple, Plus, Trash,
   X, ImageSquare, DownloadSimple, CaretLeft, CaretRight,
-  ArrowsClockwise, FunnelSimple,
+  ArrowsClockwise, FunnelSimple, Eye, EyeSlash
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
@@ -268,12 +268,32 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (e, id) => {
     e.stopPropagation();
-    if (!confirm('هل أنت متأكد من إخفاء هذا المنتج من واجهة المتجر؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) fetchProducts();
       else alert('حدث خطأ أثناء الحذف');
-    } catch { console.error('Failed to delete product'); }
+    } catch { console.error('فشل في حذف المنتج'); }
+  };
+
+  const toggleVisibility = async (e, product) => {
+    e.stopPropagation();
+    // Optimistic update
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible_on_website: !product.visible_on_website } : p));
+    
+    try {
+      const res = await fetch(`/api/products/${product.id}/visibility`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visible: !product.visible_on_website })
+      });
+      if (!res.ok) throw new Error('Failed to toggle visibility');
+    } catch (err) {
+      console.error(err);
+      // Revert on failure
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible_on_website: product.visible_on_website } : p));
+      alert('حدث خطأ أثناء تحديث حالة الظهور');
+    }
   };
 
   const generateSlug = () => {
@@ -467,9 +487,20 @@ export default function AdminProducts() {
                       </td>
                       {/* Visibility */}
                       <td className="py-3 px-4 hidden sm:table-cell">
-                        <span className={`text-[0.65rem] font-bold ${product.visible_on_website ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
-                          {product.visible_on_website ? '● مرئي' : '○ مخفي'}
-                        </span>
+                        <button
+                          onClick={(e) => toggleVisibility(e, product)}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
+                            product.visible_on_website 
+                              ? 'text-[var(--color-success)] hover:bg-[var(--color-success-dim)]' 
+                              : 'text-[var(--color-text-subtle)] hover:bg-black/20'
+                          }`}
+                          title={product.visible_on_website ? 'إخفاء المنتج' : 'إظهار المنتج'}
+                        >
+                          {product.visible_on_website ? <Eye size={18} /> : <EyeSlash size={18} />}
+                          <span className="text-[0.65rem] font-bold mt-0.5">
+                            {product.visible_on_website ? 'مرئي' : 'مخفي'}
+                          </span>
+                        </button>
                       </td>
                       {/* Actions */}
                       <td className="py-3 px-4">
