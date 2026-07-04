@@ -123,7 +123,18 @@ export async function POST(request) {
     let employeeIdVal = null;
     let controlledSaleSource = 'STAFF_POS';
 
-    if (adminSession) {
+    if (sale_source === 'STAFF_POS' && employeeSession) {
+      const emp = await prisma.employee.findUnique({
+        where: { id: employeeSession.employeeId }
+      });
+      if (emp) {
+        employeeIdVal = emp.id;
+        sellerUserId = emp.id;
+        sellerNameSnapshot = emp.display_name || emp.username;
+        sellerRoleSnapshot = emp.role === 'manager' ? 'مدير فرع' : 'موظف كاشير';
+      }
+      controlledSaleSource = 'STAFF_POS';
+    } else if (adminSession) {
       sellerUserId = adminSession.id || 'admin';
       sellerNameSnapshot = adminSession.displayName || adminSession.username || 'المدير العام';
       sellerRoleSnapshot = 'المدير العام';
