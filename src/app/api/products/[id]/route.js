@@ -1,7 +1,12 @@
-import { prisma } from '@/lib/prisma';
+﻿import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
+import {
+  ALLOWED_CATEGORY_SLUGS,
+  ALLOWED_SEASON_SLUGS,
+  normalizeSeason,
+} from '@/lib/productClassification';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function activeDiscountWhere() {
   const now = new Date();
@@ -30,7 +35,7 @@ const fullProductInclude = {
   variants: true,
 };
 
-// ─── GET /api/products/[id] — Public ─────────────────────────────────────────
+// â”€â”€â”€ GET /api/products/[id] â€” Public â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Looks up by `id` (UUID) or by `slug`. Returns 404 for invisible products.
 export async function GET(request, { params }) {
   try {
@@ -41,6 +46,9 @@ export async function GET(request, { params }) {
       where: {
         OR: [{ id }, { slug: id }],
         visible: true,
+        ready_for_storefront: true,
+        category_slug: { in: ALLOWED_CATEGORY_SLUGS },
+        season_slug: { in: ALLOWED_SEASON_SLUGS },
       },
       include: fullProductInclude,
     });
@@ -56,11 +64,11 @@ export async function GET(request, { params }) {
   }
 }
 
-// ─── PUT /api/products/[id] — Admin only ─────────────────────────────────────
-// Full update — only provided fields are changed.
+// â”€â”€â”€ PUT /api/products/[id] â€” Admin only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Full update â€” only provided fields are changed.
 export async function PUT(request, { params }) {
   try {
-    // ── Auth ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const session = await verifyAdminSession();
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -68,13 +76,13 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
 
-    // ── Verify product exists ─────────────────────────────────────────────────
+    // â”€â”€ Verify product exists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const existing = await prisma.product.findUnique({ where: { id }, select: { id: true } });
     if (!existing) {
       return Response.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // ── Parse body ───────────────────────────────────────────────────────────
+    // â”€â”€ Parse body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let body;
     try {
       body = await request.json();
@@ -110,12 +118,14 @@ export async function PUT(request, { params }) {
       needs_review,
       source_excel_row,
       categoryId,
+      category_slug,
+      season_slug,
       variants, // array of { volume, price, stock }
     } = body;
 
     const data = {};
 
-    // ── String / text fields ───────────────────────────────────────────────────
+    // â”€â”€ String / text fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (sku !== undefined) {
       if (typeof sku !== 'string' || sku.trim() === '') {
         return Response.json({ error: 'sku cannot be empty' }, { status: 400 });
@@ -155,7 +165,14 @@ export async function PUT(request, { params }) {
     if (inspired_by         !== undefined) data.inspired_by         = inspired_by ? String(inspired_by).trim() : null;
     if (main_category       !== undefined) data.main_category       = String(main_category).trim();
     if (gender              !== undefined) data.gender              = String(gender).trim();
-    if (season              !== undefined) data.season              = String(season).trim();
+    if (season !== undefined || season_slug !== undefined) {
+      const normalizedSeason = normalizeSeason(season_slug || season);
+      if (!normalizedSeason) {
+        return Response.json({ error: 'season is required and must be summer, winter, or both' }, { status: 400 });
+      }
+      data.season = normalizedSeason.name_ar;
+      data.season_slug = normalizedSeason.slug;
+    }
     if (fragrance_family !== undefined) data.fragrance_family = String(fragrance_family);
     if (short_description !== undefined) data.short_description = String(short_description);
     if (short_description_en !== undefined) data.short_description_en = short_description_en ? String(short_description_en) : null;
@@ -169,17 +186,17 @@ export async function PUT(request, { params }) {
     if (notes                !== undefined) data.notes                = notes ? String(notes) : null;
     if (research_confidence  !== undefined) data.research_confidence  = String(research_confidence);
 
-    // ── Boolean fields ────────────────────────────────────────────────────────
+    // â”€â”€ Boolean fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (needs_image          !== undefined) data.needs_image          = Boolean(needs_image);
     if (visible   !== undefined) data.visible   = Boolean(visible);
     if (featured !== undefined) data.featured = Boolean(featured);
     if (needs_review         !== undefined) data.needs_review         = Boolean(needs_review);
 
-    // ── Integer / threshold fields ────────────────────────────────────────────
+    // â”€â”€ Integer / threshold fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (low_stock_threshold !== undefined) data.low_stock_threshold = Math.max(0, parseInt(low_stock_threshold, 10) || 5);
     if (source_excel_row   !== undefined) data.source_excel_row   = source_excel_row !== null ? parseInt(source_excel_row, 10) : null;
 
-    // ── Variants relation update ──────────────────────────────────────────────
+    // â”€â”€ Variants relation update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (variants !== undefined) {
       if (!Array.isArray(variants)) {
         return Response.json({ error: 'variants must be an array' }, { status: 400 });
@@ -194,25 +211,26 @@ export async function PUT(request, { params }) {
       };
     }
 
-    // ── images_360 (array → JSON string) ──────────────────────────────────────
-    // ── categoryId ────────────────────────────────────────────────────────────
-    if (categoryId !== undefined) {
-      if (categoryId === null) {
-        data.categoryId = null;
-      } else {
-        const cat = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
-        if (!cat) {
-          return Response.json({ error: `Category with id "${categoryId}" not found` }, { status: 400 });
-        }
-        data.categoryId = categoryId;
+    // â”€â”€ categoryId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    if (categoryId !== undefined || category_slug !== undefined) {
+      const cat = categoryId
+        ? await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true, slug: true, name_ar: true } })
+        : await prisma.category.findFirst({ where: { slug: category_slug, is_active: true }, select: { id: true, slug: true, name_ar: true } });
+
+      if (!cat || !ALLOWED_CATEGORY_SLUGS.includes(cat.slug)) {
+        return Response.json({ error: 'category is required and must be men, women, or oud' }, { status: 400 });
       }
+
+      data.categoryId = cat.id;
+      data.category_slug = cat.slug;
+      data.main_category = cat.name_ar || cat.slug;
     }
 
     if (Object.keys(data).length === 0) {
       return Response.json({ error: 'No fields provided to update' }, { status: 400 });
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
+    // â”€â”€ Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const product = await prisma.product.update({
       where: { id },
       data,
@@ -233,11 +251,11 @@ export async function PUT(request, { params }) {
   }
 }
 
-// ─── DELETE /api/products/[id] — Admin only ───────────────────────────────────
+// â”€â”€â”€ DELETE /api/products/[id] â€” Admin only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Soft delete: sets visible = false (product stays in DB).
 export async function DELETE(request, { params }) {
   try {
-    // ── Auth ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const session = await verifyAdminSession();
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -245,13 +263,13 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
 
-    // ── Verify product exists ─────────────────────────────────────────────────
+    // â”€â”€ Verify product exists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const existing = await prisma.product.findUnique({ where: { id }, select: { id: true } });
     if (!existing) {
       return Response.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // ── Soft delete ───────────────────────────────────────────────────────────
+    // â”€â”€ Soft delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const product = await prisma.product.update({
       where: { id },
       data: { visible: false },

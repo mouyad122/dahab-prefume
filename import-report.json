@@ -3,27 +3,47 @@
   "importedProducts": 0,
   "updatedProducts": 331,
   "skippedRows": 0,
-  "createdCategories": [
-    "men",
-    "women",
-    "oud"
+  "createdCategories": [],
+  "prunedCategories": [
+    "hair-mists",
+    "middle-eastern",
+    "perfumes",
+    "private",
+    "private-collection"
   ],
-  "updatedCategories": [],
   "missingImages": [
     "DHB-0004",
     "DHB-0102"
   ],
   "invalidRows": [],
-  "hiddenBecauseMissingImage": [],
-  "hiddenBecauseVisibilityNo": [],
-  "visibleProducts": 329,
-  "hiddenProducts": 2,
-  "createdVariants": 993,
-  "createdAccords": 1655,
-  "globalPrices": {
-    "50ml": 10000,
-    "100ml": 15000,
-    "200ml": 25000
-  },
-  "databaseCounts": {}
+  "visibleProducts": 331,
+  "hiddenProducts": 0,
+  "databaseCounts": {
+    "products": 331,
+    "categories": 3,
+    "variants": 993,
+    "accords": 1655,
+    "visibleStorefrontProducts": 331,
+    "missingImageProducts": 2,
+    "categoryBreakdown": [
+      {
+        "slug": "men",
+        "_count": {
+          "products": 152
+        }
+      },
+      {
+        "slug": "oud",
+        "_count": {
+          "products": 3
+        }
+      },
+      {
+        "slug": "women",
+        "_count": {
+          "products": 176
+        }
+      }
+    ]
+  }
 }

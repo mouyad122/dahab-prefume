@@ -4,6 +4,7 @@ import React, { useContext } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
+import PageContainer from '../../components/layout/PageContainer';
 
 const fallbackCollections = [
   {
@@ -44,7 +45,7 @@ export default function CollectionsClient({ categories = [] }) {
   return (
     <main className={`shop-page ${isAr ? 'dir-ar' : 'dir-en'}`}>
       <section className="shop-hero">
-        <div className="premium-container">
+        <PageContainer size="default" className="py-0">
           <div className="shop-hero-inner">
             <div>
               <div className="eyebrow">
@@ -63,10 +64,10 @@ export default function CollectionsClient({ categories = [] }) {
               <span>{isAr ? 'مجموعة' : 'collections'}</span>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </section>
 
-      <section className="premium-container collection-grid pb-20 pt-8">
+      <PageContainer as="section" size="default" className="collection-grid pb-20 pt-8">
         {list.map((category) => {
           const title = (isAr ? category.name_ar : category.name_en) || category.name_ar || category.name_en;
           const description = (isAr ? category.description_ar : category.description_en) || category.description_ar || category.description_en;
@@ -90,7 +91,7 @@ export default function CollectionsClient({ categories = [] }) {
             </Link>
           );
         })}
-      </section>
+      </PageContainer>
     </main>
   );
 }

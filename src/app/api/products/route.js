@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
+import {
+  ALLOWED_CATEGORY_SLUGS,
+  ALLOWED_SEASON_SLUGS,
+  normalizeSeason,
+} from '@/lib/productClassification';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -32,6 +37,7 @@ const publicProductSelect = {
   main_category: true,
   gender: true,
   season: true,
+  season_slug: true,
   fragrance_family: true,
   short_description: true,
   short_description_en: true,
@@ -44,6 +50,7 @@ const publicProductSelect = {
   notes_base: true,
   notes: true,
   categoryId: true,
+  category_slug: true,
   category: {
     select: { id: true, slug: true, name_ar: true, name_en: true },
   },
@@ -88,9 +95,15 @@ export async function GET(request) {
     const searchParam   = searchParams.get('search');
     const genderParam   = searchParams.get('gender');
     const featuredParam = searchParams.get('featured');
+    const seasonParam   = searchParams.get('season');
 
     // Build where clause — always visible on website for public route
-    const where = { visible: true };
+    const where = {
+      visible: true,
+      ready_for_storefront: true,
+      category_slug: { in: ALLOWED_CATEGORY_SLUGS },
+      season_slug: { in: ALLOWED_SEASON_SLUGS },
+    };
 
     if (genderParam && ['male', 'female', 'unisex'].includes(genderParam)) {
       where.gender = genderParam;
@@ -100,17 +113,27 @@ export async function GET(request) {
       where.featured = true;
     }
 
+    if (seasonParam && seasonParam !== 'all') {
+      const normalizedSeason = normalizeSeason(seasonParam);
+      if (!normalizedSeason) {
+        return Response.json({ products: [], total: 0, limit, offset }, { status: 200 });
+      }
+      where.season_slug = normalizedSeason.slug;
+    }
+
     if (categoryParam) {
       // Try matching by slug first, then by id
       const cat = await prisma.category.findFirst({
         where: {
           OR: [{ slug: categoryParam }, { id: categoryParam }],
+          slug: { in: ALLOWED_CATEGORY_SLUGS },
           is_active: true,
         },
-        select: { id: true },
+        select: { id: true, slug: true },
       });
       if (cat) {
         where.categoryId = cat.id;
+        where.category_slug = cat.slug;
       } else {
         // No matching active category — return empty
         return Response.json({ products: [], total: 0, limit, offset }, { status: 200 });
@@ -192,6 +215,8 @@ export async function POST(request) {
       needs_review,
       source_excel_row,
       categoryId,
+      category_slug,
+      season_slug,
       variants, // array of { volume, price, stock }
     } = body;
 
@@ -219,12 +244,19 @@ export async function POST(request) {
       return Response.json({ error: `Slug "${slug.trim()}" already exists` }, { status: 409 });
     }
 
-    // ── Validate categoryId if provided ───────────────────────────────────────
-    if (categoryId) {
-      const cat = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
-      if (!cat) {
-        return Response.json({ error: `Category with id "${categoryId}" not found` }, { status: 400 });
-      }
+    const normalizedSeason = normalizeSeason(season_slug || season);
+    if (!normalizedSeason) {
+      return Response.json({ error: 'season is required and must be summer, winter, or both' }, { status: 400 });
+    }
+
+    const cat = categoryId
+      ? await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true, slug: true, name_ar: true } })
+      : category_slug
+        ? await prisma.category.findFirst({ where: { slug: category_slug, is_active: true }, select: { id: true, slug: true, name_ar: true } })
+        : null;
+
+    if (!cat || !ALLOWED_CATEGORY_SLUGS.includes(cat.slug)) {
+      return Response.json({ error: 'category is required and must be men, women, or oud' }, { status: 400 });
     }
 
     // ── Validate variants array if provided ───────────────────────────────────
@@ -239,9 +271,11 @@ export async function POST(request) {
       name_ar: name_ar.trim(),
       ...(name_en                !== undefined && { name_en: name_en ? String(name_en).trim() : null }),
       ...(inspired_by            !== undefined && { inspired_by: inspired_by ? String(inspired_by).trim() : null }),
-      ...(main_category          !== undefined && { main_category: String(main_category).trim() }),
+      main_category: cat.name_ar || cat.slug,
+      category_slug: cat.slug,
       ...(gender                 !== undefined && { gender: String(gender).trim() }),
-      ...(season                 !== undefined && { season: String(season).trim() }),
+      season: normalizedSeason.name_ar,
+      season_slug: normalizedSeason.slug,
       ...(fragrance_family   !== undefined && { fragrance_family: String(fragrance_family) }),
       ...(short_description   !== undefined && { short_description: String(short_description) }),
       ...(short_description_en   !== undefined && { short_description_en: short_description_en ? String(short_description_en) : null }),
@@ -260,7 +294,7 @@ export async function POST(request) {
       ...(research_confidence    !== undefined && { research_confidence: String(research_confidence) }),
       ...(needs_review           !== undefined && { needs_review: Boolean(needs_review) }),
       ...(source_excel_row       !== undefined && source_excel_row !== null && { source_excel_row: parseInt(source_excel_row, 10) }),
-      ...(categoryId             !== undefined && categoryId !== null && { categoryId }),
+      categoryId: cat.id,
       variants: {
         create: (variants || []).map(v => ({
           volume: String(v.volume).trim(),

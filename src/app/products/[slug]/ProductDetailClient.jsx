@@ -9,6 +9,8 @@ import { useCartStore } from '../../../stores/useCartStore';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 import FragranceAccords from '../../../components/product/FragranceAccords';
 import { getProductImageSrc } from '../../../lib/productDisplay';
+import PageContainer from '../../../components/layout/PageContainer';
+import { getSeasonLabel } from '../../../lib/productClassification';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=900';
 
@@ -19,6 +21,7 @@ function formatJOD(fils) {
 export default function ProductDetailClient({ product }) {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
+  const seasonLabel = getSeasonLabel(product, language);
   const addToCart = useCartStore(state => state.addToCart);
   
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
@@ -78,7 +81,7 @@ export default function ProductDetailClient({ product }) {
 
   return (
     <main className={`product-page ${isAr ? 'dir-ar' : 'dir-en'}`}>
-      <div className="premium-container">
+      <PageContainer size="default">
         <Link href="/shop" className="product-back">
           <BackIcon size={15} />
           <span>{isAr ? 'العودة للمتجر' : 'Back to shop'}</span>
@@ -111,8 +114,8 @@ export default function ProductDetailClient({ product }) {
                   {product.gender && (
                      <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.gender}</span>
                   )}
-                  {product.season && (
-                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{product.season}</span>
+                  {seasonLabel && (
+                     <span className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[var(--color-text-secondary)]">{seasonLabel}</span>
                   )}
                   {product.fragrance_family && (
                      <span className="text-xs bg-[var(--color-gold-dim)]/20 border border-[var(--color-gold-dim)]/30 px-2 py-1 rounded-md text-[var(--color-gold-light)]">{product.fragrance_family}</span>
@@ -217,7 +220,7 @@ export default function ProductDetailClient({ product }) {
               </div>
               <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center">
                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] font-bold block mb-1">{isAr ? 'الموسم' : 'Season'}</span>
-                <strong className="text-sm font-bold text-[var(--color-text-primary)]">{product.season === 'all' ? (isAr ? 'جميع المواسم' : 'All Seasons') : product.season}</strong>
+                <strong className="text-sm font-bold text-[var(--color-text-primary)]">{seasonLabel || product.season}</strong>
               </div>
               {product.fragrance_family && (
                 <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-[var(--color-border-subtle)] text-center col-span-2">
@@ -269,7 +272,7 @@ export default function ProductDetailClient({ product }) {
             {isAr ? 'استفسر من خبير العطور' : 'Ask a Dahab specialist'}
           </LuxuryButton>
         </section>
-      </div>
+      </PageContainer>
     </main>
   );
 }

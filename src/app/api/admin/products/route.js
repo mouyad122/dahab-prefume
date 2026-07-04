@@ -7,7 +7,7 @@ import { verifyAdminSession } from '../../../../lib/session';
  * Admin-only product list with server-side pagination, filtering, and CSV export.
  *
  * Query params:
- *   search      – string search on name_ar | name_en | sku | barcode
+ *   search      – string search on name_ar | name_en | sku | inspired_by
  *   category    – category id
  *   gender      – male | female | unisex
  *   visible     – true | false | '' (all)
@@ -85,7 +85,10 @@ export async function GET(request) {
     name_en: true,
     inspired_by: true,
     main_category: true,
+    category_slug: true,
     gender: true,
+    season: true,
+    season_slug: true,
     visible: true,
     featured: true,
     low_stock_threshold: true,

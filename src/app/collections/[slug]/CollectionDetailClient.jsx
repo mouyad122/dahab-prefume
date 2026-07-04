@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../../contexts/LanguageContext';
 import { getProductImageSrc } from '../../../lib/productDisplay';
+import PageContainer from '../../../components/layout/PageContainer';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=700';
 
@@ -29,7 +30,7 @@ export default function CollectionDetailClient({ category, products = [] }) {
   return (
     <main className={`shop-page ${isAr ? 'dir-ar' : 'dir-en'}`}>
       <section className="shop-hero">
-        <div className="premium-container">
+        <PageContainer size="default" className="py-0">
           <Link href="/collections" className="product-back">
             <BackIcon size={15} />
             <span>{isAr ? 'العودة للمجموعات' : 'Back to collections'}</span>
@@ -48,10 +49,10 @@ export default function CollectionDetailClient({ category, products = [] }) {
               <span>{isAr ? 'منتج' : 'products'}</span>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </section>
 
-      <section className="premium-container pb-20 pt-8">
+      <PageContainer as="section" size="default" className="pb-20 pt-8">
         {products.length === 0 ? (
           <div className="empty-state">
             <MagnifyingGlass size={42} />
@@ -88,7 +89,7 @@ export default function CollectionDetailClient({ category, products = [] }) {
             })}
           </div>
         )}
-      </section>
+      </PageContainer>
     </main>
   );
 }

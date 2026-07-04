@@ -5,6 +5,13 @@ import { FadersHorizontal, MagnifyingGlass, Sparkle } from '@phosphor-icons/reac
 import { LanguageContext } from '../../contexts/LanguageContext';
 import ProductCard from '../../components/product/ProductCard';
 import LuxuryButton from '../../components/ui/LuxuryButton';
+import PageContainer from '../../components/layout/PageContainer';
+import {
+  CATEGORY_OPTIONS,
+  SEASON_OPTIONS,
+  isAllowedCategorySlug,
+  isAllowedSeasonSlug,
+} from '../../lib/productClassification';
 
 export default function ShopClient({ initialProducts }) {
   const { language } = useContext(LanguageContext);
@@ -23,15 +30,13 @@ export default function ShopClient({ initialProducts }) {
   const products = initialProducts || [];
 
   const categories = useMemo(() => {
-    const map = new Map();
-    products.forEach((product) => {
-      if (product.category?.id) map.set(product.category.id, product.category);
-    });
-    return Array.from(map.values());
+    const present = new Set(products.map((product) => product.category_slug || product.category?.slug).filter(isAllowedCategorySlug));
+    return CATEGORY_OPTIONS.filter((option) => present.has(option.slug));
   }, [products]);
 
   const seasons = useMemo(() => {
-    return Array.from(new Set(products.map(p => p.season).filter(Boolean)));
+    const present = new Set(products.map((product) => product.season_slug || product.season).filter(isAllowedSeasonSlug));
+    return SEASON_OPTIONS.filter((option) => present.has(option.slug));
   }, [products]);
 
   const genders = useMemo(() => {
@@ -59,8 +64,10 @@ export default function ShopClient({ initialProducts }) {
     const name = `${product.name_ar || ''} ${product.name_en || ''}`.toLowerCase();
     
     const matchesSearch = !query || name.includes(query);
-    const matchesCategory = category === 'all' || product.categoryId === category;
-    const matchesSeason = season === 'all' || product.season === season;
+    const productCategory = product.category_slug || product.category?.slug;
+    const productSeason = product.season_slug || product.season;
+    const matchesCategory = category === 'all' || productCategory === category;
+    const matchesSeason = season === 'all' || productSeason === season;
     const matchesGender = gender === 'all' || product.gender === gender;
     const matchesFamily = family === 'all' || product.fragrance_family === family;
     
@@ -69,7 +76,15 @@ export default function ShopClient({ initialProducts }) {
       matchesAccord = product.accords && product.accords.some(a => a.name_ar === accord);
     }
     
-    return matchesSearch && matchesCategory && matchesSeason && matchesGender && matchesFamily && matchesAccord && product.visible !== false;
+    return matchesSearch &&
+      matchesCategory &&
+      matchesSeason &&
+      matchesGender &&
+      matchesFamily &&
+      matchesAccord &&
+      product.visible !== false &&
+      isAllowedCategorySlug(productCategory) &&
+      isAllowedSeasonSlug(productSeason);
   });
 
   return (
@@ -77,7 +92,7 @@ export default function ShopClient({ initialProducts }) {
       <div className="absolute top-10 right-1/4 w-[400px] h-[400px] bg-[#c5a25d]/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/4 w-[450px] h-[450px] bg-[#d4af37]/5 rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8 md:space-y-12">
+      <PageContainer size="wide" className="relative z-10 space-y-8 md:space-y-12 pt-2">
         <section className="text-center pt-2 pb-4 flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#141418] border border-[#c5a25d]/20 text-[#c5a25d] text-xs font-semibold tracking-wider uppercase mb-4">
             <Sparkle size={13} className="text-[#c5a25d]" />
@@ -124,11 +139,11 @@ export default function ShopClient({ initialProducts }) {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 border-t border-[#c5a25d]/20 mt-2">
                 <select value={category} onChange={e => setCategory(e.target.value)} className="bg-[#0a0a0c] border border-white/10 text-xs rounded-lg p-2 text-white">
                   <option value="all">{isAr ? 'القسم: الكل' : 'Category: All'}</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
+                  {categories.map(c => <option key={c.slug} value={c.slug}>{isAr ? c.name_ar : c.name_en}</option>)}
                 </select>
                 <select value={season} onChange={e => setSeason(e.target.value)} className="bg-[#0a0a0c] border border-white/10 text-xs rounded-lg p-2 text-white">
                   <option value="all">{isAr ? 'فصل العطر: الكل' : 'Season: All'}</option>
-                  {seasons.map(s => <option key={s} value={s}>{s}</option>)}
+                  {seasons.map(s => <option key={s.slug} value={s.slug}>{isAr ? s.name_ar : s.name_en}</option>)}
                 </select>
                 <select value={gender} onChange={e => setGender(e.target.value)} className="bg-[#0a0a0c] border border-white/10 text-xs rounded-lg p-2 text-white">
                   <option value="all">{isAr ? 'الجنس: الكل' : 'Gender: All'}</option>
@@ -183,7 +198,7 @@ export default function ShopClient({ initialProducts }) {
             </div>
           )}
         </section>
-      </div>
+      </PageContainer>
     </main>
   );
 }

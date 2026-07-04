@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '../../../lib/prisma';
 import ProductDetailClient from './ProductDetailClient';
+import { ALLOWED_CATEGORY_SLUGS, ALLOWED_SEASON_SLUGS } from '../../../lib/productClassification';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }) {
 }
 
 export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
@@ -36,7 +38,13 @@ export default async function ProductPage({ params }) {
     }
   });
 
-  if (!product || !product.visible) {
+  if (
+    !product ||
+    !product.visible ||
+    !product.ready_for_storefront ||
+    !ALLOWED_CATEGORY_SLUGS.includes(product.category_slug) ||
+    !ALLOWED_SEASON_SLUGS.includes(product.season_slug)
+  ) {
     notFound();
   }
 
@@ -45,7 +53,10 @@ export default async function ProductPage({ params }) {
     where: {
       categoryId: product.categoryId,
       id: { not: product.id },
-      visible: true
+      visible: true,
+      ready_for_storefront: true,
+      category_slug: { in: ALLOWED_CATEGORY_SLUGS },
+      season_slug: { in: ALLOWED_SEASON_SLUGS },
     },
     take: 4,
     select: {
@@ -55,6 +66,12 @@ export default async function ProductPage({ params }) {
       slug: true,
       image_name: true,
       image_url: true,
+      category_slug: true,
+      season_slug: true,
+      season: true,
+      category: {
+        select: { id: true, slug: true, name_ar: true, name_en: true },
+      },
       variants: {
         select: {
           id: true,

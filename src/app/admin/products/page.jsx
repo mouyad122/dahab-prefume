@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
@@ -9,8 +9,13 @@ import {
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 import { getProductImageSrc } from '../../../lib/productDisplay';
+import {
+  ALLOWED_CATEGORY_SLUGS,
+  SEASON_OPTIONS,
+  normalizeSeason,
+} from '../../../lib/productClassification';
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatJOD(fils) {
   const v = Number.isFinite(fils) ? fils : 0;
   return `${(v / 1000).toFixed(3)} JOD`;
@@ -23,22 +28,22 @@ function getTotalStock(product) {
   return (product?.variants || []).reduce((s, v) => s + (v.stock ?? 0), 0);
 }
 
-// ── Empty State ──────────────────────────────────────────────────────────────
+// â”€â”€ Empty State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function EmptyState({ onAdd }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4 text-[var(--color-text-muted)]">
       <ImageSquare size={48} className="opacity-20" />
-      <p className="text-sm">لا توجد منتجات مطابقة لهذا البحث</p>
+      <p className="text-sm">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù†ØªØ¬Ø§Øª Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø­Ø«</p>
       <LuxuryButton variant="primary" onClick={onAdd} iconLeft={Plus} className="text-sm">
-        إضافة منتج جديد
+        Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯
       </LuxuryButton>
     </div>
   );
 }
 
-// ── Products page ────────────────────────────────────────────────────────────
+// â”€â”€ Products page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminProducts() {
-  // ── Data state ─────────────────────────────────────────────────────────────
+  // â”€â”€ Data state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [products, setProducts]     = useState([]);
   const [total, setTotal]           = useState(0);
   const [pages, setPages]           = useState(1);
@@ -46,7 +51,7 @@ export default function AdminProducts() {
   const [loading, setLoading]       = useState(true);
   const [exporting, setExporting]   = useState(false);
 
-  // ── Filter state ────────────────────────────────────────────────────────────
+  // â”€â”€ Filter state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [search, setSearch]         = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterGender, setFilterGender]     = useState('');
@@ -55,11 +60,11 @@ export default function AdminProducts() {
   const [sort, setSort]                     = useState('newest');
   const [showFilters, setShowFilters]       = useState(false);
 
-  // ── Pagination ──────────────────────────────────────────────────────────────
+  // â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const PAGE_SIZE = 20;
   const [page, setPage]             = useState(1);
 
-  // ── Product Form Modal ──────────────────────────────────────────────────────
+  // â”€â”€ Product Form Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [isFormOpen, setIsFormOpen]         = useState(false);
   const [formProductId, setFormProductId]   = useState(null);
   const [formSaving, setFormSaving]         = useState(false);
@@ -71,7 +76,7 @@ export default function AdminProducts() {
   const [inspiredBy, setInspiredBy]         = useState('');
   const [categoryId, setCategoryId]         = useState('');
   const [gender, setGender]                 = useState('unisex');
-  const [season, setSeason]                 = useState('all');
+  const [season, setSeason]                 = useState('both');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
   const [imageFilename, setImageFilename]   = useState('');
   const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '0' }]);
@@ -80,7 +85,7 @@ export default function AdminProducts() {
   const [visibleOnWebsite, setVisibleOnWebsite]     = useState(true);
   const [featuredOnFrontend, setFeaturedOnFrontend] = useState(false);
 
-  // ── Search debounce ─────────────────────────────────────────────────────────
+  // â”€â”€ Search debounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const searchTimer = useRef(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
@@ -92,7 +97,7 @@ export default function AdminProducts() {
     return () => clearTimeout(searchTimer.current);
   }, [search]);
 
-  // ── Fetch helpers ────────────────────────────────────────────────────────────
+  // â”€â”€ Fetch helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const buildParams = useCallback((overrides = {}) => {
     const p = new URLSearchParams({
       limit:  String(PAGE_SIZE),
@@ -138,7 +143,11 @@ export default function AdminProducts() {
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  // ── Reset filters and go back to page 1 ────────────────────────────────────
+  const allowedCategories = categories
+    .filter((category) => ALLOWED_CATEGORY_SLUGS.includes(category.slug))
+    .sort((a, b) => ALLOWED_CATEGORY_SLUGS.indexOf(a.slug) - ALLOWED_CATEGORY_SLUGS.indexOf(b.slug));
+
+  // â”€â”€ Reset filters and go back to page 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const resetFilters = () => {
     setSearch('');
     setFilterCategory('');
@@ -149,7 +158,7 @@ export default function AdminProducts() {
     setPage(1);
   };
 
-  // ── CSV Export ──────────────────────────────────────────────────────────────
+  // â”€â”€ CSV Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleExportCSV = async () => {
     setExporting(true);
     try {
@@ -185,21 +194,21 @@ export default function AdminProducts() {
       if (res.ok) {
         fetchProducts();
       } else {
-        alert('حدث خطأ أثناء تغيير حالة الظهور');
+        alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© Ø§Ù„Ø¸Ù‡ÙˆØ±');
       }
     } catch (err) {
       console.error(err);
-      alert('حدث خطأ أثناء تغيير حالة الظهور');
+      alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØºÙŠÙŠØ± Ø­Ø§Ù„Ø© Ø§Ù„Ø¸Ù‡ÙˆØ±');
     }
   };
 
-  // ── Modal helpers ─────────────────────────────────────────────────────────
+  // â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleOpenAddModal = () => {
     setFormProductId(null);
     setSku(`SKU-${Math.floor(1000 + Math.random() * 9000)}`);
     setSlug(''); setNameAr(''); setNameEn(''); setInspiredBy('');
-    setCategoryId(categories[0]?.id || '');
-    setGender('unisex'); setSeason('all'); setLowStockThreshold('5');
+    setCategoryId(allowedCategories[0]?.id || '');
+    setGender('unisex'); setSeason('both'); setLowStockThreshold('5');
     setImageFilename('');
     setVariants([{ volume: '100', price: '', stock: '0' }]);
     setShortDescriptionAr(''); setShortDescriptionEn('');
@@ -217,7 +226,7 @@ export default function AdminProducts() {
     setInspiredBy(product.inspired_by || '');
     setCategoryId(product.categoryId || product.category?.id || '');
     setGender(product.gender || 'unisex');
-    setSeason(product.season || 'all');
+    setSeason(normalizeSeason(product.season_slug || product.season)?.slug || 'both');
     setLowStockThreshold(String(product.low_stock_threshold || 5));
     setImageFilename(product.image_name || '');
     setVariants(product.variants?.length > 0
@@ -233,23 +242,31 @@ export default function AdminProducts() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!nameAr) { alert('الرجاء تعبئة اسم المنتج بالعربي'); return; }
-    if (variants.length === 0) { alert('الرجاء إضافة حجم واحد على الأقل'); return; }
+    if (!nameAr) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ ØªØ¹Ø¨Ø¦Ø© Ø§Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ'); return; }
+    if (variants.length === 0) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¶Ø§ÙØ© Ø­Ø¬Ù… ÙˆØ§Ø­Ø¯ Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„'); return; }
     for (const v of variants) {
-      if (!v.volume || !v.price) { alert('الرجاء إدخال الحجم والسعر لجميع الأحجام'); return; }
+      if (!v.volume || !v.price) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø­Ø¬Ù… ÙˆØ§Ù„Ø³Ø¹Ø± Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø£Ø­Ø¬Ø§Ù…'); return; }
     }
+
+    const selectedCat = allowedCategories.find(c => c.id === categoryId);
+    const selectedSeason = normalizeSeason(season);
+    if (!selectedCat) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ø®ØªÙŠØ§Ø± Ù‚Ø³Ù… ØµØ­ÙŠØ­: Ø±Ø¬Ø§Ù„ÙŠ / Ù†Ø³Ø§Ø¦ÙŠ / Ø¹ÙˆØ¯'); return; }
+    if (!selectedSeason) { alert('Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ø®ØªÙŠØ§Ø± ÙØµÙ„ ØµØ­ÙŠØ­: ØµÙŠÙÙŠ / Ø´ØªÙˆÙŠ / ÙƒÙ„Ø§ Ø§Ù„ÙØµÙ„ÙŠÙ†'); return; }
 
     let finalSku  = sku.trim()  || `SKU-${Math.floor(1000 + Math.random() * 9000)}`;
     let finalSlug = slug.trim() || (nameEn.trim() || nameAr.trim() || finalSku)
       .toLowerCase().replace(/[^a-z0-9_]+/g, '-').replace(/(^-|-$)/g, '');
 
-    const selectedCat = categories.find(c => c.id === categoryId);
     const payload = {
       sku: finalSku, slug: finalSlug,
       name_ar: nameAr.trim(), name_en: nameEn.trim() || null,
       inspired_by: inspiredBy.trim() || null,
-      main_category: selectedCat ? selectedCat.slug : 'private',
-      categoryId: categoryId || null, gender, season,
+      main_category: selectedCat.name_ar || selectedCat.slug,
+      categoryId: selectedCat.id,
+      category_slug: selectedCat.slug,
+      gender,
+      season: selectedSeason.name_ar,
+      season_slug: selectedSeason.slug,
       low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
       variants: variants.map(v => ({
         volume: v.volume.trim(),
@@ -277,10 +294,10 @@ export default function AdminProducts() {
         fetchProducts();
       } else {
         const err = await res.json();
-        alert(err.error || 'فشل حفظ المنتج');
+        alert(err.error || 'ÙØ´Ù„ Ø­ÙØ¸ Ø§Ù„Ù…Ù†ØªØ¬');
       }
     } catch {
-      alert('خطأ في الشبكة');
+      alert('Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø´Ø¨ÙƒØ©');
     } finally {
       setFormSaving(false);
     }
@@ -288,11 +305,11 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (e, id) => {
     e.stopPropagation();
-    if (!confirm('هل أنت متأكد من إخفاء هذا المنتج من واجهة المتجر؟')) return;
+    if (!confirm('Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø¥Ø®ÙØ§Ø¡ Ù‡Ø°Ø§ Ø§Ù„Ù…Ù†ØªØ¬ Ù…Ù† ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ù…ØªØ¬Ø±ØŸ')) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) fetchProducts();
-      else alert('حدث خطأ أثناء الحذف');
+      else alert('Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø­Ø°Ù');
     } catch { console.error('Failed to delete product'); }
   };
 
@@ -303,18 +320,18 @@ export default function AdminProducts() {
 
   const hasActiveFilters = filterCategory || filterGender || filterVisible || filterStock || search;
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="flex flex-col gap-6 h-full dir-ar">
 
-      {/* ── Header ── */}
+      {/* â”€â”€ Header â”€â”€ */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)] mb-1">
-            إدارة المنتجات
+            Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª
           </h1>
           <p className="text-[var(--color-text-secondary)] text-sm">
-            إضافة وتعديل عطور المتجر — إجمالي <span className="text-[var(--color-gold-light)] font-mono">{total}</span> منتج
+            Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø¹Ø·ÙˆØ± Ø§Ù„Ù…ØªØ¬Ø± â€” Ø¥Ø¬Ù…Ø§Ù„ÙŠ <span className="text-[var(--color-gold-light)] font-mono">{total}</span> Ù…Ù†ØªØ¬
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -325,7 +342,7 @@ export default function AdminProducts() {
             iconLeft={DownloadSimple}
             disabled={exporting}
           >
-            {exporting ? 'جارٍ التصدير...' : 'تصدير CSV'}
+            {exporting ? 'Ø¬Ø§Ø±Ù Ø§Ù„ØªØµØ¯ÙŠØ±...' : 'ØªØµØ¯ÙŠØ± CSV'}
           </LuxuryButton>
           <LuxuryButton
             variant="primary"
@@ -333,12 +350,12 @@ export default function AdminProducts() {
             onClick={handleOpenAddModal}
             iconLeft={Plus}
           >
-            إضافة عطر جديد
+            Ø¥Ø¶Ø§ÙØ© Ø¹Ø·Ø± Ø¬Ø¯ÙŠØ¯
           </LuxuryButton>
         </div>
       </div>
 
-      {/* ── Card ── */}
+      {/* â”€â”€ Card â”€â”€ */}
       <div className="glass-card border border-[var(--color-border-strong)] rounded-xl flex flex-col overflow-hidden flex-1 bg-[var(--color-bg-surface)]">
 
         {/* Toolbar */}
@@ -350,7 +367,7 @@ export default function AdminProducts() {
               <input
                 type="text"
                 className="form-input pr-10 text-sm"
-                placeholder="ابحث برقم SKU أو الاسم..."
+                placeholder="Ø§Ø¨Ø­Ø« Ø¨Ø±Ù‚Ù… SKU Ø£Ùˆ Ø§Ù„Ø§Ø³Ù…..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -361,10 +378,10 @@ export default function AdminProducts() {
               value={sort}
               onChange={e => { setSort(e.target.value); setPage(1); }}
             >
-              <option value="newest">الأحدث أولاً</option>
-              <option value="oldest">الأقدم أولاً</option>
-              <option value="name_asc">الاسم أ–ي</option>
-              <option value="name_desc">الاسم ي–أ</option>
+              <option value="newest">Ø§Ù„Ø£Ø­Ø¯Ø« Ø£ÙˆÙ„Ø§Ù‹</option>
+              <option value="oldest">Ø§Ù„Ø£Ù‚Ø¯Ù… Ø£ÙˆÙ„Ø§Ù‹</option>
+              <option value="name_asc">Ø§Ù„Ø§Ø³Ù… Ø£â€“ÙŠ</option>
+              <option value="name_desc">Ø§Ù„Ø§Ø³Ù… ÙŠâ€“Ø£</option>
             </select>
             {/* Filter toggle */}
             <div className="flex items-center gap-2 sm:mr-auto">
@@ -374,11 +391,11 @@ export default function AdminProducts() {
                 iconLeft={FunnelSimple}
                 onClick={() => setShowFilters(v => !v)}
               >
-                فلتر{hasActiveFilters ? ' ●' : ''}
+                ÙÙ„ØªØ±{hasActiveFilters ? ' â—' : ''}
               </LuxuryButton>
               {hasActiveFilters && (
                 <LuxuryButton variant="ghost" className="!py-2 px-3 text-xs" onClick={resetFilters} iconLeft={ArrowsClockwise}>
-                  إزالة الكل
+                  Ø¥Ø²Ø§Ù„Ø© Ø§Ù„ÙƒÙ„
                 </LuxuryButton>
               )}
             </div>
@@ -388,24 +405,24 @@ export default function AdminProducts() {
           {showFilters && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 border-t border-[var(--color-border-subtle)] mt-1">
               <select className="form-select text-xs py-1.5" value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
-                <option value="">كل الأقسام</option>
+                <option value="">ÙƒÙ„ Ø§Ù„Ø£Ù‚Ø³Ø§Ù…</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
               </select>
               <select className="form-select text-xs py-1.5" value={filterGender} onChange={e => { setFilterGender(e.target.value); setPage(1); }}>
-                <option value="">كل الأجناس</option>
-                <option value="male">رجالي</option>
-                <option value="female">نسائي</option>
-                <option value="unisex">للجميع</option>
+                <option value="">ÙƒÙ„ Ø§Ù„Ø£Ø¬Ù†Ø§Ø³</option>
+                <option value="male">Ø±Ø¬Ø§Ù„ÙŠ</option>
+                <option value="female">Ù†Ø³Ø§Ø¦ÙŠ</option>
+                <option value="unisex">Ù„Ù„Ø¬Ù…ÙŠØ¹</option>
               </select>
               <select className="form-select text-xs py-1.5" value={filterVisible} onChange={e => { setFilterVisible(e.target.value); setPage(1); }}>
-                <option value="">كل حالات الظهور</option>
-                <option value="true">مرئي في المتجر</option>
-                <option value="false">مخفي</option>
+                <option value="">ÙƒÙ„ Ø­Ø§Ù„Ø§Øª Ø§Ù„Ø¸Ù‡ÙˆØ±</option>
+                <option value="true">Ù…Ø±Ø¦ÙŠ ÙÙŠ Ø§Ù„Ù…ØªØ¬Ø±</option>
+                <option value="false">Ù…Ø®ÙÙŠ</option>
               </select>
               <select className="form-select text-xs py-1.5" value={filterStock} onChange={e => { setFilterStock(e.target.value); setPage(1); }}>
-                <option value="">كل المخزونات</option>
-                <option value="low">مخزون منخفض</option>
-                <option value="out">نفد المخزون</option>
+                <option value="">ÙƒÙ„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†Ø§Øª</option>
+                <option value="low">Ù…Ø®Ø²ÙˆÙ† Ù…Ù†Ø®ÙØ¶</option>
+                <option value="out">Ù†ÙØ¯ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</option>
               </select>
             </div>
           )}
@@ -423,14 +440,14 @@ export default function AdminProducts() {
             <table className="w-full text-right text-sm">
               <thead className="bg-[var(--color-bg-surface)] text-[var(--color-text-muted)] text-xs sticky top-0 z-10 shadow-sm border-b border-[var(--color-border)]">
                 <tr>
-                  <th className="py-3 px-4 font-bold w-14">الصورة</th>
-                  <th className="py-3 px-4 font-bold">المنتج</th>
-                  <th className="py-3 px-4 font-bold hidden md:table-cell">الفئة</th>
-                  <th className="py-3 px-4 font-bold hidden lg:table-cell">الأحجام</th>
-                  <th className="py-3 px-4 font-bold">السعر</th>
-                  <th className="py-3 px-4 font-bold">المخزون</th>
-                  <th className="py-3 px-4 font-bold hidden sm:table-cell">الظهور</th>
-                  <th className="py-3 px-4 font-bold w-24">إجراءات</th>
+                  <th className="py-3 px-4 font-bold w-14">Ø§Ù„ØµÙˆØ±Ø©</th>
+                  <th className="py-3 px-4 font-bold">Ø§Ù„Ù…Ù†ØªØ¬</th>
+                  <th className="py-3 px-4 font-bold hidden md:table-cell">Ø§Ù„ÙØ¦Ø©</th>
+                  <th className="py-3 px-4 font-bold hidden lg:table-cell">Ø§Ù„Ø£Ø­Ø¬Ø§Ù…</th>
+                  <th className="py-3 px-4 font-bold">Ø§Ù„Ø³Ø¹Ø±</th>
+                  <th className="py-3 px-4 font-bold">Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</th>
+                  <th className="py-3 px-4 font-bold hidden sm:table-cell">Ø§Ù„Ø¸Ù‡ÙˆØ±</th>
+                  <th className="py-3 px-4 font-bold w-24">Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
@@ -459,14 +476,14 @@ export default function AdminProducts() {
                       </td>
                       {/* Category */}
                       <td className="py-3 px-4 hidden md:table-cell text-[var(--color-text-secondary)] text-xs">
-                        {product.category?.name_ar || product.main_category || '—'}
+                        {product.category?.name_ar || product.main_category || 'â€”'}
                       </td>
                       {/* Sizes */}
                       <td className="py-3 px-4 hidden lg:table-cell">
                         <div className="flex gap-1 flex-wrap">
                           {(product.variants || []).map(v => (
                             <span key={v.id || v.volume} className="px-1.5 py-0.5 rounded bg-[var(--color-bg-raised)] border border-[var(--color-border-subtle)] text-[0.62rem] text-[var(--color-text-secondary)]">
-                              {v.volume}مل
+                              {v.volume}Ù…Ù„
                             </span>
                           ))}
                         </div>
@@ -488,7 +505,7 @@ export default function AdminProducts() {
                       {/* Visibility */}
                       <td className="py-3 px-4 hidden sm:table-cell">
                         <span className={`text-[0.65rem] font-bold ${product.visible ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
-                          {product.visible ? '● مرئي' : '○ مخفي'}
+                          {product.visible ? 'â— Ù…Ø±Ø¦ÙŠ' : 'â—‹ Ù…Ø®ÙÙŠ'}
                         </span>
                       </td>
                       {/* Actions */}
@@ -496,21 +513,21 @@ export default function AdminProducts() {
                         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
-                            title={product.visible ? 'إخفاء' : 'إظهار'}
+                            title={product.visible ? 'Ø¥Ø®ÙØ§Ø¡' : 'Ø¥Ø¸Ù‡Ø§Ø±'}
                             onClick={e => handleToggleVisibility(e, product)}
                           >
                             {product.visible ? <Eye size={18} /> : <EyeSlash size={18} />}
                           </button>
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-gold-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-gold)] transition-colors"
-                            title="تعديل"
+                            title="ØªØ¹Ø¯ÙŠÙ„"
                             onClick={e => handleOpenEditModal(e, product)}
                           >
                             <PencilSimple size={16} />
                           </button>
                           <button
                             className="p-1.5 rounded hover:bg-[var(--color-error-dim)] text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
-                            title="حذف"
+                            title="Ø­Ø°Ù"
                             onClick={e => handleDeleteProduct(e, product.id)}
                           >
                             <Trash size={16} />
@@ -529,7 +546,7 @@ export default function AdminProducts() {
         {!loading && total > PAGE_SIZE && (
           <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex items-center justify-between gap-4">
             <span className="text-xs text-[var(--color-text-muted)]">
-              عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)}–{Math.min(page * PAGE_SIZE, total)} من {total}
+              Ø¹Ø±Ø¶ {Math.min((page - 1) * PAGE_SIZE + 1, total)}â€“{Math.min(page * PAGE_SIZE, total)} Ù…Ù† {total}
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -554,9 +571,9 @@ export default function AdminProducts() {
         )}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          Product Add/Edit Modal — preserved original logic exactly
-          ══════════════════════════════════════════════════════════════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          Product Add/Edit Modal â€” preserved original logic exactly
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isFormOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <form
@@ -565,7 +582,7 @@ export default function AdminProducts() {
           >
             <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
               <h2 className="font-display text-xl font-bold text-[var(--color-gold-light)]">
-                {formProductId ? 'تعديل بيانات العطر' : 'إضافة عطر جديد'}
+                {formProductId ? 'ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ø·Ø±' : 'Ø¥Ø¶Ø§ÙØ© Ø¹Ø·Ø± Ø¬Ø¯ÙŠØ¯'}
               </h2>
               <button
                 type="button"
@@ -580,71 +597,71 @@ export default function AdminProducts() {
               {/* Basic Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label text-white">الاسم بالعربي (مطلوب)</label>
-                  <input type="text" className="form-input text-white bg-black/30" value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="مثال: مسك الفانيليا" required />
+                  <label className="form-label text-white">Ø§Ù„Ø§Ø³Ù… Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ (Ù…Ø·Ù„ÙˆØ¨)</label>
+                  <input type="text" className="form-input text-white bg-black/30" value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="Ù…Ø«Ø§Ù„: Ù…Ø³Ùƒ Ø§Ù„ÙØ§Ù†ÙŠÙ„ÙŠØ§" required />
                 </div>
                 <div>
-                  <label className="form-label">الاسم بالإنجليزي (اختياري)</label>
+                  <label className="form-label">Ø§Ù„Ø§Ø³Ù… Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)</label>
                   <input type="text" className="form-input text-left text-white bg-black/30" dir="ltr" value={nameEn} onChange={e => setNameEn(e.target.value)} onBlur={generateSlug} placeholder="e.g. Vanilla Musk" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="form-label">رقم SKU</label>
-                  <input type="text" className="form-input text-left font-mono text-white bg-black/30" dir="ltr" value={sku} onChange={e => setSku(e.target.value)} placeholder="يولد تلقائياً" />
+                  <label className="form-label">Ø±Ù‚Ù… SKU</label>
+                  <input type="text" className="form-input text-left font-mono text-white bg-black/30" dir="ltr" value={sku} onChange={e => setSku(e.target.value)} placeholder="ÙŠÙˆÙ„Ø¯ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹" />
                 </div>
                 <div>
-                  <label className="form-label">الرابط Slug</label>
+                  <label className="form-label">Ø§Ù„Ø±Ø§Ø¨Ø· Slug</label>
                   <input type="text" className="form-input text-left font-mono text-white bg-black/30" dir="ltr" value={slug} onChange={e => setSlug(e.target.value)} placeholder="vanilla-musk" />
                 </div>
                 <div>
-                  <label className="form-label">مستوحى من (اختياري)</label>
-                  <input type="text" className="form-input text-white bg-black/30" value={inspiredBy} onChange={e => setInspiredBy(e.target.value)} placeholder="مثال: Creed Aventus" />
+                  <label className="form-label">Ù…Ø³ØªÙˆØ­Ù‰ Ù…Ù† (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)</label>
+                  <input type="text" className="form-input text-white bg-black/30" value={inspiredBy} onChange={e => setInspiredBy(e.target.value)} placeholder="Ù…Ø«Ø§Ù„: Creed Aventus" />
                 </div>
               </div>
 
               {/* Categorization */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="form-label">القسم (مطلوب)</label>
+                  <label className="form-label">Ø§Ù„Ù‚Ø³Ù… (Ù…Ø·Ù„ÙˆØ¨)</label>
                   <select className="form-select text-white bg-black/30" value={categoryId} onChange={e => setCategoryId(e.target.value)} required>
-                    <option value="" className="bg-[var(--color-bg-surface)]">-- اختر القسم --</option>
-                    {categories.map(c => <option key={c.id} value={c.id} className="bg-[var(--color-bg-surface)]">{c.name_ar}</option>)}
+                    <option value="" className="bg-[var(--color-bg-surface)]">-- Ø§Ø®ØªØ± Ø§Ù„Ù‚Ø³Ù… --</option>
+                    {allowedCategories.map(c => <option key={c.id} value={c.id} className="bg-[var(--color-bg-surface)]">{c.name_ar}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">الجنس المستهدف</label>
+                  <label className="form-label">Ø§Ù„Ø¬Ù†Ø³ Ø§Ù„Ù…Ø³ØªÙ‡Ø¯Ù</label>
                   <select className="form-select text-white bg-black/30" value={gender} onChange={e => setGender(e.target.value)}>
-                    <option value="unisex" className="bg-[var(--color-bg-surface)]">للجنسين</option>
-                    <option value="male" className="bg-[var(--color-bg-surface)]">رجالي</option>
-                    <option value="female" className="bg-[var(--color-bg-surface)]">نسائي</option>
+                    <option value="unisex" className="bg-[var(--color-bg-surface)]">Ù„Ù„Ø¬Ù†Ø³ÙŠÙ†</option>
+                    <option value="male" className="bg-[var(--color-bg-surface)]">Ø±Ø¬Ø§Ù„ÙŠ</option>
+                    <option value="female" className="bg-[var(--color-bg-surface)]">Ù†Ø³Ø§Ø¦ÙŠ</option>
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">الموسم</label>
+                  <label className="form-label">Ø§Ù„Ù…ÙˆØ³Ù…</label>
                   <select className="form-select text-white bg-black/30" value={season} onChange={e => setSeason(e.target.value)}>
-                    <option value="all" className="bg-[var(--color-bg-surface)]">كل المواسم</option>
-                    <option value="winter" className="bg-[var(--color-bg-surface)]">شتوي</option>
-                    <option value="summer" className="bg-[var(--color-bg-surface)]">صيفي</option>
-                    <option value="spring" className="bg-[var(--color-bg-surface)]">ربيعي</option>
-                    <option value="autumn" className="bg-[var(--color-bg-surface)]">خريفي</option>
+                    <option value="both" className="bg-[var(--color-bg-surface)]">كلا الفصلين</option>
+                    <option value="winter" className="bg-[var(--color-bg-surface)]">Ø´ØªÙˆÙŠ</option>
+                    <option value="summer" className="bg-[var(--color-bg-surface)]">ØµÙŠÙÙŠ</option>
+                    
+                    
                   </select>
                 </div>
               </div>
 
               {/* Image */}
               <div className="border-t border-[var(--color-border)] pt-4">
-                <ImageUpload label="صورة المنتج" value={imageFilename} onChange={setImageFilename} />
+                <ImageUpload label="ØµÙˆØ±Ø© Ø§Ù„Ù…Ù†ØªØ¬" value={imageFilename} onChange={setImageFilename} />
               </div>
 
               {/* Variants */}
               <div className="border-t border-[var(--color-border)] pt-4">
                 <div className="flex justify-between items-center mb-3">
-                  <label className="form-label !mb-0 text-white font-bold">الأحجام والأسعار والمخزون</label>
+                  <label className="form-label !mb-0 text-white font-bold">Ø§Ù„Ø£Ø­Ø¬Ø§Ù… ÙˆØ§Ù„Ø£Ø³Ø¹Ø§Ø± ÙˆØ§Ù„Ù…Ø®Ø²ÙˆÙ†</label>
                   <LuxuryButton type="button" variant="secondary" className="!py-1 px-3 text-xs"
                     onClick={() => setVariants([...variants, { volume: '', price: '', stock: '0' }])}>
-                    + إضافة حجم
+                    + Ø¥Ø¶Ø§ÙØ© Ø­Ø¬Ù…
                   </LuxuryButton>
                 </div>
                 <div className="space-y-3">
@@ -652,17 +669,17 @@ export default function AdminProducts() {
                     <div key={i} className="flex items-end gap-3 p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20">
                       <div className="flex-1 grid grid-cols-3 gap-3">
                         <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">الحجم (مل)</label>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">Ø§Ù„Ø­Ø¬Ù… (Ù…Ù„)</label>
                           <input type="text" className="form-input py-1.5 text-white bg-black/30" placeholder="100" value={v.volume}
                             onChange={e => { const n = [...variants]; n[i].volume = e.target.value; setVariants(n); }} required />
                         </div>
                         <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">Ø§Ù„Ø³Ø¹Ø± (JOD)</label>
                           <input type="number" step="0.001" className="form-input py-1.5 text-white bg-black/30" placeholder="0.000" value={v.price}
                             onChange={e => { const n = [...variants]; n[i].price = e.target.value; setVariants(n); }} required />
                         </div>
                         <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">المخزون</label>
+                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</label>
                           <input type="number" className="form-input py-1.5 text-white bg-black/30" placeholder="0" value={v.stock}
                             onChange={e => { const n = [...variants]; n[i].stock = e.target.value; setVariants(n); }} required />
                         </div>
@@ -681,7 +698,7 @@ export default function AdminProducts() {
               {/* Stock threshold */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-4">
                 <div>
-                  <label className="form-label">حد تنبيه انخفاض المخزون</label>
+                  <label className="form-label">Ø­Ø¯ ØªÙ†Ø¨ÙŠÙ‡ Ø§Ù†Ø®ÙØ§Ø¶ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</label>
                   <input type="number" className="form-input text-white bg-black/30" value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} />
                 </div>
               </div>
@@ -689,11 +706,11 @@ export default function AdminProducts() {
               {/* Descriptions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">وصف قصير بالعربي</label>
-                  <textarea className="form-input h-20 resize-none text-white bg-black/30" value={shortDescriptionAr} onChange={e => setShortDescriptionAr(e.target.value)} placeholder="نبذة مختصرة..." />
+                  <label className="form-label">ÙˆØµÙ Ù‚ØµÙŠØ± Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠ</label>
+                  <textarea className="form-input h-20 resize-none text-white bg-black/30" value={shortDescriptionAr} onChange={e => setShortDescriptionAr(e.target.value)} placeholder="Ù†Ø¨Ø°Ø© Ù…Ø®ØªØµØ±Ø©..." />
                 </div>
                 <div>
-                  <label className="form-label">الوصف القصير بالإنجليزي</label>
+                  <label className="form-label">Ø§Ù„ÙˆØµÙ Ø§Ù„Ù‚ØµÙŠØ± Ø¨Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠ</label>
                   <textarea className="form-input h-20 resize-none text-left text-white bg-black/30" dir="ltr" value={shortDescriptionEn} onChange={e => setShortDescriptionEn(e.target.value)} placeholder="A brief summary..." />
                 </div>
               </div>
@@ -702,11 +719,11 @@ export default function AdminProducts() {
               <div className="flex gap-6 border-t border-[var(--color-border)] pt-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={visibleOnWebsite} onChange={e => setVisibleOnWebsite(e.target.checked)} className="rounded" />
-                  <span className="text-sm font-semibold">عرض على واجهة المتجر</span>
+                  <span className="text-sm font-semibold">Ø¹Ø±Ø¶ Ø¹Ù„Ù‰ ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ù…ØªØ¬Ø±</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={featuredOnFrontend} onChange={e => setFeaturedOnFrontend(e.target.checked)} className="rounded" />
-                  <span className="text-sm font-semibold">تمييز المنتج في الصفحة الرئيسية</span>
+                  <span className="text-sm font-semibold">ØªÙ…ÙŠÙŠØ² Ø§Ù„Ù…Ù†ØªØ¬ ÙÙŠ Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</span>
                 </label>
               </div>
             </div>
@@ -714,10 +731,10 @@ export default function AdminProducts() {
             {/* Form actions */}
             <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4 mt-2">
               <LuxuryButton variant="secondary" className="px-4 py-2 text-sm" onClick={() => setIsFormOpen(false)} type="button">
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </LuxuryButton>
               <LuxuryButton type="submit" variant="primary" className="px-4 py-2 text-sm" disabled={formSaving}>
-                {formSaving ? 'جارٍ الحفظ...' : 'حفظ المنتج'}
+                {formSaving ? 'Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸...' : 'Ø­ÙØ¸ Ø§Ù„Ù…Ù†ØªØ¬'}
               </LuxuryButton>
             </div>
           </form>
@@ -726,3 +743,4 @@ export default function AdminProducts() {
     </div>
   );
 }
+

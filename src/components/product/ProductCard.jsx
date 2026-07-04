@@ -14,6 +14,7 @@ import {
   getProductImageSrc,
   getTotalStock,
 } from '../../lib/productDisplay';
+import { getCategoryLabel, getSeasonLabel } from '../../lib/productClassification';
 
 export default function ProductCard({ product }) {
   const { language, t } = useContext(LanguageContext);
@@ -59,6 +60,8 @@ export default function ProductCard({ product }) {
 
   const imageSource = getProductImageSrc(product);
   const hasImage = Boolean(imageSource) && !imageError;
+  const categoryLabel = getCategoryLabel(product, language);
+  const seasonLabel = getSeasonLabel(product, language);
 
   return (
     <div className="rounded-3xl bg-[#121216]/90 backdrop-blur-xl border border-[#c5a25d]/20 p-4 sm:p-5 flex flex-col justify-between h-full relative group hover:border-[#c5a25d]/50 hover:shadow-[0_12px_35px_rgba(197,162,93,0.12)] transition-all duration-300">
@@ -132,8 +135,20 @@ export default function ProductCard({ product }) {
         </Link>
 
         {/* Category & Title */}
-        <div className="flex flex-col gap-1 text-center items-center">
-          <span className="text-[10px] uppercase tracking-widest text-[#c5a25d] font-bold">
+        <div className="flex flex-col gap-2 text-center items-center">
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {categoryLabel && (
+              <span className="text-[10px] uppercase tracking-widest text-[#c5a25d] font-bold bg-[#c5a25d]/10 border border-[#c5a25d]/20 px-2 py-1 rounded-full">
+                {categoryLabel}
+              </span>
+            )}
+            {seasonLabel && (
+              <span className="text-[10px] uppercase tracking-widest text-gray-200 font-bold bg-white/5 border border-white/10 px-2 py-1 rounded-full">
+                {seasonLabel}
+              </span>
+            )}
+          </div>
+          <span className="sr-only">
             {product.category?.name_ar || product.category?.name_en || (isAr ? 'عطور نيش' : 'Niche Fragrance')}
           </span>
           <Link href={`/products/${product.slug}`} className="focus:outline-none">
@@ -201,10 +216,13 @@ export default function ProductCard({ product }) {
               </LuxuryButton>
 
               <LuxuryButton 
-                href={`/products/${product.slug}`}
-                variant="outline"
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="whatsapp"
                 size="sm"
                 className="!py-2.5 !text-xs font-semibold"
+                iconLeft={WhatsappLogo}
               >
                 {isAr ? 'عرض العطر' : 'View Scent'}
               </LuxuryButton>

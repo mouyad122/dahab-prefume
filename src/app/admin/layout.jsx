@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { List } from '@phosphor-icons/react';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import LuxuryButton from '../../components/ui/LuxuryButton';
+import PageContainer from '../../components/layout/PageContainer';
 
 export default function AdminLayout({ children }) {
   const [user, setUser] = useState(null);
@@ -13,6 +14,7 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
+  const isCounterPage = pathname.startsWith('/admin/counter');
 
   // Handle mobile screen width auto-collapse on load
   useEffect(() => {
@@ -132,8 +134,14 @@ export default function AdminLayout({ children }) {
           <div className="w-10"></div> {/* spacer */}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 dir-ar relative">
-          {children}
+        <div className="flex-1 overflow-y-auto dir-ar relative">
+          {isCounterPage ? (
+            <div className="p-4 md:p-6">{children}</div>
+          ) : (
+            <PageContainer size="admin" className="min-h-full">
+              {children}
+            </PageContainer>
+          )}
         </div>
       </main>
     </div>
