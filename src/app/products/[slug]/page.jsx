@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '../../../lib/prisma';
 import ProductDetailClient from './ProductDetailClient';
-import { ALLOWED_CATEGORY_SLUGS, ALLOWED_SEASON_SLUGS } from '../../../lib/productClassification';
+import { ALLOWED_CATEGORY_SLUGS, ALLOWED_SEASON_SLUGS, getCategoryLabel } from '../../../lib/productClassification';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -38,25 +38,20 @@ export default async function ProductPage({ params }) {
     }
   });
 
-  if (
-    !product ||
-    !product.visible ||
-    !product.ready_for_storefront ||
-    !ALLOWED_CATEGORY_SLUGS.includes(product.category_slug) ||
-    !ALLOWED_SEASON_SLUGS.includes(product.season_slug)
-  ) {
+  const categorySlug = product?.category_slug || getCategoryLabel(product, 'en')?.toLowerCase();
+  const seasonSlug = product?.season_slug || (product?.season === 'كل المواسم' ? 'both' : null);
+
+  if (!product || !product.visible) {
     notFound();
   }
 
   // Fetch some related products (same category)
   const relatedProducts = await prisma.product.findMany({
     where: {
-      categoryId: product.categoryId,
+      categoryId: product.categoryId || undefined,
       id: { not: product.id },
       visible: true,
       ready_for_storefront: true,
-      category_slug: { in: ALLOWED_CATEGORY_SLUGS },
-      season_slug: { in: ALLOWED_SEASON_SLUGS },
     },
     take: 4,
     select: {
