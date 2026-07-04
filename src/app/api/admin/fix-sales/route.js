@@ -14,17 +14,10 @@ export async function GET(req) {
       return NextResponse.json({ error: 'No active employee found' }, { status: 400 });
     }
 
-    // 2. Find all sales made today from STAFF_POS that are NOT assigned to this employee
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
     // 3. Update them to belong to the employee
     const updateResult = await prisma.sale.updateMany({
       where: {
         sale_source: 'STAFF_POS',
-        created_at: {
-          gte: startOfToday
-        },
         // Only update if it wasn't already assigned to this employee
         seller_user_id: {
           not: firstEmployee.id
