@@ -1,5 +1,3 @@
-import { prisma } from '../lib/prisma';
-
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap() {
@@ -10,7 +8,6 @@ export default async function sitemap() {
     '/shop',
     '/collections',
     '/about',
-
     '/reviews',
     '/store-location',
     '/faq',
@@ -29,6 +26,7 @@ export default async function sitemap() {
   let categories = [];
   
   try {
+    const { prisma } = await import('../lib/prisma');
     [products, categories] = await Promise.all([
       prisma.product.findMany({
         where: { visible: true },
