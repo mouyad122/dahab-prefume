@@ -21,7 +21,11 @@ export async function PATCH(req, { params }) {
 
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: { visible }
+      data: { 
+        visible, 
+        visible_on_website: visible,
+        ready_for_storefront: visible
+      }
     });
 
     return NextResponse.json(updatedProduct, { status: 200 });

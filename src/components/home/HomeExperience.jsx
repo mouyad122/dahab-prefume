@@ -14,22 +14,22 @@ export default function HomeExperience() {
 
   const collections = [
     {
-      title: isAr ? 'العطور الشرقية' : 'Oriental Signatures',
-      text: isAr ? 'عود، عنبر، مسك وتوابل دافئة بحضور واضح.' : 'Oud, amber, musk, and warm spices with a confident trail.',
-      href: '/collections/oud',
-      image: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&q=80&w=900',
-    },
-    {
-      title: isAr ? 'المجموعة الخاصة' : 'Private Collection',
-      text: isAr ? 'اختيارات أكثر تركيزًا للمناسبات والحضور المسائي.' : 'Deeper blends for evenings, occasions, and memorable entrances.',
-      href: '/collections/private-collection',
+      title: isAr ? 'رجالي' : 'Men',
+      text: isAr ? 'عطور رجالية بحضور فخم وثبات يدوم طويلاً.' : 'Men\'s fragrances with a luxurious presence and long-lasting sillage.',
+      href: '/collections/men',
       image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=900',
     },
     {
-      title: isAr ? 'معطرات الشعر' : 'Hair Mists',
-      text: isAr ? 'رائحة ناعمة على الشعر دون ثقل، مناسبة للاستخدام اليومي.' : 'Soft fragrance for hair, light enough for daily wear.',
-      href: '/collections/hair-mists',
+      title: isAr ? 'نسائي' : 'Women',
+      text: isAr ? 'تركيبات ناعمة وجذابة تناسب كافة المناسبات.' : 'Soft and attractive compositions suitable for all occasions.',
+      href: '/collections/women',
       image: 'https://images.unsplash.com/photo-1622618991746-fe6004db3a47?auto=format&fit=crop&q=80&w=900',
+    },
+    {
+      title: isAr ? 'عود' : 'Oud',
+      text: isAr ? 'عود، عنبر، مسك وتوابل دافئة بحضور واضح.' : 'Oud, amber, musk, and warm spices with a confident trail.',
+      href: '/collections/oud',
+      image: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&q=80&w=900',
     },
   ];
 

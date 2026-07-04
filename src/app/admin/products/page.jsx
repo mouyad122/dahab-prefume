@@ -279,19 +279,19 @@ export default function AdminProducts() {
   const toggleVisibility = async (e, product) => {
     e.stopPropagation();
     // Optimistic update
-    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible_on_website: !product.visible_on_website } : p));
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible: !product.visible } : p));
     
     try {
       const res = await fetch(`/api/products/${product.id}/visibility`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visible: !product.visible_on_website })
+        body: JSON.stringify({ visible: !product.visible })
       });
       if (!res.ok) throw new Error('Failed to toggle visibility');
     } catch (err) {
       console.error(err);
       // Revert on failure
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible_on_website: product.visible_on_website } : p));
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, visible: product.visible } : p));
       alert('حدث خطأ أثناء تحديث حالة الظهور');
     }
   };
@@ -490,15 +490,15 @@ export default function AdminProducts() {
                         <button
                           onClick={(e) => toggleVisibility(e, product)}
                           className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-                            product.visible_on_website 
+                            product.visible 
                               ? 'text-[var(--color-success)] hover:bg-[var(--color-success-dim)]' 
                               : 'text-[var(--color-text-subtle)] hover:bg-black/20'
                           }`}
-                          title={product.visible_on_website ? 'إخفاء المنتج' : 'إظهار المنتج'}
+                          title={product.visible ? 'إخفاء المنتج' : 'إظهار المنتج'}
                         >
-                          {product.visible_on_website ? <Eye size={18} /> : <EyeSlash size={18} />}
+                          {product.visible ? <Eye size={18} /> : <EyeSlash size={18} />}
                           <span className="text-[0.65rem] font-bold mt-0.5">
-                            {product.visible_on_website ? 'مرئي' : 'مخفي'}
+                            {product.visible ? 'مرئي' : 'مخفي'}
                           </span>
                         </button>
                       </td>
