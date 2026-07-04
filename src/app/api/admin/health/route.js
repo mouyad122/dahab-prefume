@@ -3,6 +3,8 @@ import { prisma } from '../../../../lib/prisma';
 import { verifyAdminSession } from '../../../../lib/session';
 import { getRedisClient } from '../../../../lib/redis';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/health
  * Returns system health metrics:
