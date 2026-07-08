@@ -293,6 +293,45 @@ export default function AdminReports() {
               </div>
             </div>
 
+            {/* Raw Material Consumption Table */}
+            {report.raw_materials_consumption && report.raw_materials_consumption.length > 0 && (
+              <div className="glass-card mt-8 border border-[var(--color-border-strong)] rounded-lg overflow-hidden bg-[var(--color-bg-surface)] no-print">
+                <div className="p-4 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex justify-between items-center">
+                  <h3 className="font-bold text-white">تقرير استهلاك المواد الخام</h3>
+                  <span className="text-xs text-gray-400 font-mono">مستخلص من عمليات البيع</span>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-sm">
+                    <thead className="bg-black/40 text-white text-xs border-b border-[var(--color-border)]">
+                      <tr>
+                        <th className="py-3 px-4 font-bold">المادة الخام</th>
+                        <th className="py-3 px-4 font-bold">النوع</th>
+                        <th className="py-3 px-4 font-bold">الكمية المستهلكة (مل)</th>
+                        <th className="py-3 px-4 font-bold">لترات (تقريبي)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border-subtle)] text-white">
+                      {report.raw_materials_consumption.map(rm => (
+                        <tr key={rm.raw_material_id} className="hover:bg-black/20 transition-colors">
+                          <td className="py-3 px-4 font-bold text-white">{rm.name_ar} {rm.name_en ? `(${rm.name_en})` : ''}</td>
+                          <td className="py-3 px-4 text-white/80">{
+                            rm.type === 'OIL' ? 'زيت عطري' : 
+                            rm.type === 'ALCOHOL' ? 'كحول' : 
+                            rm.type === 'FIXATIVE' ? 'مثبت' : 
+                            rm.type === 'MUSK' ? 'مسك' : 
+                            rm.type === 'OTHER' ? 'أخرى' : rm.type
+                          }</td>
+                          <td className="py-3 px-4 font-mono font-bold text-[var(--color-gold-light)]">{(rm.total_consumed_ml).toFixed(2)} مل</td>
+                          <td className="py-3 px-4 font-mono text-white/60">{(rm.total_consumed_ml / 1000).toFixed(3)} لتر</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Hidden Print Layout */}
             <div className="hidden print-only print-report" dir="rtl">
               <div className="print-header">
@@ -354,6 +393,36 @@ export default function AdminReports() {
                   ))}
                 </tbody>
               </table>
+
+              {report.raw_materials_consumption && report.raw_materials_consumption.length > 0 && (
+                <>
+                  <h3 className="mb-2 mt-6 font-bold" style={{ color: '#8a6222' }}>استهلاك المواد الخام:</h3>
+                  <table className="print-table w-full">
+                    <thead>
+                      <tr>
+                        <th className="w-1/3">المادة الخام</th>
+                        <th className="w-1/3">النوع</th>
+                        <th className="w-1/3">الكمية المستهلكة (مل)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.raw_materials_consumption.map(rm => (
+                        <tr key={rm.raw_material_id}>
+                          <td>{rm.name_ar} {rm.name_en ? `(${rm.name_en})` : ''}</td>
+                          <td>{
+                            rm.type === 'OIL' ? 'زيت عطري' : 
+                            rm.type === 'ALCOHOL' ? 'كحول' : 
+                            rm.type === 'FIXATIVE' ? 'مثبت' : 
+                            rm.type === 'MUSK' ? 'مسك' : 
+                            rm.type === 'OTHER' ? 'أخرى' : rm.type
+                          }</td>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{(rm.total_consumed_ml).toFixed(2)} مل</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
 
               <div className="print-signature-area">
                 <div className="print-signature-line">توقيع المدير المسؤول</div>

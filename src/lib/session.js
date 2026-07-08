@@ -4,12 +4,16 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const ADMIN_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || 'dahab-admin-secret-key-2024-very-long-random'
-);
-const EMPLOYEE_SECRET = new TextEncoder().encode(
-  process.env.EMPLOYEE_JWT_SECRET || 'dahab-employee-secret-key-2024-very-long-random'
-);
+function getRequiredSecret(name) {
+  const value = process.env[name];
+  if (!value || value.length < 32) {
+    throw new Error(`${name} must be set to a strong secret of at least 32 characters.`);
+  }
+  return new TextEncoder().encode(value);
+}
+
+const ADMIN_SECRET = getRequiredSecret('ADMIN_JWT_SECRET');
+const EMPLOYEE_SECRET = getRequiredSecret('EMPLOYEE_JWT_SECRET');
 
 const ADMIN_COOKIE = 'dahab_admin_session';
 const EMPLOYEE_COOKIE = 'dahab_employee_session';

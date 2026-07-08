@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { destroyAdminSession } from '../../../../../lib/session';
+import { destroyAdminSession } from '@/lib/session';
 
 
 export const dynamic = 'force-dynamic';

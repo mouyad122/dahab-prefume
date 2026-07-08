@@ -1,7 +1,31 @@
 import React from 'react';
+import { Cormorant_Garamond, Cairo, Outfit } from 'next/font/google';
+import { cookies } from 'next/headers';
 import '../index.css';
 import { Providers } from './providers';
 import PublicLayoutWrapper from '../components/layout/PublicLayoutWrapper';
+import SecurityGuard from '../components/security/SecurityGuard';
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-cormorant',
+  display: 'swap',
+});
+
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'DAHAB PERFUMES | Luxury Fragrance Boutique',
@@ -34,9 +58,13 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const cookieStore = cookies();
+  const lang = cookieStore.get('dahab_lang')?.value || 'ar';
+
   return (
-    <html lang="ar" dir="rtl">
-      <body className="flex flex-col min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-center transition-colors duration-300">
+    <html lang={lang} dir="ltr" className={`${cormorant.variable} ${cairo.variable} ${outfit.variable}`}>
+      <body className="flex flex-col min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        <SecurityGuard />
         <Providers>
           <PublicLayoutWrapper>
             {children}

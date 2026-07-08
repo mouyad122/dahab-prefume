@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { verifyAdminSession } from '../../../../lib/session';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/session';
+import { DEFAULT_LOW_STOCK_THRESHOLD_ML, getSellableUnitsForVariant } from '@/lib/inventory';
 
 
 export const dynamic = 'force-dynamic';
@@ -64,9 +65,15 @@ export async function GET(request) {
   if (visible === 'false') where.visible = false;
 
   if (stockFilter === 'low') {
-    where.variants = { some: { stock: { lte: 5 } } };
+    where.OR = [
+      { inventory_mode: 'BULK_LIQUID', bulk_stock_ml: { gt: 0, lte: DEFAULT_LOW_STOCK_THRESHOLD_ML } },
+      { NOT: { inventory_mode: 'BULK_LIQUID' }, variants: { some: { stock: { lte: DEFAULT_LOW_STOCK_THRESHOLD_ML } } } },
+    ];
   } else if (stockFilter === 'out') {
-    where.variants = { some: { stock: 0 } };
+    where.OR = [
+      { inventory_mode: 'BULK_LIQUID', bulk_stock_ml: { lte: 0 } },
+      { NOT: { inventory_mode: 'BULK_LIQUID' }, variants: { some: { stock: 0 } } },
+    ];
   }
 
   // ── Sort ────────────────────────────────────────────────────────────────────
@@ -96,6 +103,8 @@ export async function GET(request) {
     low_stock_threshold: true,
     image_name: true,
     image_url: true,
+    inventory_mode: true,
+    bulk_stock_ml: true,
     created_at: true,
     updated_at: true,
     category: { select: { id: true, name_ar: true } },
@@ -108,10 +117,32 @@ export async function GET(request) {
 
   // ── Execute ────────────────────────────────────────────────────────────────
   const t0 = Date.now();
-  const [products, total] = await prisma.$transaction([
+  const [rawProducts, total] = await prisma.$transaction([
     prisma.product.findMany({ where, orderBy, skip: offset, take: limit, select }),
     prisma.product.count({ where }),
   ]);
+
+  const products = rawProducts.map(product => {
+    if (product.inventory_mode === 'BULK_LIQUID') {
+      return {
+        ...product,
+        variants: product.variants.map(v => ({
+          ...v,
+          stock: getSellableUnitsForVariant(product, v)
+        }))
+      };
+    } else if (product.inventory_mode === 'FORMULA_BASED') {
+      return {
+        ...product,
+        variants: product.variants.map(v => ({
+          ...v,
+          stock: 999
+        }))
+      };
+    }
+    return product;
+  });
+
   const queryMs = Date.now() - t0;
 
   // ── CSV Export ─────────────────────────────────────────────────────────────

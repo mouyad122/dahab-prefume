@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { verifyAdminSession } from '../../../../lib/session';
-import { prisma } from '../../../../lib/prisma';
-import { sanitize } from '../../../../lib/security';
+import { verifyAdminSession } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import { sanitize } from '@/lib/security';
 
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,11 @@ const PERMISSION_FIELDS = [
   'can_manage_employees',
   'can_view_accounting',
   'can_view_settings',
+  'can_manage_raw_materials',
+  'can_adjust_raw_material_stock',
+  'can_view_raw_material_movements',
+  'can_manage_product_formulas',
+  'can_view_consumption_reports',
 ];
 
 const ALLOWED_ROLES = ['admin', 'manager', 'employee', 'inventory', 'accountant'];
@@ -59,6 +64,11 @@ export async function GET(request, { params }) {
               can_manage_employees: employee.permissions.can_manage_employees,
               can_view_accounting:  employee.permissions.can_view_accounting,
               can_view_settings:    employee.permissions.can_view_settings,
+              can_manage_raw_materials: employee.permissions.can_manage_raw_materials,
+              can_adjust_raw_material_stock: employee.permissions.can_adjust_raw_material_stock,
+              can_view_raw_material_movements: employee.permissions.can_view_raw_material_movements,
+              can_manage_product_formulas: employee.permissions.can_manage_product_formulas,
+              can_view_consumption_reports: employee.permissions.can_view_consumption_reports,
             }
           : null,
       },
@@ -196,6 +206,11 @@ export async function PUT(request, { params }) {
               can_manage_employees: perms.can_manage_employees,
               can_view_accounting:  perms.can_view_accounting,
               can_view_settings:    perms.can_view_settings,
+              can_manage_raw_materials: perms.can_manage_raw_materials,
+              can_adjust_raw_material_stock: perms.can_adjust_raw_material_stock,
+              can_view_raw_material_movements: perms.can_view_raw_material_movements,
+              can_manage_product_formulas: perms.can_manage_product_formulas,
+              can_view_consumption_reports: perms.can_view_consumption_reports,
             }
           : null,
       },

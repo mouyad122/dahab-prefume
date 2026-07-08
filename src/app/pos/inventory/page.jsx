@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Warehouse, MagnifyingGlass, WarningCircle, CheckCircle } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
+import { formatMl, getBulkStockMl, getLowStockThresholdMl, getSellableUnitsForVariant } from '../../../lib/inventory';
 
 export default function PosInventoryPage() {
   const [products, setProducts] = useState([]);
@@ -17,7 +18,7 @@ export default function PosInventoryPage() {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/products?limit=150');
+      const res = await fetch('/api/products?limit=1000');
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products || []);
@@ -33,9 +34,12 @@ export default function PosInventoryPage() {
     const q = search.trim().toLowerCase();
     const name = `${p.name_ar || ''} ${p.name_en || ''} ${p.sku || ''}`.toLowerCase();
     const matchesSearch = !q || name.includes(q);
-    const totalStock = (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
-    const lowThreshold = p.low_stock_threshold || 5;
-    const matchesLowStock = !showLowStockOnly || totalStock <= lowThreshold;
+    const bulkMl = getBulkStockMl(p);
+    const totalStock = p.inventory_mode === 'BULK_LIQUID'
+      ? bulkMl
+      : (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+    const lowThreshold = getLowStockThresholdMl(p);
+    const matchesLowStock = !showLowStockOnly || (totalStock > 0 && totalStock <= lowThreshold) || totalStock <= 0;
     return matchesSearch && matchesLowStock;
   });
 
@@ -100,9 +104,12 @@ export default function PosInventoryPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredProducts.map((p) => {
-                  const totalStock = (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
-                  const lowThreshold = p.low_stock_threshold || 5;
-                  const isLow = totalStock <= lowThreshold;
+                  const bulkMl = getBulkStockMl(p);
+                  const totalStock = p.inventory_mode === 'BULK_LIQUID'
+                    ? bulkMl
+                    : (p.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+                  const lowThreshold = getLowStockThresholdMl(p);
+                  const isLow = totalStock > 0 && totalStock <= lowThreshold;
                   const isOutOfStock = totalStock <= 0;
 
                   return (
@@ -110,9 +117,14 @@ export default function PosInventoryPage() {
                       <td className="p-4 font-bold text-white font-serif">{p.name_ar}</td>
                       <td className="p-4 font-mono text-gray-400">{p.sku}</td>
                       <td className="p-4 text-gray-300">
-                        {(p.variants || []).map((v) => `${v.volume}ml: ${v.stock} حبة`).join(' | ')}
+                        {(p.variants || []).map((v) => {
+                          const sellableUnits = getSellableUnitsForVariant(p, v);
+                          return `${v.volume}ml: ${sellableUnits} ${p.inventory_mode === 'BULK_LIQUID' ? 'عبوة' : 'حبة'}`;
+                        }).join(' | ')}
                       </td>
-                      <td className="p-4 font-bold text-white">{totalStock}</td>
+                      <td className="p-4 font-bold text-white">
+                        {p.inventory_mode === 'BULK_LIQUID' ? formatMl(totalStock) : totalStock}
+                      </td>
                       <td className="p-4">
                         {isOutOfStock ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 font-bold">
@@ -120,7 +132,7 @@ export default function PosInventoryPage() {
                           </span>
                         ) : isLow ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold">
-                            <WarningCircle size={13} /> منخفض ({totalStock})
+                            <WarningCircle size={13} /> منخفض ({p.inventory_mode === 'BULK_LIQUID' ? formatMl(totalStock) : totalStock})
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold">

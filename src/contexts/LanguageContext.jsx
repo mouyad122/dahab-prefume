@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 export const LanguageContext = createContext();
 
@@ -57,36 +58,43 @@ const translations = {
   },
 };
 
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState('ar');
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('dahab_lang');
-    if (savedLang === 'ar' || savedLang === 'en') {
-      setLanguage(savedLang);
+    const cookieLang = getCookie('dahab_lang');
+    if (cookieLang === 'ar' || cookieLang === 'en') {
+      setLanguage(cookieLang);
     }
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem('dahab_lang', language);
+      document.documentElement.setAttribute('lang', language);
     }
-
-    document.documentElement.setAttribute('lang', language);
-    document.documentElement.setAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
   }, [language, mounted]);
 
-  const toggleLanguage = () => {
-    setLanguage(prev => (prev === 'ar' ? 'en' : 'ar'));
-  };
+  const toggleLanguage = useCallback(() => {
+    const newLang = language === 'ar' ? 'en' : 'ar';
+    const currentPath = pathname.replace(/^\/en/, '') || '/';
+    const targetPath = newLang === 'en' ? '/en' + currentPath : currentPath;
+    router.push(targetPath);
+  }, [language, pathname, router]);
 
   const t = key => {
     if (typeof key === 'object' && key !== null) {
       return key[language] || key.en || '';
     }
-
     return translations[language]?.[key] || translations.en?.[key] || key;
   };
 

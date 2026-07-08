@@ -12,7 +12,8 @@ export default function PosLayout({ children }) {
   const [posSettings, setPosSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace(/^\/en/, '') || '/';
 
   useEffect(() => {
     const checkSession = async () => {

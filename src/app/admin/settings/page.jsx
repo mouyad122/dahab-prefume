@@ -194,21 +194,30 @@ export default function AdminSettings() {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-lg font-bold text-[var(--color-gold-light)] mb-6 font-display border-b border-[var(--color-border)] pb-2">الإعدادات العامة</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <label className="form-label">اسم المتجر (عربي)</label>
-                    <input type="text" className="form-input" value={formData.store_name_ar || ''} onChange={e => handleChange('store_name_ar', e.target.value)} />
+                    <input type="text" className="form-input" placeholder="دهب للعطور" value={formData.store_name_ar || ''} onChange={e => handleChange('store_name_ar', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="form-label">وسم صفحة المتجر (عربي)</label>
+                    <input type="text" className="form-input" placeholder="دهب للعطور | عطور فاخرة في قلب عمّان" value={formData.store_tagline_ar || ''} onChange={e => handleChange('store_tagline_ar', e.target.value)} />
                   </div>
                 </div>
                 
                 <div className="space-y-4 dir-en text-left">
                   <div>
                     <label className="form-label">Store Name (English)</label>
-                    <input type="text" className="form-input text-left" value={formData.store_name_en || ''} onChange={e => handleChange('store_name_en', e.target.value)} />
+                    <input type="text" className="form-input text-left" placeholder="DAHAB PERFUMES" value={formData.store_name_en || ''} onChange={e => handleChange('store_name_en', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="form-label">Store Tagline (English)</label>
+                    <input type="text" className="form-input text-left" placeholder="DAHAB Perfumes | Luxury Fragrances in the Heart of Amman" value={formData.store_tagline_en || ''} onChange={e => handleChange('store_tagline_en', e.target.value)} />
                   </div>
                 </div>
               </div>
+
             </div>
           )}
 
@@ -220,27 +229,36 @@ export default function AdminSettings() {
                 <div className="space-y-4">
                   <div>
                     <label className="form-label">عنوان الهيرو (عربي)</label>
-                    <input type="text" className="form-input" value={formData.hero_title_ar || ''} onChange={e => handleChange('hero_title_ar', e.target.value)} />
+                    <input type="text" className="form-input" placeholder="منذ 2007، عطرٌ يحمل أثراً لا يُنسى" value={formData.hero_title_ar || ''} onChange={e => handleChange('hero_title_ar', e.target.value)} />
                   </div>
                   <div>
                     <label className="form-label">وصف الهيرو (عربي)</label>
-                    <textarea className="form-textarea h-24" value={formData.hero_desc_ar || ''} onChange={e => handleChange('hero_desc_ar', e.target.value)}></textarea>
+                    <textarea className="form-textarea h-24" placeholder="في قلب عمّان، نقدم لكم تجربة عطرية راقية تجمع بين فخامة العود النادر، نقاء المسك، وسحر التراث الشرقي الأصيل." value={formData.hero_desc_ar || ''} onChange={e => handleChange('hero_desc_ar', e.target.value)}></textarea>
+                  </div>
+                  <div>
+                    <label className="form-label">زر الهيرو الأول (عربي)</label>
+                    <input type="text" className="form-input" placeholder="تسوّق الآن" value={formData.hero_cta_ar || ''} onChange={e => handleChange('hero_cta_ar', e.target.value)} />
                   </div>
                 </div>
                 
                 <div className="space-y-4 dir-en text-left">
                   <div>
                     <label className="form-label">Hero Title (English)</label>
-                    <input type="text" className="form-input text-left" value={formData.hero_title_en || ''} onChange={e => handleChange('hero_title_en', e.target.value)} />
+                    <input type="text" className="form-input text-left" placeholder="Since 2007, fragrance that leaves a lasting legacy" value={formData.hero_title_en || ''} onChange={e => handleChange('hero_title_en', e.target.value)} />
                   </div>
                   <div>
                     <label className="form-label">Hero Description (English)</label>
-                    <textarea className="form-textarea h-24 text-left" value={formData.hero_desc_en || ''} onChange={e => handleChange('hero_desc_en', e.target.value)}></textarea>
+                    <textarea className="form-textarea h-24 text-left" placeholder="In the heart of Amman, we present a refined aromatic experience blending rare oud, pure musk, and authentic Eastern heritage." value={formData.hero_desc_en || ''} onChange={e => handleChange('hero_desc_en', e.target.value)}></textarea>
+                  </div>
+                  <div>
+                    <label className="form-label">Hero CTA Button (English)</label>
+                    <input type="text" className="form-input text-left" placeholder="Shop Now" value={formData.hero_cta_en || ''} onChange={e => handleChange('hero_cta_en', e.target.value)} />
                   </div>
                 </div>
               </div>
             </div>
           )}
+
 
           {activeTab === 'contact' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

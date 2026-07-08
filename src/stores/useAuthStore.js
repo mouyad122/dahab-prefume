@@ -19,14 +19,8 @@ export const useAuthStore = create((set, get) => ({
   },
 
   login: (username, password) => {
-    const demoEmail = process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL || 'admin';
-    const demoPassword = process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD || 'dahab101';
-
-    if (username === demoEmail && password === demoPassword) {
-      StorageService.set(AUTH_KEY, true);
-      set({ isAuthenticated: true, adminUser: { username } });
-      return true;
-    }
+    void username;
+    void password;
     return false;
   },
 

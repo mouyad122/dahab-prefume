@@ -16,7 +16,8 @@ export default function Header() {
   const toggleCart = useCartStore((state) => state.toggleCart);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace(/^\/en/, '') || '/';
   const isAr = language === 'ar';
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -46,7 +47,7 @@ export default function Header() {
   return (
     <header className={`site-header ${scrolled ? 'site-header-scrolled' : ''}`}>
       <div className="site-topbar">
-        <div className={`premium-container flex items-center justify-between gap-4 text-[0.72rem] ${isAr ? 'dir-ar' : 'dir-en'}`}>
+          <div className="premium-container flex items-center justify-between gap-4 text-[0.72rem]">
           <a href={brandConfig.googleMapsLink} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-gold-light)]">
             <MapPin size={13} className="text-[var(--color-gold)]" />
             <span>{brandConfig.address[language]}</span>

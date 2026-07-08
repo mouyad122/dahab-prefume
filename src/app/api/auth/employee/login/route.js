@@ -7,9 +7,9 @@ import {
   rateLimit,
   sanitize,
   getClientIp,
-} from '../../../../../lib/security';
-import { createEmployeeSession } from '../../../../../lib/session';
-import { prisma } from '../../../../../lib/prisma';
+} from '@/lib/security';
+import { createEmployeeSession } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,6 +138,11 @@ export async function POST(request) {
           can_manage_employees: employee.permissions.can_manage_employees,
           can_view_accounting:  employee.permissions.can_view_accounting,
           can_view_settings:    employee.permissions.can_view_settings,
+          can_manage_raw_materials: employee.permissions.can_manage_raw_materials,
+          can_adjust_raw_material_stock: employee.permissions.can_adjust_raw_material_stock,
+          can_view_raw_material_movements: employee.permissions.can_view_raw_material_movements,
+          can_manage_product_formulas: employee.permissions.can_manage_product_formulas,
+          can_view_consumption_reports: employee.permissions.can_view_consumption_reports,
         }
       : null;
 

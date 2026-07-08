@@ -8,7 +8,8 @@ import { usePosContext } from '../../contexts/PosContext';
 import LuxuryButton from '../ui/LuxuryButton';
 
 export default function POSSidebar() {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace(/^\/en/, '') || '/';
   const router = useRouter();
   const { employee, permissions } = usePosContext();
 

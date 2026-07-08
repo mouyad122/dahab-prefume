@@ -17,16 +17,6 @@ const COLLECTIONS = [
     tag: { ar: 'الأكثر مبيعاً', en: 'Best Seller' },
   },
   {
-    id: 'private-collection',
-    slug: 'private-collection',
-    name: { ar: 'المجموعة الخاصة', en: 'Private Collection' },
-    desc: { ar: 'عطور حصرية من أرقى دور العطور العالمية', en: 'Exclusive fragrances from the world\'s most prestigious houses' },
-    count: 12,
-    image: 'https://images.unsplash.com/photo-1547005327-4f5a2a60e93e?auto=format&fit=crop&q=80&w=600',
-    accent: 'rgba(90,52,26,0.18)',
-    tag: { ar: 'حصري', en: 'Exclusive' },
-  },
-  {
     id: 'oud',
     slug: 'oud',
     name: { ar: 'دور الشرق الأوسط', en: 'Middle Eastern Houses' },

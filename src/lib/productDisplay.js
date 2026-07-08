@@ -1,3 +1,5 @@
+import { getBulkStockMl, getSellableUnitsForVariant } from './inventory';
+
 const FALLBACK_PRODUCT_IMAGE = '/hero-bottle.png';
 
 export function getProductImageSrc(productOrPath, fallback = FALLBACK_PRODUCT_IMAGE) {
@@ -40,6 +42,13 @@ export function getDefaultVariant(product) {
 }
 
 export function getTotalStock(product) {
+  if (product?.inventory_mode === 'FORMULA_BASED') {
+    return 999; // Treat formula-based products as always available on storefront
+  }
+  if (product?.inventory_mode === 'BULK_LIQUID') {
+    return Math.floor(getBulkStockMl(product));
+  }
+
   const directStock = Number(product?.stock);
   if (Number.isFinite(directStock) && directStock > 0) {
     return directStock;
@@ -63,7 +72,12 @@ export function getPriceJod(product, variant = getDefaultVariant(product)) {
 
 export function buildCartProduct(product, variant = getDefaultVariant(product)) {
   const volume = variant?.volume || product?.volume || '100ml';
-  const stock = Number(variant?.stock ?? product?.stock);
+  let stock = Number(variant?.stock ?? product?.stock);
+  if (product?.inventory_mode === 'BULK_LIQUID') {
+    stock = getSellableUnitsForVariant(product, { ...variant, volume });
+  } else if (product?.inventory_mode === 'FORMULA_BASED') {
+    stock = 999;
+  }
   const normalizedStock = Number.isFinite(stock) && stock > 0 ? stock : null;
 
   return {

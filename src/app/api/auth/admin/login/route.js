@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../../../../../lib/prisma';
-import { createAdminSession, createEmployeeSession } from '../../../../../lib/session';
+import { prisma } from '@/lib/prisma';
+import { createAdminSession, createEmployeeSession } from '@/lib/session';
 import {
   checkBruteForce,
   isIpBlocked,
@@ -9,9 +9,65 @@ import {
   rateLimit,
   sanitize,
   getClientIp,
-} from '../../../../../lib/security';
+} from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
+
+const ADMIN_PERMISSION_FIELDS = [
+  'can_access_counter',
+  'can_view_invoices',
+  'can_print_reports',
+  'can_add_notes',
+  'can_view_inventory',
+  'can_manage_products',
+  'can_manage_employees',
+  'can_view_accounting',
+  'can_view_settings',
+  'can_manage_raw_materials',
+  'can_adjust_raw_material_stock',
+  'can_view_raw_material_movements',
+  'can_manage_product_formulas',
+  'can_view_consumption_reports',
+];
+
+function allAdminPermissions() {
+  return Object.fromEntries(ADMIN_PERMISSION_FIELDS.map((field) => [field, true]));
+}
+
+async function bootstrapAdminFromEnv(username, password) {
+  const bootstrapUsername = process.env.ADMIN_USERNAME;
+  const bootstrapPassword = process.env.ADMIN_PASSWORD;
+
+  if (!bootstrapUsername || !bootstrapPassword || username !== bootstrapUsername || password !== bootstrapPassword) {
+    return null;
+  }
+
+  const existingAdmin = await prisma.employee.findFirst({ where: { role: 'admin' } });
+  if (existingAdmin) return null;
+
+  const password_hash = await bcrypt.hash(password, 12);
+
+  return await prisma.$transaction(async (tx) => {
+    const admin = await tx.employee.create({
+      data: {
+        username,
+        password_hash,
+        display_name: 'المدير العام',
+        role: 'admin',
+        is_active: true,
+      },
+    });
+
+    await tx.employeePermission.create({
+      data: {
+        employeeId: admin.id,
+        ...allAdminPermissions(),
+      },
+    });
+
+    return { ...admin, permissions: allAdminPermissions() };
+  });
+}
 
 export async function POST(request) {
   const ip = getClientIp(request);
@@ -59,50 +115,39 @@ export async function POST(request) {
       );
     }
 
-    // ── 4. Validate Against Env Vars ──────────────────────────────────────────
-    const validUsername =
-      process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'admin';
-    const validPassword =
-      process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'dahab101';
-
-    const credentialsMatch =
-      username === validUsername && password === validPassword;
-
-    if (credentialsMatch) {
-      await createAdminSession({ username, role: 'admin' });
-      await recordLoginAttempt({
-        ip,
-        username,
-        userType: 'admin',
-        success: true,
-      });
-      return NextResponse.json({ ok: true });
-    }
-
-    // Check Employee Table
+    // ── 4. Validate Against Hashed DB Password ────────────────────────────────
     try {
-      const employee = await prisma.employee.findUnique({
+      let employee = await prisma.employee.findUnique({
         where: { username },
         include: { permissions: true },
       });
 
+      if (!employee) {
+        employee = await bootstrapAdminFromEnv(username, password);
+      }
+
       if (employee && employee.is_active) {
         const passwordMatch = await bcrypt.compare(password, employee.password_hash);
         if (passwordMatch) {
-          await createEmployeeSession({
-            employeeId: employee.id,
-            username: employee.username,
-            displayName: employee.display_name,
-            role: employee.role,
-          });
+          if (employee.role === 'admin') {
+            await createAdminSession({ username: employee.username, role: 'admin', employeeId: employee.id });
+          } else {
+            await createEmployeeSession({
+              employeeId: employee.id,
+              username: employee.username,
+              displayName: employee.display_name,
+              role: employee.role,
+            });
+          }
+
           await recordLoginAttempt({
             ip,
             username: employee.username,
-            userType: 'employee',
+            userType: employee.role === 'admin' ? 'admin' : 'employee',
             success: true,
             employeeId: employee.id,
           });
-          return NextResponse.json({ ok: true, isEmployee: true });
+          return NextResponse.json({ ok: true, isEmployee: employee.role !== 'admin' });
         }
       }
     } catch (e) {

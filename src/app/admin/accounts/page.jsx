@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Plus, PencilSimple, Trash, ShieldCheck, XCircle, X, UserGear, Storefront, ChartLineUp, Database, IdentificationBadge } from '@phosphor-icons/react';
+import { Plus, PencilSimple, ShieldCheck, XCircle, X, UserGear, Storefront, Database, IdentificationBadge, Flask } from '@phosphor-icons/react';
 
 const PERMISSION_GROUPS = [
   {
@@ -10,15 +10,8 @@ const PERMISSION_GROUPS = [
     keys: [
       { key: 'can_access_counter', label: 'الوصول لكاونتر البيع', desc: 'يسمح بفتح نقطة البيع وتسجيل الطلبات' },
       { key: 'can_add_notes', label: 'إضافة ملاحظات', desc: 'يسمح بكتابة ملاحظات مخصصة على الفواتير' },
-    ]
-  },
-  {
-    title: 'الإدارة والتقارير',
-    icon: ChartLineUp,
-    keys: [
       { key: 'can_view_invoices', label: 'سجل الفواتير', desc: 'الاطلاع على كافة فواتير المتجر' },
       { key: 'can_print_reports', label: 'طباعة التقارير', desc: 'طباعة وتصدير تقارير المبيعات' },
-      { key: 'can_view_accounting', label: 'الحسابات المالية', desc: 'الوصول للتسويات والأرباح' },
     ]
   },
   {
@@ -26,7 +19,7 @@ const PERMISSION_GROUPS = [
     icon: Database,
     keys: [
       { key: 'can_manage_products', label: 'إدارة المنتجات', desc: 'إضافة وتعديل المنتجات والأقسام' },
-      { key: 'can_view_inventory', label: 'إدارة المخزون', desc: 'متابعة وجرد كميات المنتجات' },
+      { key: 'can_view_inventory', label: 'عرض المخزون', desc: 'متابعة وجرد كميات المنتجات' },
     ]
   },
   {
@@ -35,6 +28,18 @@ const PERMISSION_GROUPS = [
     keys: [
       { key: 'can_manage_employees', label: 'إدارة الحسابات', desc: 'إضافة وتعديل صلاحيات المستخدمين' },
       { key: 'can_view_settings', label: 'إعدادات النظام', desc: 'التحكم بإعدادات المتجر العامة' },
+      { key: 'can_view_accounting', label: 'عرض الحسابات', desc: 'الاطلاع على البيانات المحاسبية' },
+    ]
+  },
+  {
+    title: 'المواد الخام والتصنيع',
+    icon: Flask,
+    keys: [
+      { key: 'can_manage_raw_materials', label: 'إدارة المواد الخام', desc: 'إضافة وتعديل المواد الخام' },
+      { key: 'can_adjust_raw_material_stock', label: 'تعديل رصيد المواد', desc: 'تعديل كميات المواد الخام يدوياً' },
+      { key: 'can_view_raw_material_movements', label: 'حركات المواد', desc: 'مشاهدة سجل حركات المواد الخام' },
+      { key: 'can_manage_product_formulas', label: 'إدارة التركيبات', desc: 'إنشاء وتعديل تركيبات المنتجات' },
+      { key: 'can_view_consumption_reports', label: 'تقارير الاستهلاك', desc: 'مشاهدة تقارير استهلاك المواد' },
     ]
   }
 ];

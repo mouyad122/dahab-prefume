@@ -12,7 +12,8 @@ export default function AdminLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true); // Default open on desktop
   const router = useRouter();
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace(/^\/en/, '') || '/';
   const isLoginPage = pathname === '/admin/login';
   const isCounterPage = pathname.startsWith('/admin/counter');
 

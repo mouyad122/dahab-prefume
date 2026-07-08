@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { verifyAdminSession } from '../../../lib/session';
-import { prisma } from '../../../lib/prisma';
-import { sanitize } from '../../../lib/security';
+import { verifyAdminSession } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
+import { sanitize } from '@/lib/security';
 
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,11 @@ const PERMISSION_FIELDS = [
   'can_manage_employees',
   'can_view_accounting',
   'can_view_settings',
+  'can_manage_raw_materials',
+  'can_adjust_raw_material_stock',
+  'can_view_raw_material_movements',
+  'can_manage_product_formulas',
+  'can_view_consumption_reports',
 ];
 
 const ALLOWED_ROLES = ['admin', 'manager', 'employee', 'inventory', 'accountant'];
@@ -60,6 +65,11 @@ export async function GET() {
             can_manage_employees: emp.permissions.can_manage_employees,
             can_view_accounting:  emp.permissions.can_view_accounting,
             can_view_settings:    emp.permissions.can_view_settings,
+            can_manage_raw_materials: emp.permissions.can_manage_raw_materials,
+            can_adjust_raw_material_stock: emp.permissions.can_adjust_raw_material_stock,
+            can_view_raw_material_movements: emp.permissions.can_view_raw_material_movements,
+            can_manage_product_formulas: emp.permissions.can_manage_product_formulas,
+            can_view_consumption_reports: emp.permissions.can_view_consumption_reports,
           }
         : parsePermissions({}, emp.role === 'admin'),
     }));

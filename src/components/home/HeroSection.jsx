@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, WhatsappLogo, Star, MapPin } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, WhatsappLogo, Star, MapPin, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
 
@@ -10,12 +10,12 @@ export default function HeroSection() {
   const { language } = useContext(LanguageContext);
   const isAr = language === 'ar';
   const [scrollY, setScrollY] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const heroRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      requestAnimationFrame(() => setScrollY(window.scrollY));
-    };
+    setMounted(true);
+    const handleScroll = () => requestAnimationFrame(() => setScrollY(window.scrollY));
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -25,214 +25,196 @@ export default function HeroSection() {
     : 'Hello, I would like to order a fragrance from DAHAB PERFUMES.';
   const whatsappUrl = `https://wa.me/${brandConfig.whatsappNumberClean}?text=${encodeURIComponent(whatsappMsg)}`;
 
-  // Ultra-smooth parallax effects
   const bgParallax = {
-    transform: `translate3d(0, ${scrollY * 0.15}px, 0) scale(${1 + scrollY * 0.0002})`,
+    transform: `translate3d(0, ${scrollY * 0.12}px, 0) scale(${1 + scrollY * 0.0002})`,
     willChange: 'transform',
   };
-  
-  const textParallax = {
-    transform: `translate3d(0, ${scrollY * 0.25}px, 0)`,
-    opacity: Math.max(0, 1 - scrollY / 700),
-    willChange: 'transform, opacity',
-  };
+
+  const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
 
   return (
     <section
       ref={heroRef}
-      className="relative min-h-[100dvh] overflow-hidden"
-      style={{ backgroundColor: 'var(--color-bg-primary)' }}
+      className="relative min-h-[100dvh] overflow-hidden flex flex-col"
+      style={{ backgroundColor: '#070504' }}
     >
-      {/* ─── Luxury Background Layers ─── */}
-      <div className="absolute inset-0 z-0 bg-[#070504]" />
-
-      {/* Cinematic Watermark Image (Aesthetic) */}
-      <div className="absolute inset-0 z-[1] w-full h-full opacity-30" style={{ ...bgParallax, mixBlendMode: 'overlay' }}>
-        <img
-          src="/images/background.jpg"
-          alt="DAHAB PERFUMES watermark"
-          className="w-full h-full object-cover object-center"
-          loading="eager"
-          fetchPriority="high"
-        />
+      {/* ─── Deep Background ─── */}
+      <div className="absolute inset-0 z-0">
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0e0905] via-[#070504] to-[#0a0604]" />
+        {/* Warm gold glow — top right */}
+        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #c5a25d 0%, transparent 70%)', filter: 'blur(80px)' }} />
+        {/* Deep amber glow — bottom left */}
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, #8b5e1a 0%, transparent 70%)', filter: 'blur(100px)' }} />
+        {/* Noise texture overlay */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
       </div>
 
-      {/* Luxury Color Grading Overlay */}
-      <div className="absolute inset-0 z-[1] bg-[rgba(7,5,4,0.7)] pointer-events-none mix-blend-multiply" />
+      {/* ─── Main Content: Split Layout ─── */}
+      <div className="relative z-10 flex-1 flex flex-col lg:flex-row min-h-[100dvh] premium-container">
 
-      {/* Foreground Hero Bottle */}
-      <div className="absolute inset-0 z-[3] w-full h-full pointer-events-none flex items-center justify-center lg:justify-end lg:pr-[10%]" style={textParallax}>
-        <img
-          src="/hero-bottle.png"
-          alt="DAHAB PERFUMES hero product"
-          className="h-[60%] lg:h-[85%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(196,154,68,0.25)] transition-transform duration-1000 translate-y-10"
-          loading="eager"
-          fetchPriority="high"
-        />
-      </div>
-
-      {/* Atmospheric Overlays */}
-      <div className="absolute inset-0 z-[2] pointer-events-none">
-        {/* Soft radial vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_var(--color-bg-primary)_100%)] opacity-70" />
-        {/* Gradient from left (dark) to right (transparent) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] md:via-[#070504]/80 to-transparent" />
-        {/* Subtle bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[var(--color-bg-primary)] to-transparent" />
-      </div>
-
-      {/* Dynamic Lighting Effects (Orbs) */}
-      <div
-        className="absolute z-[2] rounded-full pointer-events-none mix-blend-screen"
-        style={{
-          width: '70vw', height: '70vw',
-          top: '-35%', left: '-20%',
-          background: 'radial-gradient(circle, var(--color-gold-glow) 0%, transparent 60%)',
-          filter: 'blur(60px)',
-          animation: 'pulseGlow 8s ease-in-out infinite alternate',
-        }}
-      />
-      
-      {/* Smoke/Fragrance Atmosphere */}
-      <div className="smoke-trail smoke-trail-1 z-[2] hidden md:block opacity-40" />
-      <div className="smoke-trail smoke-trail-2 z-[2] hidden md:block opacity-30" style={{ animationDelay: '3s', left: '45%' }} />
-
-      {/* ─── Main Content ─── */}
-      <div className="premium-container relative z-[10] flex min-h-[100dvh] flex-col justify-between py-10" style={textParallax}>
-        
-        {/* Top Header Space (Rating) */}
-        <div className="flex items-center justify-end pt-4">
-          <div className="glass-card flex items-center gap-2 px-4 py-2 border-[var(--color-border-strong)] backdrop-blur-md">
-            <Star size={14} weight="fill" className="text-[var(--color-gold-light)] drop-shadow-[0_0_8px_rgba(214,184,120,0.5)]" />
-            <span className="text-sm font-bold text-[var(--color-gold-pale)] font-display tracking-widest">
-              {brandConfig.rating.score}
+        {/* LEFT / TEXT COLUMN */}
+        <div className={`flex-1 flex flex-col justify-center py-20 lg:py-0 ${isAr ? 'lg:pr-0 lg:pl-12' : 'lg:pl-0 lg:pr-12'}`}>
+          
+          {/* Eyebrow badge */}
+          <div className={`reveal-up flex items-center gap-3 mb-8 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <div className="w-8 h-[1px] bg-[var(--color-gold)]" />
+            <span className="text-[0.7rem] font-bold tracking-[0.4em] uppercase text-[var(--color-gold)] font-sans">
+              {isAr ? 'دار عطور عربية منذ ٢٠٠٧' : 'Arabic Fragrance House · Est. 2007'}
             </span>
-            <span className="text-xs text-[var(--color-text-muted)] tracking-wider">
-              ({brandConfig.rating.reviewsCount} {isAr ? 'تقييم' : 'reviews'})
-            </span>
+          </div>
+
+          {/* Main Headline */}
+          <h1
+            className={`reveal-up anim-delay-1 font-display mb-6 leading-[1.03] ${isAr ? 'font-sans-ar' : ''}`}
+            style={{ fontSize: 'clamp(2.8rem, 6.5vw, 6.5rem)', fontWeight: 600, letterSpacing: '-0.02em' }}
+          >
+            {isAr ? (
+              <>
+                <span className="block text-[var(--color-text-primary)]">كل عطرٍ</span>
+                <span className="block" style={{ color: 'transparent', WebkitTextStroke: '1px #c5a25d' }}>قصّةٌ</span>
+                <span className="block text-[var(--color-text-primary)]">لا تُنسى</span>
+              </>
+            ) : (
+              <>
+                <span className="block text-[var(--color-text-primary)]">Every Scent,</span>
+                <span className="block" style={{ color: 'transparent', WebkitTextStroke: '1px #c5a25d' }}>A Story</span>
+                <span className="block text-[var(--color-text-primary)]">Untold.</span>
+              </>
+            )}
+          </h1>
+
+          {/* Divider line */}
+          <div className="reveal-up anim-delay-1 w-16 h-[2px] bg-gradient-to-r from-[var(--color-gold)] to-transparent mb-8" />
+
+          {/* Subtitle */}
+          <p
+            className={`reveal-up anim-delay-2 max-w-md text-base md:text-lg leading-relaxed text-[var(--color-text-muted)] mb-10 ${isAr ? 'font-sans-ar' : ''}`}
+          >
+            {isAr
+              ? 'في قلب عمّان، نختار لكم أفخر التركيبات العطرية؛ عود نادر، مسك أبيض، وعنبر أصيل. عطرك شخصيتك.'
+              : 'In the heart of Amman, curated rare oud, white musk, and authentic amber — your fragrance is your identity.'}
+          </p>
+
+          {/* CTA Buttons */}
+          <div className={`reveal-up anim-delay-3 flex flex-col sm:flex-row gap-4 mb-14 ${isAr ? 'sm:flex-row-reverse' : ''}`}>
+            <Link
+              href="/shop"
+              className="btn-primary h-[52px] px-8 text-sm uppercase tracking-widest relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              <span className={`relative z-10 ${isAr ? 'font-sans-ar' : ''}`}>
+                {isAr ? 'اكتشف العطور' : 'Explore Fragrances'}
+              </span>
+              <ArrowIcon size={16} weight="bold" className="relative z-10" />
+            </Link>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary h-[52px] px-8 text-sm uppercase tracking-widest border-[var(--color-border-strong)] hover:border-[#5ddb85] hover:text-[#5ddb85] transition-colors"
+            >
+              <WhatsappLogo size={18} weight="regular" />
+              <span className={isAr ? 'font-sans-ar' : ''}>
+                {isAr ? 'طلب عبر واتساب' : 'WhatsApp Order'}
+              </span>
+            </a>
+          </div>
+
+          {/* Stats strip */}
+          <div className="reveal-up anim-delay-4">
+            <div className={`flex divide-[var(--color-border-strong)] border border-[var(--color-border-strong)] bg-[var(--color-bg-surface)]/20 backdrop-blur-sm rounded-xl overflow-hidden ${isAr ? 'divide-x divide-x-reverse' : 'divide-x'}`}>
+              {[
+                { value: '2007', label: isAr ? 'تأسيس' : 'Est.' },
+                { value: '+500', label: isAr ? 'عطر' : 'Scents' },
+                { value: '4.7★', label: isAr ? 'تقييم' : 'Rating' },
+                { value: 'JO', label: isAr ? 'عمّان' : 'Amman' },
+              ].map((stat) => (
+                <div key={stat.value} className="flex-1 py-4 text-center">
+                  <div className="text-lg md:text-xl font-bold text-[var(--color-gold-pale)] font-display tracking-wider">
+                    {stat.value}
+                  </div>
+                  <div className={`text-[0.6rem] text-[var(--color-text-muted)] mt-0.5 tracking-widest uppercase ${isAr ? 'font-sans-ar' : ''}`}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Center — Headlines & CTA */}
-        <div className={`flex-1 flex items-center ${isAr ? 'dir-ar' : 'dir-en'} mt-10 lg:mt-0`}>
-          <div className="max-w-4xl relative">
-            
-            {/* Subtle decorative line above kicker */}
-            <div className="reveal-up w-12 h-[2px] bg-gradient-to-r from-[var(--color-gold)] to-transparent mb-6" />
+        {/* RIGHT / VISUAL COLUMN */}
+        <div className="hidden lg:flex flex-[0.9] flex-col justify-center items-center relative py-12">
 
-            {/* Kicker */}
-            <div className="reveal-up mb-8">
-              <span className="font-sans-ar text-[0.75rem] font-bold tracking-[0.3em] uppercase text-[var(--color-gold)]" dir={isAr ? 'rtl' : 'ltr'}>
-                {isAr ? 'دار عطور عربية فاخرة' : 'Luxury Arabic Fragrance House'}
-              </span>
+          {/* Floating perfume bottle visual (stack of elegant cards) */}
+          <div className="relative w-full max-w-[420px] aspect-[3/4]">
+
+            {/* Main image frame */}
+            <div
+              className="absolute inset-0 rounded-3xl overflow-hidden border border-[var(--color-border-strong)]"
+              style={{ ...bgParallax }}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&q=85&w=800"
+                alt="Luxury Perfume"
+                className="w-full h-full object-cover opacity-80"
+                loading="eager"
+              />
+              {/* Gradient overlay on image */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#070504]/80 via-transparent to-[#070504]/20" />
             </div>
 
-            {/* Headline (Exactly as requested) */}
-            <h1
-              className="reveal-up anim-delay-1 font-display mb-8 drop-shadow-2xl"
-              style={{ 
-                fontSize: 'clamp(3.5rem, 9vw, 8rem)', 
-                fontWeight: 600, 
-                lineHeight: 1.05, 
-                letterSpacing: '-0.01em' 
-              }}
-            >
-              {isAr ? (
-                <span className="block font-sans-ar">
-                  <span className="block text-[var(--color-text-primary)] transition-colors duration-700 hover:text-[var(--color-gold-pale)]">منذ 2007،</span>
-                  <span className="block text-[var(--color-gold)]" style={{ textShadow: '0 4px 32px rgba(184,150,87,0.3)' }}>عطرٌ يحمل</span>
-                  <span className="block text-[var(--color-text-primary)] transition-colors duration-700 hover:text-[var(--color-gold-pale)]">أثراً لا يُنسى</span>
-                </span>
-              ) : (
-                <span className="block">
-                  <span className="block text-[var(--color-text-primary)] transition-colors duration-700 hover:text-[var(--color-gold-pale)]">Since 2007,</span>
-                  <span className="block text-[var(--color-gold)]" style={{ textShadow: '0 4px 32px rgba(184,150,87,0.3)' }}>fragrance that</span>
-                  <span className="block text-[var(--color-text-primary)] transition-colors duration-700 hover:text-[var(--color-gold-pale)]">leaves a lasting legacy</span>
-                </span>
-              )}
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              className={`reveal-up anim-delay-2 max-w-xl text-base md:text-lg leading-relaxed text-[var(--color-text-muted)] mb-12 ${isAr ? 'font-sans-ar' : ''}`}
-            >
-              {isAr
-                ? 'في قلب عمّان، نقدم لكم تجربة عطرية راقية تجمع بين فخامة العود النادر، نقاء المسك، وسحر التراث الشرقي الأصيل.'
-                : 'In the heart of Amman, we present a refined aromatic experience blending rare oud, pure musk, and authentic Eastern heritage.'}
-            </p>
-
-            {/* CTAs */}
-            <div className="reveal-up anim-delay-3 flex flex-col sm:flex-row gap-5 mb-14">
-              <Link 
-                href="/shop" 
-                className="btn-primary min-w-[200px] h-[54px] text-[0.9rem] uppercase tracking-widest relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
-                <span className={`relative z-10 ${isAr ? 'font-sans-ar' : ''}`}>
-                  {isAr ? 'تسوّق الآن' : 'Shop Now'}
-                </span>
-                <ArrowUpRight size={18} weight="bold" className="relative z-10" />
-              </Link>
-              
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary min-w-[200px] h-[54px] text-[0.9rem] bg-[var(--color-bg-surface)]/50 backdrop-blur-md border-[var(--color-border-strong)] uppercase tracking-widest hover:border-[#5ddb85] hover:text-[#5ddb85]"
-              >
-                <WhatsappLogo size={20} weight="regular" />
-                <span className={isAr ? 'font-sans-ar' : ''}>
-                  {isAr ? 'اطلب عبر واتساب' : 'Order on WhatsApp'}
-                </span>
-              </a>
-            </div>
-
-            {/* Stats strip */}
-            <div className="reveal-up anim-delay-4 inline-block">
-              <div className="flex divide-x divide-x-reverse divide-[var(--color-border-strong)] border-y border-[var(--color-border-strong)] bg-[var(--color-bg-surface)]/30 backdrop-blur-sm">
-                {[
-                  { value: '2007', label: isAr ? 'سنة التأسيس' : 'EST.' },
-                  { value: '+500', label: isAr ? 'عطر فريد' : 'SCENTS' },
-                  { value: '4.7★', label: isAr ? 'تقييم العملاء' : 'RATING' },
-                ].map((stat) => (
-                  <div key={stat.value} className="px-6 py-4 text-center min-w-[110px]">
-                    <div className="text-xl md:text-2xl font-bold text-[var(--color-gold-pale)] font-display tracking-wider">
-                      {stat.value}
-                    </div>
-                    <div className={`text-[0.65rem] text-[var(--color-text-muted)] mt-1 tracking-widest uppercase ${isAr ? 'font-sans-ar' : ''}`}>
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
+            {/* Floating badge — top left */}
+            <div className="absolute -left-6 top-12 glass-card px-4 py-3 border border-[var(--color-border-strong)] backdrop-blur-md flex items-center gap-2 shadow-xl animate-float">
+              <Star size={14} weight="fill" className="text-[var(--color-gold)]" />
+              <div>
+                <div className="text-xs font-bold text-white">4.7 / 5.0</div>
+                <div className="text-[10px] text-[var(--color-text-muted)]">{isAr ? 'تقييم العملاء' : 'Customer Rating'}</div>
               </div>
             </div>
 
-          </div>
-        </div>
+            {/* Floating badge — bottom right */}
+            <div className="absolute -right-6 bottom-16 glass-card px-4 py-3 border border-[var(--color-border-strong)] backdrop-blur-md shadow-xl animate-float" style={{ animationDelay: '1.5s' }}>
+              <div className="flex items-center gap-2">
+                <Sparkle size={14} weight="fill" className="text-[var(--color-gold)]" />
+                <div>
+                  <div className="text-xs font-bold text-white">{isAr ? '+500 عطر' : '+500 Scents'}</div>
+                  <div className="text-[10px] text-[var(--color-text-muted)]">{isAr ? 'متوفرة الآن' : 'In Stock'}</div>
+                </div>
+              </div>
+            </div>
 
-        {/* Bottom Bar */}
-        <div className="reveal-up anim-delay-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-6 mt-10 border-t border-[var(--color-border-strong)]">
-          <div className={`flex items-center gap-3 text-[0.8rem] text-[var(--color-text-secondary)] tracking-wider uppercase ${isAr ? 'font-sans-ar dir-ar' : ''}`}>
-            <MapPin size={16} className="text-[var(--color-gold)] shrink-0" />
+            {/* Corner accent lines */}
+            <div className="absolute top-4 right-4 w-6 h-6 border-t border-r border-[var(--color-gold)]/40" />
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b border-l border-[var(--color-gold)]/40" />
+          </div>
+
+          {/* Location strip below image */}
+          <div className={`mt-6 flex items-center gap-2 text-xs text-[var(--color-text-muted)] ${isAr ? 'flex-row-reverse font-sans-ar' : ''}`}>
+            <MapPin size={14} className="text-[var(--color-gold)] shrink-0" />
             <span>{brandConfig.address[language]}</span>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="w-12 h-[1px] bg-[var(--color-gold-dim)] hidden sm:block"></span>
-            <div className={`text-[0.7rem] text-[var(--color-text-subtle)] tracking-[0.2em] uppercase ${isAr ? 'font-sans-ar' : ''}`}>
-              {brandConfig.tagline[language]}
-            </div>
-          </div>
         </div>
-        
       </div>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes pulseGlow {
-          0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(1.1); opacity: 1; }
+
+      {/* ─── Bottom scroll indicator ─── */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-40 animate-bounce">
+        <div className="w-[1px] h-10 bg-gradient-to-b from-[var(--color-gold)] to-transparent" />
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
         }
-      `}} />
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
+        }
+      ` }} />
     </section>
   );
 }

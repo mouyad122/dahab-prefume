@@ -1,6 +1,5 @@
 'use client';
 import { useState, useRef } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import LuxuryButton from '../ui/LuxuryButton';
 
@@ -29,32 +28,22 @@ export default function ImageUpload({ value, onChange, label = 'Image', classNam
     setError(null);
 
     try {
-      // Create a unique file name
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Upload to Supabase Storage bucket named 'images'
-      const { error: uploadError, data } = await supabase.storage
-        .from('images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      const response = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) {
-        throw uploadError;
+      const result = await response.json();
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || 'Failed to upload image');
       }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-
       // Pass URL back to parent
-      onChange(publicUrl);
+      onChange(result.url);
     } catch (err) {
-      console.error('Upload error:', err);
       setError(err.message || 'Failed to upload image');
     } finally {
       setIsUploading(false);

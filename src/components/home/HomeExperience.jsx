@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useContext } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CheckCircle, MapPin, Sparkle, Star, WhatsappLogo } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
@@ -40,15 +41,17 @@ export default function HomeExperience() {
   ];
 
   return (
-    <main className={`dahab-home ${isAr ? 'dir-ar' : 'dir-en'}`}>
+    <main className="dahab-home">
       <section className="home-hero" aria-labelledby="home-hero-title">
         <div className="home-hero-bg" aria-hidden="true">
-          <img
+          <Image
             src="/images/background.jpg"
-            alt=""
+            alt="Dahab Background"
             className="home-hero-bg-image"
-            loading="eager"
-            fetchPriority="high"
+            priority
+            fill
+            style={{ objectFit: 'cover' }}
+            sizes="100vw"
           />
         </div>
         <div className="premium-container home-hero-grid">

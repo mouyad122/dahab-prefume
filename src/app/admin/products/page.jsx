@@ -8,6 +8,7 @@ import {
 } from '@phosphor-icons/react';
 import ImageUpload from '../../../components/admin/ImageUpload';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
+import { DEFAULT_LOW_STOCK_THRESHOLD_ML, getLowStockThresholdMl } from '../../../lib/inventory';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function formatJOD(fils) {
@@ -42,6 +43,7 @@ export default function AdminProducts() {
   const [total, setTotal]           = useState(0);
   const [pages, setPages]           = useState(1);
   const [categories, setCategories] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [exporting, setExporting]   = useState(false);
 
@@ -73,7 +75,10 @@ export default function AdminProducts() {
   const [season, setSeason]                 = useState('all');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
   const [imageFilename, setImageFilename]   = useState('');
-  const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '0' }]);
+  // variant: { id, volume, price, stock, formula: [{ raw_material_id, quantity_ml }] }
+  const [variants, setVariants]             = useState([{ volume: '100', price: '', stock: '0', formula: [] }]);
+  const [inventoryMode, setInventoryMode]   = useState('BULK_LIQUID'); // FINISHED_PRODUCT, FORMULA_BASED, or BULK_LIQUID
+  const [bulkStockMl, setBulkStockMl]       = useState('1000');
   const [shortDescriptionAr, setShortDescriptionAr] = useState('');
   const [shortDescriptionEn, setShortDescriptionEn] = useState('');
   const [visibleOnWebsite, setVisibleOnWebsite]     = useState(true);
@@ -134,7 +139,17 @@ export default function AdminProducts() {
     } catch {}
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  const fetchRawMaterials = async () => {
+    try {
+      const res = await fetch('/api/admin/inventory/raw-materials');
+      if (res.ok) {
+        const data = await res.json();
+        setRawMaterials(data.rawMaterials || []);
+      }
+    } catch {}
+  };
+
+  useEffect(() => { fetchCategories(); fetchRawMaterials(); }, []);
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   // ── Reset filters and go back to page 1 ────────────────────────────────────
@@ -179,9 +194,11 @@ export default function AdminProducts() {
     setSku(`SKU-${Math.floor(1000 + Math.random() * 9000)}`);
     setSlug(''); setNameAr(''); setNameEn(''); setInspiredBy('');
     setCategoryId(categories[0]?.id || '');
-    setGender('unisex'); setSeason('all'); setLowStockThreshold('5');
+    setGender('unisex'); setSeason('all'); setLowStockThreshold(String(DEFAULT_LOW_STOCK_THRESHOLD_ML));
     setImageFilename('');
-    setVariants([{ volume: '100', price: '', stock: '10' }]);
+    setInventoryMode('BULK_LIQUID');
+    setBulkStockMl('1000');
+    setVariants([{ volume: '100', price: '', stock: '0', formula: [] }]);
     setShortDescriptionAr(''); setShortDescriptionEn('');
     setVisibleOnWebsite(true); setFeaturedOnFrontend(false);
     setIsFormOpen(true);
@@ -198,11 +215,19 @@ export default function AdminProducts() {
     setCategoryId(product.categoryId || product.category?.id || '');
     setGender(product.gender || 'unisex');
     setSeason(product.season || 'all');
-    setLowStockThreshold(String(product.low_stock_threshold || 5));
+    setLowStockThreshold(String(product.low_stock_threshold || DEFAULT_LOW_STOCK_THRESHOLD_ML));
     setImageFilename(product.image_filename || '');
+    setInventoryMode(product.inventory_mode || 'FINISHED_PRODUCT');
+    setBulkStockMl(String(product.bulk_stock_ml || 0));
     setVariants(product.variants?.length > 0
-      ? product.variants.map(v => ({ volume: v.volume, price: String(v.price / 1000), stock: String(v.stock) }))
-      : [{ volume: '100', price: '', stock: '0' }]
+      ? product.variants.map(v => ({ 
+          id: v.id,
+          volume: v.volume, 
+          price: String(v.price / 1000), 
+          stock: String(v.stock),
+          formula: v.formulas?.items?.map(i => ({ raw_material_id: i.raw_material_id, quantity_ml: String(i.quantity_ml) })) || []
+        }))
+      : [{ volume: '100', price: '', stock: '0', formula: [] }]
     );
     setShortDescriptionAr(product.short_description_ar || '');
     setShortDescriptionEn(product.short_description_en || '');
@@ -217,6 +242,18 @@ export default function AdminProducts() {
     if (variants.length === 0) { alert('الرجاء إضافة حجم واحد على الأقل'); return; }
     for (const v of variants) {
       if (!v.volume || !v.price) { alert('الرجاء إدخال الحجم والسعر لجميع الأحجام'); return; }
+      if (inventoryMode === 'FORMULA_BASED' && v.formula.length === 0) {
+        alert(`الرجاء إدخال مكونات التركيبة للحجم ${v.volume} مل`);
+        return;
+      }
+      if (inventoryMode === 'FORMULA_BASED') {
+        const totalMl = v.formula.reduce((sum, item) => sum + (parseFloat(item.quantity_ml) || 0), 0);
+        if (Math.abs(totalMl - parseFloat(v.volume)) > 2) { // Allow slight 2ml deviation
+          if (!confirm(`تحذير: مجموع المكونات للحجم ${v.volume}مل هو ${totalMl.toFixed(2)}مل. هل تريد الاستمرار؟`)) {
+            return;
+          }
+        }
+      }
     }
 
     let finalSku  = sku.trim()  || `SKU-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -230,11 +267,18 @@ export default function AdminProducts() {
       inspired_by: inspiredBy.trim() || null,
       main_category: selectedCat ? selectedCat.slug : 'private',
       categoryId: categoryId || null, gender, season,
-      low_stock_threshold: parseInt(lowStockThreshold, 10) || 5,
+      inventory_mode: inventoryMode,
+      bulk_stock_ml: parseFloat(bulkStockMl) || 0,
+      low_stock_threshold: parseInt(lowStockThreshold, 10) || DEFAULT_LOW_STOCK_THRESHOLD_ML,
       variants: variants.map(v => ({
+        id: v.id,
         volume: v.volume.trim(),
         price: Math.round(parseFloat(v.price) * 1000),
         stock: parseInt(v.stock, 10) || 0,
+        formula: v.formula.map(f => ({
+          raw_material_id: f.raw_material_id,
+          quantity_ml: parseFloat(f.quantity_ml) || 0
+        }))
       })),
       short_description_ar: shortDescriptionAr.trim() || null,
       short_description_en: shortDescriptionEn.trim() || null,
@@ -436,7 +480,13 @@ export default function AdminProducts() {
               <tbody className="divide-y divide-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
                 {products.map(product => {
                   const totalStock = getTotalStock(product);
-                  const isLow = (product.variants || []).some(v => v.stock <= (product.low_stock_threshold || 5));
+                  const isBulk = product.inventory_mode === 'BULK_LIQUID';
+                  const bulkMl = product.bulk_stock_ml || 0;
+                  const lowThresh = getLowStockThresholdMl(product);
+                  const isLow = isBulk
+                    ? (bulkMl > 0 && bulkMl <= lowThresh)
+                    : (product.variants || []).some(v => v.stock <= lowThresh);
+                  const isOut = isBulk ? bulkMl <= 0 : totalStock <= 0;
                   return (
                     <tr key={product.id} className="hover:bg-black/10 transition-colors group">
                       {/* Image */}
@@ -478,11 +528,16 @@ export default function AdminProducts() {
                       {/* Stock */}
                       <td className="py-3 px-4">
                         <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                          isLow
+                          isOut
                             ? 'bg-[var(--color-error-dim)] text-[var(--color-error)] border-[var(--color-error-border)]'
+                            : isLow
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                             : 'bg-[var(--color-success-dim)] text-[var(--color-success)] border-[var(--color-success-border)]'
                         }`}>
-                          {totalStock}
+                          {isBulk
+                            ? (bulkMl >= 1000 ? `${(bulkMl/1000).toFixed(1)}ل` : `${Math.round(bulkMl)}مل`)
+                            : totalStock
+                          }
                         </span>
                       </td>
                       {/* Visibility */}
@@ -643,38 +698,142 @@ export default function AdminProducts() {
 
               {/* Variants */}
               <div className="border-t border-[var(--color-border)] pt-4">
+                
+                <div className="mb-4 bg-black/20 p-4 rounded-lg border border-[var(--color-border-subtle)]">
+                  <label className="form-label !mb-2 text-white font-bold">طريقة حساب المخزون لهذا ERP</label>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="inventoryMode" value="FINISHED_PRODUCT" checked={inventoryMode === 'FINISHED_PRODUCT'} onChange={() => setInventoryMode('FINISHED_PRODUCT')} />
+                      <span className="text-sm">منتج جاهز (FINISHED_PRODUCT)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="inventoryMode" value="FORMULA_BASED" checked={inventoryMode === 'FORMULA_BASED'} onChange={() => setInventoryMode('FORMULA_BASED')} />
+                      <span className="text-sm text-[#c5a25d]">تركيبة عطرية (FORMULA_BASED)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="inventoryMode" value="BULK_LIQUID" checked={inventoryMode === 'BULK_LIQUID'} onChange={() => setInventoryMode('BULK_LIQUID')} />
+                      <span className="text-sm text-[#5db2c5]">عطر صب بالمل (BULK_LIQUID)</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {inventoryMode === 'FINISHED_PRODUCT' && 'يتم الخصم المباشر من مخزون المنتج الجاهز عند البيع.'}
+                    {inventoryMode === 'FORMULA_BASED' && 'يتم استهلاك المواد الخام (زيوت، كحول، الخ) من المخزون تلقائياً بناءً على التركيبة عند كل عملية بيع.'}
+                    {inventoryMode === 'BULK_LIQUID' && 'يتم تعبئة خزان العطر (بالملل) ويتم الخصم من مخزون العطر السائل مباشرة عند البيع.'}
+                  </p>
+                  {inventoryMode === 'BULK_LIQUID' && (
+                    <div className="mt-3">
+                      <label className="text-xs text-[var(--color-text-muted)] mb-1 block">حجم مخزون العطر السائل المتوفر (مل - mL)</label>
+                      <input type="number" step="any" className="form-input py-1.5 text-white bg-black/30 w-full sm:w-1/2" placeholder="مثلاً: 1000" value={bulkStockMl} onChange={e => setBulkStockMl(e.target.value)} required />
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-between items-center mb-3">
-                  <label className="form-label !mb-0 text-white font-bold">الأحجام والأسعار والمخزون</label>
+                  <label className="form-label !mb-0 text-white font-bold">الأحجام والأسعار {inventoryMode === 'FORMULA_BASED' && 'والتركيبات'}</label>
                   <LuxuryButton type="button" variant="secondary" className="!py-1 px-3 text-xs"
-                    onClick={() => setVariants([...variants, { volume: '', price: '', stock: '10' }])}>
+                    onClick={() => setVariants([...variants, { volume: '', price: '', stock: '10', formula: [] }])}>
                     + إضافة حجم
                   </LuxuryButton>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {variants.map((v, i) => (
-                    <div key={i} className="flex items-end gap-3 p-3 rounded-lg border border-[var(--color-border-subtle)] bg-black/20">
-                      <div className="flex-1 grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">الحجم (مل)</label>
-                          <input type="text" className="form-input py-1.5 text-white bg-black/30" placeholder="100" value={v.volume}
-                            onChange={e => { const n = [...variants]; n[i].volume = e.target.value; setVariants(n); }} required />
+                    <div key={i} className="flex flex-col gap-3 p-4 rounded-lg border border-[var(--color-border-subtle)] bg-black/20">
+                      <div className="flex items-end gap-3">
+                        <div className="flex-1 grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-xs text-[var(--color-text-muted)] mb-1 block">الحجم (مل)</label>
+                            <input type="text" className="form-input py-1.5 text-white bg-black/30" placeholder="100" value={v.volume}
+                              onChange={e => { const n = [...variants]; n[i].volume = e.target.value; setVariants(n); }} required />
+                          </div>
+                          <div>
+                            <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
+                            <input type="number" step="0.001" className="form-input py-1.5 text-white bg-black/30" placeholder="0.000" value={v.price}
+                              onChange={e => { const n = [...variants]; n[i].price = e.target.value; setVariants(n); }} required />
+                          </div>
+                          <div className={inventoryMode !== 'FINISHED_PRODUCT' ? 'opacity-50' : ''}>
+                            <label className="text-xs text-[var(--color-text-muted)] mb-1 block">
+                              {inventoryMode === 'FINISHED_PRODUCT' ? 'المخزون المتوفر' : 'المخزون (مغلق - يُحسب تلقائياً)'}
+                            </label>
+                            <input type="number" className="form-input py-1.5 text-white bg-black/30" placeholder="0" value={v.stock}
+                              onChange={e => { const n = [...variants]; n[i].stock = e.target.value; setVariants(n); }} 
+                              required={inventoryMode === 'FINISHED_PRODUCT'}
+                              readOnly={inventoryMode !== 'FINISHED_PRODUCT'}
+                              disabled={inventoryMode !== 'FINISHED_PRODUCT'} />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">السعر (JOD)</label>
-                          <input type="number" step="0.001" className="form-input py-1.5 text-white bg-black/30" placeholder="0.000" value={v.price}
-                            onChange={e => { const n = [...variants]; n[i].price = e.target.value; setVariants(n); }} required />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[var(--color-text-muted)] mb-1 block">المخزون</label>
-                          <input type="number" className="form-input py-1.5 text-white bg-black/30" placeholder="0" value={v.stock}
-                            onChange={e => { const n = [...variants]; n[i].stock = e.target.value; setVariants(n); }} required />
-                        </div>
+                        {variants.length > 1 && (
+                          <LuxuryButton type="button" variant="danger" className="!p-2.5 !w-10 !h-10 !min-h-0 !min-w-0 mb-0.5"
+                            onClick={() => setVariants(variants.filter((_, idx) => idx !== i))}>
+                            <Trash size={16} />
+                          </LuxuryButton>
+                        )}
                       </div>
-                      {variants.length > 1 && (
-                        <LuxuryButton type="button" variant="danger" className="!p-2.5 !w-10 !h-10 !min-h-0 !min-w-0"
-                          onClick={() => setVariants(variants.filter((_, idx) => idx !== i))}>
-                          <Trash size={16} />
-                        </LuxuryButton>
+                      
+                      {inventoryMode === 'FORMULA_BASED' && (
+                        <div className="mt-2 bg-black/40 border border-white/5 p-3 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="text-xs text-[#c5a25d] font-bold">بناء تركيبة الحجم ({v.volume || '0'} مل)</label>
+                            <button type="button" onClick={() => {
+                              const n = [...variants];
+                              n[i].formula.push({ raw_material_id: '', quantity_ml: '' });
+                              setVariants(n);
+                            }} className="text-[10px] text-gray-300 hover:text-white bg-white/10 px-2 py-1 rounded">
+                              + إضافة مادة للتركيبة
+                            </button>
+                          </div>
+                          
+                          {v.formula.length === 0 ? (
+                            <p className="text-xs text-gray-500 text-center py-2">لا توجد مواد مضافة للتركيبة بعد.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {v.formula.map((f, fIdx) => (
+                                <div key={fIdx} className="flex items-center gap-2">
+                                  <select 
+                                    className="flex-1 form-select py-1 text-xs text-white bg-black/30 border-white/10"
+                                    value={f.raw_material_id}
+                                    onChange={e => {
+                                      const n = [...variants];
+                                      n[i].formula[fIdx].raw_material_id = e.target.value;
+                                      setVariants(n);
+                                    }}
+                                    required
+                                  >
+                                    <option value="">-- اختر المادة الخام --</option>
+                                    {rawMaterials.map(rm => (
+                                      <option key={rm.id} value={rm.id}>{rm.name_ar} ({rm.sku}) - {rm.unit}</option>
+                                    ))}
+                                  </select>
+                                  <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    placeholder="الكمية (مل / حبة)"
+                                    className="w-32 form-input py-1 text-xs text-white bg-black/30 border-white/10"
+                                    value={f.quantity_ml}
+                                    onChange={e => {
+                                      const n = [...variants];
+                                      n[i].formula[fIdx].quantity_ml = e.target.value;
+                                      setVariants(n);
+                                    }}
+                                    required
+                                  />
+                                  <button type="button" onClick={() => {
+                                    const n = [...variants];
+                                    n[i].formula.splice(fIdx, 1);
+                                    setVariants(n);
+                                  }} className="p-1 text-red-400 hover:text-red-300 bg-red-500/10 rounded">
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                              <div className="text-[10px] text-gray-400 mt-2 text-left">
+                                الإجمالي: <span className="font-mono text-[#c5a25d]">
+                                  {v.formula.reduce((sum, item) => sum + (parseFloat(item.quantity_ml) || 0), 0).toFixed(2)}
+                                </span> وحدة
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}

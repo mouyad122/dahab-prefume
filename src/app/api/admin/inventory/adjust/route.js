@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../../lib/prisma';
-import { verifyAdminSession, verifyEmployeeSession } from '../../../../../lib/session';
-import { sanitize } from '../../../../../lib/security';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession, verifyEmployeeSession } from '@/lib/session';
+import { sanitize } from '@/lib/security';
+import { DEFAULT_LOW_STOCK_THRESHOLD_ML } from '@/lib/inventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,43 +16,75 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { productId, variantId, newStock, lowStockThreshold, reason } = body;
+    const { productId, newBulkMl, deltaMl, lowStockThreshold, reason, variantId, newStock } = body;
 
     if (!productId) {
       return NextResponse.json({ error: 'productId is required' }, { status: 400 });
-    }
-
-    if (typeof newStock !== 'number' || newStock < 0) {
-      return NextResponse.json({ error: 'Valid newStock quantity is required' }, { status: 400 });
     }
 
     if (!reason || !reason.trim()) {
       return NextResponse.json({ error: 'سبب تعديل المخزون مطلوب' }, { status: 400 });
     }
 
-    const adjustedBy = adminSession 
-      ? (adminSession.displayName || adminSession.username || 'المدير العام') 
+    const adjustedBy = adminSession
+      ? (adminSession.displayName || adminSession.username || 'المدير العام')
       : (empSession.username || 'موظف');
 
     const result = await prisma.$transaction(async (tx) => {
-      // Find product
       const product = await tx.product.findUnique({
         where: { id: productId },
         include: { variants: true }
       });
 
-      if (!product) {
-        throw new Error('Product not found');
-      }
+      if (!product) throw new Error('Product not found');
 
-      // If threshold updated
-      if (typeof lowStockThreshold === 'number' && lowStockThreshold >= 0) {
+      // Update low stock threshold if provided
+      const resolvedLowStockThreshold = Number(lowStockThreshold);
+      if (Number.isFinite(resolvedLowStockThreshold) && resolvedLowStockThreshold >= 0) {
         await tx.product.update({
           where: { id: productId },
-          data: { low_stock_threshold: lowStockThreshold }
+          data: { low_stock_threshold: resolvedLowStockThreshold || DEFAULT_LOW_STOCK_THRESHOLD_ML }
         });
       }
 
+      // ── BULK_LIQUID ml-based adjustment ──────────────────────────────
+      if (product.inventory_mode === 'BULK_LIQUID' || newBulkMl !== undefined || deltaMl !== undefined) {
+        const oldMl = product.bulk_stock_ml || 0;
+        let resolvedNewMl;
+
+        if (deltaMl !== undefined) {
+          resolvedNewMl = Math.max(0, oldMl + deltaMl);
+        } else if (newBulkMl !== undefined) {
+          resolvedNewMl = Math.max(0, newBulkMl);
+        } else if (newStock !== undefined) {
+          // Legacy: newStock interpreted as ml for BULK_LIQUID
+          resolvedNewMl = Math.max(0, newStock);
+        } else {
+          throw new Error('No quantity provided');
+        }
+
+        const updatedProduct = await tx.product.update({
+          where: { id: productId },
+          data: { bulk_stock_ml: resolvedNewMl }
+        });
+
+        // Log movement
+        const movement = await tx.inventoryMovement.create({
+          data: {
+            productId: product.id,
+            variantId: null,
+            old_quantity: Math.round(oldMl),
+            new_quantity: Math.round(resolvedNewMl),
+            quantity_change: Math.round(resolvedNewMl - oldMl),
+            reason: sanitize(reason.trim()),
+            adjusted_by: adjustedBy
+          }
+        });
+
+        return { updatedProduct, movement, mode: 'bulk_liquid' };
+      }
+
+      // ── FINISHED_PRODUCT variant-based adjustment ─────────────────────
       let targetVariant = null;
       if (variantId) {
         targetVariant = product.variants.find(v => v.id === variantId);
@@ -59,33 +92,30 @@ export async function POST(request) {
         targetVariant = product.variants[0];
       }
 
-      if (!targetVariant) {
-        throw new Error('No valid variant found to adjust');
-      }
+      if (!targetVariant) throw new Error('No valid variant found to adjust');
 
       const oldStock = targetVariant.stock;
-      const quantityChange = newStock - oldStock;
+      const resolvedNewStock = typeof newStock === 'number' ? newStock : oldStock;
+      const quantityChange = resolvedNewStock - oldStock;
 
-      // Update variant stock
       const updatedVariant = await tx.productVariant.update({
         where: { id: targetVariant.id },
-        data: { stock: newStock }
+        data: { stock: resolvedNewStock }
       });
 
-      // Create InventoryMovement log
       const movement = await tx.inventoryMovement.create({
         data: {
           productId: product.id,
           variantId: targetVariant.id,
           old_quantity: oldStock,
-          new_quantity: newStock,
+          new_quantity: resolvedNewStock,
           quantity_change: quantityChange,
           reason: sanitize(reason.trim()),
           adjusted_by: adjustedBy
         }
       });
 
-      return { updatedVariant, movement };
+      return { updatedVariant, movement, mode: 'finished_product' };
     });
 
     return NextResponse.json({ success: true, ...result });

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession, verifyEmployeeSession } from '@/lib/session';
 
 
 export const dynamic = 'force-dynamic';
@@ -130,7 +130,42 @@ export async function GET(request) {
       );
     }
 
-    const response = { summary, sales };
+    const rmWhere = {
+      movement_type: 'SALE_CONSUMPTION',
+    };
+    if (startDate || endDate) {
+      rmWhere.created_at = {};
+      if (startDate) rmWhere.created_at.gte = new Date(startDate);
+      if (endDate)   rmWhere.created_at.lte = new Date(endDate);
+    }
+
+    const rmMovements = await prisma.rawMaterialMovement.findMany({
+      where: rmWhere,
+      include: {
+        raw_material: {
+          select: { name_ar: true, name_en: true, type: true }
+        }
+      }
+    });
+
+    const consumptionByRM = {};
+    for (const mov of rmMovements) {
+      const rmId = mov.raw_material_id;
+      if (!consumptionByRM[rmId]) {
+        consumptionByRM[rmId] = {
+          raw_material_id: rmId,
+          name_ar: mov.raw_material.name_ar,
+          name_en: mov.raw_material.name_en,
+          type: mov.raw_material.type,
+          total_consumed_ml: 0,
+        };
+      }
+      consumptionByRM[rmId].total_consumed_ml += Math.abs(mov.quantity_change);
+    }
+
+    const raw_materials_consumption = Object.values(consumptionByRM).sort((a, b) => b.total_consumed_ml - a.total_consumed_ml);
+
+    const response = { summary, sales, raw_materials_consumption };
     if (grouped !== undefined) response.grouped = grouped;
 
     return NextResponse.json(response);

@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   ChartBar, Package, Tag, UsersThree, Coins, 
   Warehouse, Percent, Gear, ShieldWarning, 
-  FileText, SignOut, X, CaretDown, Storefront, ChatTeardropText
+  FileText, SignOut, X, CaretDown, Storefront, ChatTeardropText, Drop, Flask
 } from '@phosphor-icons/react';
 import LuxuryButton from '../ui/LuxuryButton';
 
 export default function AdminSidebar({ user, open, setOpen }) {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace(/^\/en/, '') || '/';
   const router = useRouter();
   
   // Track which sections are collapsed
@@ -76,7 +77,9 @@ export default function AdminSidebar({ user, open, setOpen }) {
       items: [
         { path: '/admin/products', label: 'المنتجات', icon: Package, show: isSuperAdmin || perms.can_manage_products },
         { path: '/admin/categories', label: 'الأقسام', icon: Tag, show: isSuperAdmin || perms.can_manage_products },
-        { path: '/admin/inventory', label: 'المخزون', icon: Warehouse, show: isSuperAdmin || perms.can_view_inventory || perms.can_manage_products },
+        { path: '/admin/settings/fragrance-accords', label: 'البصمات العطرية', icon: Drop, show: isSuperAdmin || perms.can_manage_products },
+        { path: '/admin/inventory', label: 'مخزون المنتجات', icon: Warehouse, show: isSuperAdmin || perms.can_view_inventory || perms.can_manage_products },
+        { path: '/admin/inventory/raw-materials', label: 'المواد الخام', icon: Flask, show: isSuperAdmin || perms.can_manage_raw_materials || perms.can_view_inventory },
         { path: '/admin/discounts', label: 'العروض والخصومات', icon: Percent, show: isSuperAdmin || perms.can_manage_products },
       ]
     },

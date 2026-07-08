@@ -17,15 +17,6 @@ const fallbackCollections = [
     _count: { products: 0 },
   },
   {
-    id: 'private-collection',
-    slug: 'private-collection',
-    name_ar: 'المجموعة الخاصة',
-    name_en: 'Private Collection',
-    description_ar: 'تركيبات عطرية أكثر تركيزًا للمناسبات.',
-    description_en: 'Richer blends for special occasions.',
-    _count: { products: 0 },
-  },
-  {
     id: 'oud',
     slug: 'oud',
     name_ar: 'العطور الشرقية (عود)',
@@ -55,8 +46,8 @@ export default function CollectionsClient({ categories = [] }) {
               <h1>{isAr ? 'مجموعات عطرية منظمة حسب حضورك.' : 'Fragrance lines arranged around presence.'}</h1>
               <p>
                 {isAr
-                  ? 'اختر بين العطور الشرقية، المجموعة الخاصة، ومعطرات الشعر، مع ربط مباشر بالمنتجات الفعلية في قاعدة البيانات.'
-                  : 'Explore oriental signatures, private blends, and hair mists, all connected to the live product catalog.'}
+                  ? 'استكشف عطورنا الشرقية ومعطرات الشعر، مع ربط مباشر بالمنتجات الفعلية في قاعدة البيانات.'
+                  : 'Explore oriental signatures and hair mists, all connected to the live product catalog.'}
               </p>
             </div>
             <div className="shop-count">

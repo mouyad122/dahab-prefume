@@ -1,12 +1,13 @@
-
-export const dynamic = 'force-dynamic';
-﻿import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 import {
   ALLOWED_CATEGORY_SLUGS,
   ALLOWED_SEASON_SLUGS,
   normalizeSeason,
 } from '@/lib/productClassification';
+import { getSellableUnitsForVariant } from '@/lib/inventory';
+
+export const dynamic = 'force-dynamic';
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -59,7 +60,26 @@ export async function GET(request, { params }) {
       return Response.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    return Response.json({ product }, { status: 200 });
+    let mappedProduct = product;
+    if (product.inventory_mode === 'BULK_LIQUID') {
+      mappedProduct = {
+        ...product,
+        variants: product.variants.map(v => ({
+          ...v,
+          stock: getSellableUnitsForVariant(product, v)
+        }))
+      };
+    } else if (product.inventory_mode === 'FORMULA_BASED') {
+      mappedProduct = {
+        ...product,
+        variants: product.variants.map(v => ({
+          ...v,
+          stock: 999
+        }))
+      };
+    }
+
+    return Response.json({ product: mappedProduct }, { status: 200 });
   } catch (error) {
     console.error('[GET /api/products/[id]]', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -79,7 +99,7 @@ export async function PUT(request, { params }) {
     const { id } = await params;
 
     // â”€â”€ Verify product exists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const existing = await prisma.product.findUnique({ where: { id }, select: { id: true } });
+    const existing = await prisma.product.findUnique({ where: { id }, select: { id: true, inventory_mode: true } });
     if (!existing) {
       return Response.json({ error: 'Product not found' }, { status: 404 });
     }
@@ -122,7 +142,9 @@ export async function PUT(request, { params }) {
       categoryId,
       category_slug,
       season_slug,
-      variants, // array of { volume, price, stock }
+      inventory_mode,
+      bulk_stock_ml,
+      variants, // array of { volume, price, stock, formula }
     } = body;
 
     const data = {};
@@ -195,8 +217,10 @@ export async function PUT(request, { params }) {
     if (needs_review         !== undefined) data.needs_review         = Boolean(needs_review);
 
     // â”€â”€ Integer / threshold fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    if (low_stock_threshold !== undefined) data.low_stock_threshold = Math.max(0, parseInt(low_stock_threshold, 10) || 5);
+    if (low_stock_threshold !== undefined) data.low_stock_threshold = Math.max(0, parseInt(low_stock_threshold, 10) || 300);
     if (source_excel_row   !== undefined) data.source_excel_row   = source_excel_row !== null ? parseInt(source_excel_row, 10) : null;
+    if (inventory_mode !== undefined) data.inventory_mode = String(inventory_mode);
+    if (bulk_stock_ml !== undefined) data.bulk_stock_ml = parseFloat(bulk_stock_ml) || 0;
 
     // â”€â”€ Variants relation update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (variants !== undefined) {
@@ -208,7 +232,7 @@ export async function PUT(request, { params }) {
         create: variants.map(v => ({
           volume: String(v.volume).trim(),
           price: parseInt(v.price, 10) || 0,
-          stock: parseInt(v.stock, 10) || 0
+          stock: data.inventory_mode === 'FORMULA_BASED' || inventory_mode === 'FORMULA_BASED' ? 0 : (parseInt(v.stock, 10) || 0)
         }))
       };
     }
@@ -232,14 +256,58 @@ export async function PUT(request, { params }) {
       return Response.json({ error: 'No fields provided to update' }, { status: 400 });
     }
 
-    // â”€â”€ Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const product = await prisma.product.update({
-      where: { id },
-      data,
-      include: fullProductInclude,
+    let product;
+    await prisma.$transaction(async (tx) => {
+      product = await tx.product.update({
+        where: { id },
+        data,
+        include: { ...fullProductInclude, variants: true }
+      });
+
+      const currentMode = data.inventory_mode || inventory_mode || existing.inventory_mode || 'FINISHED_PRODUCT';
+
+      if (currentMode === 'FORMULA_BASED' && variants && variants.length > 0) {
+        for (const inputVariant of variants) {
+          const createdVariant = product.variants.find(v => v.volume === String(inputVariant.volume).trim());
+          if (createdVariant && inputVariant.formula && inputVariant.formula.length > 0) {
+            const totalVolume = inputVariant.formula.reduce((sum, f) => sum + (parseFloat(f.quantity_ml) || 0), 0);
+            await tx.productFormula.create({
+              data: {
+                productId: product.id,
+                variantId: createdVariant.id,
+                name: `تركيبة ${product.name_ar} - ${createdVariant.volume} مل`,
+                total_volume_ml: totalVolume,
+                items: {
+                  create: inputVariant.formula.map((f, idx) => ({
+                    raw_material_id: f.raw_material_id,
+                    quantity: parseFloat(f.quantity_ml) || 0,
+                    quantity_ml: parseFloat(f.quantity_ml) || 0,
+                    unit: 'ML',
+                    sort_order: idx
+                  }))
+                }
+              }
+            });
+          }
+        }
+      }
     });
 
-    return Response.json({ product }, { status: 200 });
+    const finalProduct = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        ...fullProductInclude,
+        variants: {
+          include: {
+            formulas: {
+              include: { items: true }
+            }
+          }
+        }
+      }
+    });
+
+    return Response.json({ product: finalProduct }, { status: 200 });
   } catch (error) {
     console.error('[PUT /api/products/[id]]', error);
     if (error.code === 'P2002') {

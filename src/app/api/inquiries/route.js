@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { verifyAdminSession, verifyEmployeeSession } from '../../../lib/session';
-import { sanitize } from '../../../lib/security';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession, verifyEmployeeSession } from '@/lib/session';
+import { sanitize } from '@/lib/security';
 
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,7 @@ const VALID_INQUIRY_TYPES = [
   'استفسار عام'
 ];
 
-import { rateLimit } from '../../../lib/redis';
+import { rateLimit } from '@/lib/redis';
 
 // ─── POST /api/inquiries (Public Submission) ─────────────────────────────────
 export async function POST(request) {

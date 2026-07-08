@@ -5,6 +5,7 @@ import { MagnifyingGlass, Plus, Minus, X, CheckCircle, Printer, ArrowRight, Rece
 import { usePosContext } from '../../../contexts/PosContext';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 import { getProductImageSrc } from '../../../lib/productDisplay';
+import { formatMl, getBulkStockMl, getLowStockThresholdMl, getSellableUnitsForVariant, parseVolumeMl } from '../../../lib/inventory';
 
 export default function PosCounter({ saleSource = 'STAFF_POS' }) {
   const { employee } = usePosContext();
@@ -27,7 +28,7 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
     // Fetch products
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products?limit=100');
+          const res = await fetch('/api/products?limit=1000');
         if (res.ok) {
           const data = await res.json();
           setProducts(data.products || []);
@@ -62,8 +63,10 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
     
     // Use the single variant or the selected variant
     const variant = sizeObj || vars[0];
+    const isFormulaBased = product.inventory_mode === 'FORMULA_BASED';
+    const maxStock = getSellableUnitsForVariant(product, variant);
     
-    if (variant.stock <= 0) {
+    if (!isFormulaBased && maxStock <= 0) {
       alert('عذراً، هذا الحجم نفذت كميته من المخزن');
       return;
     }
@@ -74,7 +77,7 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === cartItemId);
       if (existing) {
-        if (existing.quantity >= variant.stock) {
+        if (!isFormulaBased && existing.quantity >= maxStock) {
           alert('لا يمكن إضافة كمية أكبر من المخزون المتوفر');
           return prev;
         }
@@ -105,11 +108,12 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
       if (item.id === itemId) {
         const product = products.find(p => p.id === item.productId);
         const variant = product?.variants?.find(v => `${v.volume}ml` === item.volume);
-        const maxStock = variant ? variant.stock : 999;
+        const isFormulaBased = product?.inventory_mode === 'FORMULA_BASED';
+        const maxStock = isFormulaBased ? Infinity : getSellableUnitsForVariant(product, variant);
         
         const newQty = item.quantity + delta;
         if (newQty <= 0) return item;
-        if (newQty > maxStock) {
+        if (!isFormulaBased && newQty > maxStock) {
           alert('لا يمكن إضافة كمية أكبر من المخزون المتوفر');
           return item;
         }
@@ -170,6 +174,18 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
         setProducts(prev => prev.map(p => {
           const itemsForProduct = cartItems.filter(ci => ci.productId === p.id);
           if (itemsForProduct.length > 0) {
+            if (p.inventory_mode === 'BULK_LIQUID') {
+              const deductedMl = itemsForProduct.reduce((sum, cartItem) => sum + parseVolumeMl(cartItem.volume, 0) * cartItem.quantity, 0);
+              const nextBulkStock = Math.max(0, getBulkStockMl(p) - deductedMl);
+              return {
+                ...p,
+                bulk_stock_ml: nextBulkStock,
+                variants: p.variants.map(v => ({
+                  ...v,
+                  stock: Math.floor(nextBulkStock / parseVolumeMl(v.volume, 100))
+                }))
+              };
+            }
             return {
               ...p,
               variants: p.variants.map(v => {
@@ -339,10 +355,17 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
         <div className="flex-1 overflow-y-auto p-4 pb-20 lg:pb-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(product => {
-              const totalStock = (product.variants || []).reduce((acc, v) => acc + (v.stock || 0), 0);
-              const outOfStock = totalStock <= 0;
+              const sellableVariants = (product.variants || []).map(v => ({
+                ...v,
+                sellableStock: getSellableUnitsForVariant(product, v),
+              }));
+              const isFormulaBased = product.inventory_mode === 'FORMULA_BASED';
+              const outOfStock = !isFormulaBased && sellableVariants.every(v => v.sellableStock <= 0);
               const defaultVariant = product.variants?.[0] || { price: 0, volume: '100' };
               const multipleSizes = (product.variants || []).length > 1;
+              const bulkStockMl = getBulkStockMl(product);
+              const lowThreshold = getLowStockThresholdMl(product);
+              const isLowBulk = product.inventory_mode === 'BULK_LIQUID' && bulkStockMl > 0 && bulkStockMl <= lowThreshold;
 
               return (
                 <button
@@ -369,7 +392,11 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
                       {product.name_ar}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mb-1">
-                      {multipleSizes ? 'أحجام متعددة' : `${defaultVariant.volume}ml`} | المخزون: {totalStock}
+                      {product.inventory_mode === 'BULK_LIQUID'
+                        ? `الرصيد: ${formatMl(bulkStockMl)}${isLowBulk ? ' - منخفض' : ''}`
+                        : isFormulaBased
+                          ? 'حسب تركيبة المواد الخام'
+                          : `${multipleSizes ? 'أحجام متعددة' : `${defaultVariant.volume}ml`} | المخزون: ${sellableVariants.reduce((acc, v) => acc + (v.sellableStock || 0), 0)}`}
                     </div>
                     <div className="text-[var(--color-gold-light)] font-bold text-sm">
                       {multipleSizes ? 'أسعار متعددة' : formatJOD(defaultVariant.price)}
@@ -383,7 +410,7 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
       </div>
 
       {/* RIGHT COLUMN: Cart */}
-      <div className={`flex-[1] min-w-[320px] max-w-md flex flex-col bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-xl dir-ar ${activeTab === 'cart' ? 'flex' : 'hidden lg:flex'}`}>
+      <div className={`flex-[1] min-w-[320px] max-w-md flex flex-col bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-xl dir-ar lg:sticky lg:top-0 lg:max-h-screen lg:overflow-hidden ${activeTab === 'cart' ? 'flex' : 'hidden lg:flex'}`}>
         <div className="p-4 border-b border-[var(--color-border)] flex items-center justify-between rounded-t-xl bg-[var(--color-bg-surface)]">
           <h2 className="font-display font-bold text-xl text-[var(--color-text-primary)]">الفاتورة الحالية</h2>
           <span className="badge-gold">{cartItems.length} منتجات</span>
@@ -547,7 +574,7 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
       {/* Size Selection Modal */}
       {selectedProductForSize && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-sm p-6 border border-[var(--color-border-strong)] flex flex-col gap-4 bg-[var(--color-bg-surface)] text-white text-right dir-rtl">
+          <div className="glass-card w-full max-w-md p-6 border border-[var(--color-border-strong)] flex flex-col gap-4 bg-[var(--color-bg-surface)] text-white text-right dir-rtl">
             <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
               <h2 className="font-display text-lg font-bold text-[var(--color-gold-light)]">
                 اختر حجم العبوة لـ {selectedProductForSize.name_ar}
@@ -557,25 +584,31 @@ export default function PosCounter({ saleSource = 'STAFF_POS' }) {
               </LuxuryButton>
             </div>
             
-            <div className="flex flex-col gap-2 mt-2">
+            <div className="grid grid-cols-1 gap-4 mt-2">
               {(selectedProductForSize.variants || []).map((v) => {
-                const itemOutOfStock = v.stock <= 0;
+                const isFormulaBased = selectedProductForSize.inventory_mode === 'FORMULA_BASED';
+                const availableUnits = getSellableUnitsForVariant(selectedProductForSize, v);
+                const itemOutOfStock = !isFormulaBased && availableUnits <= 0;
                 return (
                   <button
                     key={v.id}
                     onClick={() => addToCart(selectedProductForSize, v)}
                     disabled={itemOutOfStock}
-                    className={`flex justify-between items-center p-3 rounded-lg border text-right transition-colors ${
+                    className={`flex justify-between items-center px-6 py-5 rounded-2xl border-2 text-right transition-all active:scale-95 ${
                       itemOutOfStock 
                         ? 'border-red-500/20 bg-red-500/5 text-red-400 opacity-60 cursor-not-allowed'
-                        : 'border-[var(--color-border-subtle)] bg-black/30 hover:bg-black/50 text-white'
+                        : 'border-[var(--color-border-strong)] bg-black/30 hover:bg-[var(--color-gold-dim)] hover:border-[var(--color-gold)] text-white cursor-pointer'
                     }`}
                   >
-                    <span className="font-bold">{v.volume} مل</span>
-                    <div className="flex gap-4 items-center">
-                      <span className="text-xs text-[var(--color-text-muted)]">المخزون: {v.stock}</span>
-                      <span className="font-bold text-[var(--color-gold-light)]">{formatJOD(v.price)}</span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-2xl font-bold text-[var(--color-gold-light)]">{v.volume} مل</span>
+                      {selectedProductForSize.inventory_mode === 'BULK_LIQUID' ? (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          المتوفر: {availableUnits} عبوة | الرصيد {formatMl(getBulkStockMl(selectedProductForSize))}
+                        </span>
+                      ) : !isFormulaBased && <span className="text-xs text-[var(--color-text-muted)]">المخزون: {availableUnits}</span>}
                     </div>
+                    <span className="text-xl font-bold text-[var(--color-gold-light)]">{formatJOD(v.price)}</span>
                   </button>
                 );
               })}

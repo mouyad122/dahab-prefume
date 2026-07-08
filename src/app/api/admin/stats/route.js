@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { verifyAdminSession } from '../../../../lib/session';
-import { getRedisClient } from '../../../../lib/redis';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/session';
+import { getRedisClient } from '@/lib/redis';
 
 
 export const dynamic = 'force-dynamic';

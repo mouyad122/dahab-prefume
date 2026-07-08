@@ -145,3 +145,57 @@ export function generateCsrfToken() {
   crypto.getRandomValues(array);
   return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
 }
+
+// ─── SAFE ERROR RESPONSE (never leak internals in production) ───────────────
+const PROD = process.env.NODE_ENV === 'production';
+
+export function safeError(error, publicMessage = 'حدث خطأ في الخادم') {
+  if (PROD) {
+    // In production: log internally but never expose details to client
+    console.error('[INTERNAL]', typeof error === 'object' ? error?.message : error);
+    return publicMessage;
+  }
+  // In development: show full error
+  return error?.message || error || publicMessage;
+}
+
+// ─── STRIP SENSITIVE FIELDS FROM OBJECTS ─────────────────────────────────────
+const SENSITIVE_KEY_PARTS = [
+  'password',
+  'password_hash',
+  'token',
+  'secret',
+  'api_key',
+  'apikey',
+  'jwt',
+  'session',
+  'private_key',
+  'access_token',
+  'refresh_token',
+  'database_url',
+  'direct_url',
+  'admin_password',
+  'admin_username',
+  'authorization',
+  'cookie',
+];
+
+function isSensitiveKey(key) {
+  const normalized = String(key).toLowerCase();
+  return SENSITIVE_KEY_PARTS.some(part => normalized.includes(part));
+}
+
+export function stripSensitive(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (isSensitiveKey(k)) {
+      out[k] = '[REDACTED]';
+    } else if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+      out[k] = stripSensitive(v);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}

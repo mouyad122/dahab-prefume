@@ -5,6 +5,7 @@ import {
   ALLOWED_SEASON_SLUGS,
   normalizeSeason,
 } from '@/lib/productClassification';
+import { getSellableUnitsForVariant } from '@/lib/inventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,8 @@ const publicProductSelect = {
   notes: true,
   categoryId: true,
   category_slug: true,
+  inventory_mode: true,
+  bulk_stock_ml: true,
   category: {
     select: { id: true, slug: true, name_ar: true, name_en: true },
   },
@@ -87,7 +90,7 @@ export async function GET(request) {
     // ── Pagination ────────────────────────────────────────────────────────────
     let limit = parseInt(searchParams.get('limit') ?? '24', 10);
     if (!Number.isFinite(limit) || limit < 1) limit = 24;
-    if (limit > 200) limit = 200;
+    if (limit > 1000) limit = 1000;
 
     let offset = parseInt(searchParams.get('offset') ?? '0', 10);
     if (!Number.isFinite(offset) || offset < 0) offset = 0;
@@ -165,7 +168,28 @@ export async function GET(request) {
       prisma.product.count({ where }),
     ]);
 
-    return Response.json({ products, total, limit, offset }, { status: 200 });
+    const mappedProducts = products.map(product => {
+      if (product.inventory_mode === 'BULK_LIQUID') {
+        return {
+          ...product,
+          variants: product.variants.map(v => ({
+            ...v,
+            stock: getSellableUnitsForVariant(product, v),
+          }))
+        };
+      } else if (product.inventory_mode === 'FORMULA_BASED') {
+        return {
+          ...product,
+          variants: product.variants.map(v => ({
+            ...v,
+            stock: 999
+          }))
+        };
+      }
+      return product;
+    });
+
+    return Response.json({ products: mappedProducts, total, limit, offset }, { status: 200 });
   } catch (error) {
     console.error('[GET /api/products]', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -219,7 +243,9 @@ export async function POST(request) {
       categoryId,
       category_slug,
       season_slug,
-      variants, // array of { volume, price, stock }
+      inventory_mode,
+      bulk_stock_ml,
+      variants, // array of { volume, price, stock, formula }
     } = body;
 
     // ── Required field validation ─────────────────────────────────────────────
@@ -288,7 +314,7 @@ export async function POST(request) {
       ...(needs_image            !== undefined && { needs_image: Boolean(needs_image) }),
       ...(visible     !== undefined && { visible: Boolean(visible) }),
       ...(featured   !== undefined && { featured: Boolean(featured) }),
-      ...(low_stock_threshold    !== undefined && { low_stock_threshold: parseInt(low_stock_threshold, 10) || 5 }),
+      ...(low_stock_threshold    !== undefined && { low_stock_threshold: parseInt(low_stock_threshold, 10) || 300 }),
       ...(notes_top              !== undefined && { notes_top: notes_top ? String(notes_top) : null }),
       ...(notes_heart            !== undefined && { notes_heart: notes_heart ? String(notes_heart) : null }),
       ...(notes_base             !== undefined && { notes_base: notes_base ? String(notes_base) : null }),
@@ -296,29 +322,78 @@ export async function POST(request) {
       ...(research_confidence    !== undefined && { research_confidence: String(research_confidence) }),
       ...(needs_review           !== undefined && { needs_review: Boolean(needs_review) }),
       ...(source_excel_row       !== undefined && source_excel_row !== null && { source_excel_row: parseInt(source_excel_row, 10) }),
+      ...(inventory_mode         !== undefined && { inventory_mode: String(inventory_mode) }),
+      ...(bulk_stock_ml          !== undefined && { bulk_stock_ml: parseFloat(bulk_stock_ml) || 0 }),
       categoryId: cat.id,
       variants: {
         create: (variants || []).map(v => ({
           volume: String(v.volume).trim(),
           price: parseInt(v.price, 10) || 0,
-          stock: parseInt(v.stock, 10) || 0
+          stock: inventory_mode === 'FORMULA_BASED' ? 0 : (parseInt(v.stock, 10) || 0)
         }))
       }
     };
 
     // ── Create product ────────────────────────────────────────────────────────
-    const product = await prisma.product.create({
-      data,
+    let product;
+    await prisma.$transaction(async (tx) => {
+      product = await tx.product.create({
+        data,
+        include: {
+          category: { select: { id: true, slug: true, name_ar: true, name_en: true } },
+          accords: true,
+          family_tags: true,
+          discounts: { where: { is_active: true }, take: 1 },
+          variants: true,
+        },
+      });
+
+      if (inventory_mode === 'FORMULA_BASED' && variants && variants.length > 0) {
+        for (const inputVariant of variants) {
+          const createdVariant = product.variants.find(v => v.volume === String(inputVariant.volume).trim());
+          if (createdVariant && inputVariant.formula && inputVariant.formula.length > 0) {
+            const totalVolume = inputVariant.formula.reduce((sum, f) => sum + (parseFloat(f.quantity_ml) || 0), 0);
+            await tx.productFormula.create({
+              data: {
+                productId: product.id,
+                variantId: createdVariant.id,
+                name: `تركيبة ${product.name_ar} - ${createdVariant.volume} مل`,
+                total_volume_ml: totalVolume,
+                items: {
+                  create: inputVariant.formula.map((f, idx) => ({
+                    raw_material_id: f.raw_material_id,
+                    quantity: parseFloat(f.quantity_ml) || 0,
+                    quantity_ml: parseFloat(f.quantity_ml) || 0,
+                    unit: 'ML',
+                    sort_order: idx
+                  }))
+                }
+              }
+            });
+          }
+        }
+      }
+    });
+
+    // Re-fetch product with formulas included if needed, or just return as is
+    const finalProduct = await prisma.product.findUnique({
+      where: { id: product.id },
       include: {
         category: { select: { id: true, slug: true, name_ar: true, name_en: true } },
         accords: true,
         family_tags: true,
         discounts: { where: { is_active: true }, take: 1 },
-        variants: true,
-      },
+        variants: {
+          include: {
+            formulas: {
+              include: { items: true }
+            }
+          }
+        },
+      }
     });
 
-    return Response.json({ product }, { status: 201 });
+    return Response.json({ product: finalProduct }, { status: 201 });
   } catch (error) {
     console.error('[POST /api/products]', error);
     if (error.code === 'P2002') {

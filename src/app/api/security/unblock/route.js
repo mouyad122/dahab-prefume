@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { verifyAdminSession } from '../../../../lib/session';
-import { sanitize } from '../../../../lib/security';
+import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/session';
+import { sanitize } from '@/lib/security';
 
 
 export const dynamic = 'force-dynamic';
