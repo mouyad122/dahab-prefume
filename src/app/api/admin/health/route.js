@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
-import { getRedisClient } from '@/lib/redis';
+import { getRedis } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +37,7 @@ export async function GET() {
   // ── 2. Redis latency ─────────────────────────────────────────────────────
   let redisMs = null;
   let redisStatus = 'not_configured';
-  const redis = getRedisClient();
+  const redis = getRedis();
   if (redis) {
     try {
       const t0 = Date.now();

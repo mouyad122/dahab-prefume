@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
+import { invalidateProduct } from '@/lib/cache';
 
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,8 @@ export async function PATCH(req, { params }) {
         ready_for_storefront: visible
       }
     });
+
+    await invalidateProduct(id);
 
     return NextResponse.json(updatedProduct, { status: 200 });
   } catch (error) {

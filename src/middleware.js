@@ -162,8 +162,14 @@ export function middleware(request) {
     ].join('; ')
   );
 
-  // Cache control for API responses
-  if (pathname.startsWith('/api/')) {
+  // Cache control — public storefront GET endpoints set their own Cache-Control
+  const method = request.method;
+  const isPublicGet = method === 'GET' && (
+    pathname.startsWith('/api/products') ||
+    pathname.startsWith('/api/categories') ||
+    pathname.startsWith('/api/settings')
+  );
+  if (pathname.startsWith('/api/') && !isPublicGet) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Surrogate-Control', 'no-store');

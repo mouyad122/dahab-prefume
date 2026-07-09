@@ -6,6 +6,7 @@ import {
   normalizeSeason,
 } from '@/lib/productClassification';
 import { getSellableUnitsForVariant } from '@/lib/inventory';
+import { getCache, setCache, invalidateProductList, invalidateFeatured } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,17 +91,34 @@ export async function GET(request) {
     // ── Pagination ────────────────────────────────────────────────────────────
     let limit = parseInt(searchParams.get('limit') ?? '24', 10);
     if (!Number.isFinite(limit) || limit < 1) limit = 24;
-    if (limit > 1000) limit = 1000;
+    if (limit > 48) limit = 48;
 
     let offset = parseInt(searchParams.get('offset') ?? '0', 10);
     if (!Number.isFinite(offset) || offset < 0) offset = 0;
 
     // ── Filters ───────────────────────────────────────────────────────────────
-    const categoryParam = searchParams.get('category');  // category slug or id
+    const categoryParam = searchParams.get('category');
     const searchParam   = searchParams.get('search');
     const genderParam   = searchParams.get('gender');
     const featuredParam = searchParams.get('featured');
     const seasonParam   = searchParams.get('season');
+
+    // ── Cache check ────────────────────────────────────────────────────────────
+    const cacheKeyParts = ['products:public'];
+    if (categoryParam) cacheKeyParts.push(`cat:${categoryParam}`);
+    if (searchParam) cacheKeyParts.push(`q:${searchParam.slice(0, 50)}`);
+    if (genderParam) cacheKeyParts.push(`gender:${genderParam}`);
+    if (featuredParam === 'true') cacheKeyParts.push('featured');
+    if (seasonParam && seasonParam !== 'all') cacheKeyParts.push(`season:${seasonParam}`);
+    cacheKeyParts.push(`limit:${limit}`, `offset:${offset}`);
+
+    const cacheKey = cacheKeyParts.join(':');
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return Response.json(cached, {
+        headers: { 'X-Cache': 'HIT' },
+      });
+    }
 
     // Build where clause — always visible on website for public route
     const where = {
@@ -189,7 +207,15 @@ export async function GET(request) {
       return product;
     });
 
-    return Response.json({ products: mappedProducts, total, limit, offset }, { status: 200 });
+    const body = { products: mappedProducts, total, limit, offset };
+
+    const ttl = searchParam ? 120 : categoryParam || genderParam || seasonParam ? 300 : 600;
+    await setCache(cacheKey, body, ttl);
+
+    return Response.json(body, {
+      headers: { 'X-Cache': 'MISS' },
+      status: 200,
+    });
   } catch (error) {
     console.error('[GET /api/products]', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -392,6 +418,9 @@ export async function POST(request) {
         },
       }
     });
+
+    await invalidateProductList();
+    await invalidateFeatured();
 
     return Response.json({ product: finalProduct }, { status: 201 });
   } catch (error) {

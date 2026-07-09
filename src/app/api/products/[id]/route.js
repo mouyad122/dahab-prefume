@@ -6,6 +6,7 @@ import {
   normalizeSeason,
 } from '@/lib/productClassification';
 import { getSellableUnitsForVariant } from '@/lib/inventory';
+import { getCache, setCache, deleteCache, invalidateProduct } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,15 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
 
+    const cacheKey = `product:${id}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return Response.json(cached, {
+        headers: { 'X-Cache': 'HIT' },
+        status: 200,
+      });
+    }
+
     // Try as UUID first, then as slug
     const product = await prisma.product.findFirst({
       where: {
@@ -79,7 +89,13 @@ export async function GET(request, { params }) {
       };
     }
 
-    return Response.json({ product: mappedProduct }, { status: 200 });
+    const body = { product: mappedProduct };
+    await setCache(cacheKey, body, 900);
+
+    return Response.json(body, {
+      headers: { 'X-Cache': 'MISS' },
+      status: 200,
+    });
   } catch (error) {
     console.error('[GET /api/products/[id]]', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -307,6 +323,8 @@ export async function PUT(request, { params }) {
       }
     });
 
+    await invalidateProduct(id);
+
     return Response.json({ product: finalProduct }, { status: 200 });
   } catch (error) {
     console.error('[PUT /api/products/[id]]', error);
@@ -345,6 +363,8 @@ export async function DELETE(request, { params }) {
       data: { visible: false },
       select: { id: true, sku: true, slug: true, name_ar: true, visible: true },
     });
+
+    await invalidateProduct(id);
 
     return Response.json(
       { message: 'Product hidden from website (soft-deleted)', product },

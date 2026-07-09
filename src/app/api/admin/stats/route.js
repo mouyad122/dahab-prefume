@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
-import { getRedisClient } from '@/lib/redis';
+import { getRedis } from '@/lib/redis';
 
 
 export const dynamic = 'force-dynamic';
@@ -123,7 +123,7 @@ export async function GET() {
   // ── Redis health ping ────────────────────────────────────────────────────
   let redisStatus = 'not_configured';
   let redisPingMs = null;
-  const redis = getRedisClient();
+  const redis = getRedis();
   if (redis) {
     try {
       const rt = Date.now();

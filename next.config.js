@@ -62,7 +62,7 @@ const nextConfig = {
           // Disable browser features not needed
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
           // XSS Protection (legacy browsers)
           { key: 'X-XSS-Protection', value: '1; mode=block' },

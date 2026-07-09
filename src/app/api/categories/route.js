@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
+import { getCache, setCache, invalidateCategories } from '@/lib/cache';
 
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,15 @@ export const dynamic = 'force-dynamic';
 // Returns all active categories with product count, ordered by display_order.
 export async function GET() {
   try {
+    const cacheKey = 'categories:all';
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return Response.json(cached, {
+        headers: { 'X-Cache': 'HIT' },
+        status: 200,
+      });
+    }
+
     const categories = await prisma.category.findMany({
       where: { is_active: true },
       orderBy: { display_order: 'asc' },
@@ -17,7 +27,13 @@ export async function GET() {
       },
     });
 
-    return Response.json({ categories }, { status: 200 });
+    const body = { categories };
+    await setCache(cacheKey, body, 3600);
+
+    return Response.json(body, {
+      headers: { 'X-Cache': 'MISS' },
+      status: 200,
+    });
   } catch (error) {
     console.error('[GET /api/categories]', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -95,6 +111,8 @@ export async function POST(request) {
 
     // ── Create ────────────────────────────────────────────────────────────────
     const category = await prisma.category.create({ data });
+
+    await invalidateCategories();
 
     return Response.json({ category }, { status: 201 });
   } catch (error) {

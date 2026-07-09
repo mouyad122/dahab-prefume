@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSession } from '@/lib/session';
 import { sanitize } from '@/lib/security';
+import { getCache, setCache, invalidateSettings } from '@/lib/cache';
 
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,14 @@ export const dynamic = 'force-dynamic';
 // Keys are organized by their category.
 export async function GET() {
   try {
+    const cacheKey = 'settings:all';
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { 'X-Cache': 'HIT' },
+      });
+    }
+
     const settings = await prisma.siteSettings.findMany({
       orderBy: [{ category: 'asc' }, { key: 'asc' }],
     });
@@ -33,7 +42,11 @@ export async function GET() {
       result[cat][setting.key] = parsed;
     }
 
-    return NextResponse.json(result);
+    await setCache(cacheKey, result, 1800);
+
+    return NextResponse.json(result, {
+      headers: { 'X-Cache': 'MISS' },
+    });
   } catch (error) {
     console.error('[GET /api/settings]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -115,6 +128,8 @@ export async function POST(request) {
         });
       })
     );
+
+    await invalidateSettings();
 
     return NextResponse.json({ ok: true, updated: settings.length });
   } catch (error) {
