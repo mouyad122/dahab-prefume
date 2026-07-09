@@ -142,6 +142,7 @@ export default function AdminSidebar({ user, open, setOpen }) {
             variant="icon" 
             className="lg:hidden" 
             onClick={() => setOpen(false)}
+            aria-label="إغلاق القائمة"
           >
             <X size={20} />
           </LuxuryButton>

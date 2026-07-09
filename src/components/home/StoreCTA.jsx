@@ -89,7 +89,7 @@ export default function StoreCTA() {
             <div className={`relative h-[300px] md:h-[400px] rounded-[var(--radius-xl)] overflow-hidden border border-[var(--color-border)] flex flex-col ${visible ? 'reveal-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
               <iframe 
                 src="https://maps.google.com/maps?q=Dahab%20Perfumes,%20Prince%20Mohammad%20Street,%20Amman&t=&z=16&ie=UTF8&iwloc=&output=embed" 
-                className="w-full flex-grow border-0 grayscale invert contrast-[0.9] opacity-80 hover:grayscale-0 hover:invert-0 transition-all duration-500 min-h-[220px]"
+                className="w-full flex-grow border-0 min-h-[220px]"
                 allowFullScreen="" 
                 loading="lazy"
                 title="Dahab Perfumes Store Location"

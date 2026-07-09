@@ -63,7 +63,7 @@ export default function Cart() {
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed max-w-[280px]">
               {isAr ? 'اكتشف عطورنا الفخمة والخلطات النادرة وأضفها إلى السلة لبدء رحلتك.' : 'Explore our collection of fine fragrances to start your journey.'}
             </p>
-            <LuxuryButton href="/shop" variant="primary" className="py-3 px-8 mt-2">
+            <LuxuryButton href="/" variant="primary" className="py-3 px-8 mt-2">
               {t('backToShop')}
             </LuxuryButton>
           </div>

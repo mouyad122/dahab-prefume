@@ -14,6 +14,7 @@ export default function Wishlist() {
   const wishlist = useCartStore(state => state.wishlist);
   const toggleWishlist = useCartStore(state => state.toggleWishlist);
   const addToCart = useCartStore(state => state.addToCart);
+  const hydrated = useCartStore(state => state._hydrated);
   const isAr = language === 'ar';
 
   const [wishlistProducts, setWishlistProducts] = useState([]);
@@ -81,7 +82,7 @@ export default function Wishlist() {
       </div>
 
       {/* Wishlist Grid */}
-      {loading ? (
+      {!hydrated || loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="w-10 h-10 rounded-full border-2 border-[var(--color-gold)]/30 border-t-[var(--color-gold)] animate-spin" />
           <p className="text-xs text-[var(--color-text-muted)]">{isAr ? 'جاري التحميل...' : 'Loading...'}</p>

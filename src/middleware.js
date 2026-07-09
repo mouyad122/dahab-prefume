@@ -124,7 +124,12 @@ export function middleware(request) {
 
   // ─── Security headers for all responses ───────────────────────────────────
   const response = NextResponse.next();
-  response.cookies.set('dahab_lang', 'ar', { path: '/', httpOnly: false, sameSite: 'lax', maxAge: 60 * 60 * 24 * 365 });
+
+  // Set default language cookie only if none exists (preserves user's choice)
+  const existingLang = request.cookies.get('dahab_lang');
+  if (!existingLang) {
+    response.cookies.set('dahab_lang', 'ar', { path: '/', httpOnly: false, sameSite: 'lax', maxAge: 60 * 60 * 24 * 365 });
+  }
 
   // Core security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
