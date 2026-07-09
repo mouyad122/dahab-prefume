@@ -2,6 +2,7 @@
 
 import React, { useContext, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Drop, MapPin, ShieldCheck, Sparkle, WhatsappLogo, ShoppingCart } from '@phosphor-icons/react';
 import { LanguageContext } from '../../../contexts/LanguageContext';
 import { brandConfig } from '../../../config/brand';
@@ -95,7 +96,14 @@ export default function ProductDetailClient({ product }) {
           {/* Product Image */}
           <div className="flex flex-col gap-4">
             <div className="product-gallery-main relative border border-[var(--color-border)] rounded-3xl overflow-hidden bg-black/40 aspect-square">
-              <img src={image} alt={name} className="w-full h-full object-cover" />
+              <Image 
+                src={image} 
+                alt={`${product.name_ar || name} من DAHAB PERFUMES`}
+                fill
+                priority={true}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover" 
+              />
               {!hasStock && <span className="stock-pill large absolute top-4 right-4">{isAr ? 'متوفر للطلب' : 'Available to order'}</span>}
             </div>
           </div>

@@ -38,7 +38,7 @@ export default function Footer() {
   return (
     <footer className={`site-footer ${isAr ? 'dir-ar' : 'dir-en'}`}>
       <div className="premium-container py-14 md:py-18">
-        <div className="grid gap-10 lg:grid-cols-[1.25fr_0.75fr_1fr]">
+        <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
           <div>
             <Link href="/" className="brand-lockup inline-flex items-center gap-3">
               <img src="/brand/dahab-logo.png" alt="" aria-hidden="true" className="brand-logo-image brand-logo-image-footer" />
@@ -62,16 +62,6 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
-            <h3 className="footer-title">{isAr ? 'روابط سريعة' : 'Explore'}</h3>
-            <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-              {links.map((link) => (
-                <Link key={link.href} href={link.href} className="footer-link">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
 
           <div>
             <h3 className="footer-title">{isAr ? 'زيارة المعرض' : 'Visit The Store'}</h3>

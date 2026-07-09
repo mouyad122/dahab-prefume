@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
-import { initialProducts } from '../../data/initialProducts';
 import Link from 'next/link';
 import { Heart, ShoppingBag, WhatsappLogo, Trash, ArrowRight } from '@phosphor-icons/react';
 import LuxuryButton from '../../components/ui/LuxuryButton';
@@ -17,12 +16,47 @@ export default function Wishlist() {
   const addToCart = useCartStore(state => state.addToCart);
   const isAr = language === 'ar';
 
-  const wishlistProducts = initialProducts.filter(p => wishlist.includes(p.id));
+  const [wishlistProducts, setWishlistProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (wishlist.length === 0) {
+      setWishlistProducts([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    // Use a high limit to ensure all products are returned, not just the default 24
+    fetch('/api/products?limit=1000')
+      .then(res => res.json())
+      .then(data => {
+        const all = data.products || data || [];
+        const matched = all.filter(p => wishlist.includes(p.id));
+        setWishlistProducts(matched);
+      })
+      .catch(() => setWishlistProducts([]))
+      .finally(() => setLoading(false));
+  }, [wishlist]);
 
   const handleMoveToCart = (product) => {
-    if (product.stock === 0) return;
-    addToCart(product, 1);
-    toggleWishlist(product.id); // Remove from wishlist after adding to cart
+    // Get stock from variants (DB products) or fallback fields
+    const stockQty = product.stock_quantity ?? product.stock ?? 0;
+    if (stockQty === 0) return;
+    // Build cart-compatible product with correct image and price fields
+    const defaultVariant = product.variants?.[0];
+    const price = defaultVariant ? Number(defaultVariant.price) : Number(product.price || 0);
+    const cartProduct = {
+      id: product.id,
+      slug: product.slug,
+      name_ar: product.name_ar,
+      name_en: product.name_en,
+      image_url: product.image_url || product.thumbnail_url || product.thumbnail,
+      price,
+      stock: stockQty,
+      variant: defaultVariant ? { id: defaultVariant.id, volume: defaultVariant.volume, price } : null,
+    };
+    addToCart(cartProduct, 1);
+    toggleWishlist(product.id);
   };
 
   return (
@@ -47,7 +81,12 @@ export default function Wishlist() {
       </div>
 
       {/* Wishlist Grid */}
-      {wishlistProducts.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="w-10 h-10 rounded-full border-2 border-[var(--color-gold)]/30 border-t-[var(--color-gold)] animate-spin" />
+          <p className="text-xs text-[var(--color-text-muted)]">{isAr ? 'جاري التحميل...' : 'Loading...'}</p>
+        </div>
+      ) : wishlistProducts.length === 0 ? (
         <div className="rounded-[2.5rem] bg-black/5 dark:bg-white/5 p-2 ring-1 ring-black/5 dark:ring-white/10 w-full max-w-lg mx-auto">
           <div className="rounded-[calc(2.5rem-0.5rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-12 text-center flex flex-col items-center gap-6">
             <div className="w-16 h-16 rounded-full bg-red-500/5 border border-red-500/10 flex items-center justify-center">
@@ -57,7 +96,7 @@ export default function Wishlist() {
               {isAr ? 'قائمة المفضلة فارغة حالياً.' : 'Your wishlist is currently empty.'}
             </h3>
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed max-w-[280px]">
-              {isAr ? 'تصفح تشكيلة العطور الفخمة ومعطرات الشعر وأضف مفضلاتك هنا.' : 'Explore our collection of fine fragrances and save your favorites.'}
+              {isAr ? 'تصفح تشكيلة العطور الفخمة وأضف مفضلاتك بالضغط على أيقونة القلب.' : 'Explore our collection of fine fragrances and save your favorites by tapping the heart icon.'}
             </p>
             <LuxuryButton href="/shop" variant="primary" className="py-3 px-8 mt-2">
               {t('backToShop')}
@@ -67,10 +106,21 @@ export default function Wishlist() {
       ) : (
         <div className="flex flex-col gap-6 w-full">
           {wishlistProducts.map(product => {
-            const isOutOfStock = product.stock === 0;
-            const whatsappMessage = isAr 
-              ? `مرحباً، أود الاستفسار عن عطر: ${t(product.title)} بسعر ${product.price.toFixed(2)} دينار أردني.` 
-              : `Hello, I would like to ask about the fragrance: ${t(product.title)} priced at ${product.price.toFixed(2)} JOD.`;
+            // Support both DB fields and static product fields
+            const productName = isAr
+              ? (product.name_ar || product.title?.ar || product.name || '')
+              : (product.name_en || product.title?.en || product.name || '');
+            const productSlug = product.slug || product.id;
+            const productImage = product.thumbnail_url || product.thumbnail || product.image_url || '/images/background.jpg';
+            const productStock = product.stock_quantity ?? product.stock ?? 0;
+            const productPrice = Number(product.price || 0);
+            const productComparePrice = product.compare_at_price ? Number(product.compare_at_price) : null;
+            const productCategory = isAr ? (product.category?.name_ar || product.category_slug || '') : (product.category?.name_en || product.category_slug || '');
+            const isOutOfStock = productStock === 0 || (!product.variants?.some(v => v.stock > 0) && product.inventory_mode !== 'FORMULA_BASED');
+
+            const whatsappMessage = isAr
+              ? `مرحباً، أود الاستفسار عن عطر: ${productName} بسعر ${productPrice.toFixed(2)} دينار أردني.`
+              : `Hello, I would like to ask about the fragrance: ${productName} priced at ${productPrice.toFixed(2)} JOD.`;
             const whatsappUrl = `https://wa.me/962785050655?text=${encodeURIComponent(whatsappMessage)}`;
 
             return (
@@ -81,39 +131,41 @@ export default function Wishlist() {
                 <div className="rounded-[calc(2rem-0.375rem)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-5 md:p-6 flex flex-col sm:flex-row items-center gap-6 shadow-main">
                   
                   {/* Product Thumbnail */}
-                  <Link href={`/products/${product.slug}`} className={`w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)] ${isOutOfStock ? 'opacity-50' : ''}`}>
-                    <img 
-                      src={product.thumbnail} 
-                      alt={t(product.title)} 
-                      className="w-full h-full object-cover" 
+                  <Link href={`/products/${productSlug}`} className={`w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)] ${isOutOfStock ? 'opacity-50' : ''}`}>
+                    <img
+                      src={productImage}
+                      alt={productName}
+                      className="w-full h-full object-cover"
                     />
                   </Link>
 
                   {/* Product Info */}
                   <div className="flex-1 flex flex-col gap-2 text-start min-w-0">
-                    <span className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] font-bold">{product.category}</span>
-                    <Link href={`/products/${product.slug}`} className="hover:text-[var(--color-gold)] transition-colors">
+                    {productCategory && (
+                      <span className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] font-bold">{productCategory}</span>
+                    )}
+                    <Link href={`/products/${productSlug}`} className="hover:text-[var(--color-gold)] transition-colors">
                       <h3 className="font-display font-bold text-base text-[var(--color-text-primary)] leading-tight">
-                        {t(product.title)}
+                        {productName}
                       </h3>
                     </Link>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-[var(--color-text-primary)]">
-                        {product.price.toFixed(2)} JOD
+                        {productPrice.toFixed(2)} JOD
                       </span>
-                      {product.compareAtPrice && (
+                      {productComparePrice && productComparePrice > productPrice && (
                         <span className="text-xs line-through text-[var(--color-text-muted)] font-light">
-                          {product.compareAtPrice.toFixed(2)} JOD
+                          {productComparePrice.toFixed(2)} JOD
                         </span>
                       )}
                     </div>
                     <span className={`text-[9px] font-bold uppercase tracking-wider ${
-                      isOutOfStock ? 'text-red-500' : product.stock <= 4 ? 'text-amber-500' : 'text-emerald-500'
+                      isOutOfStock ? 'text-red-500' : productStock <= 4 ? 'text-amber-500' : 'text-emerald-500'
                     }`}>
-                      {isOutOfStock 
+                      {isOutOfStock
                         ? (isAr ? 'غير متوفر حالياً' : 'Out of Stock')
-                        : product.stock <= 4 
-                          ? (isAr ? `باقي ${product.stock} قطع فقط!` : `Only ${product.stock} left!`)
+                        : productStock <= 4
+                          ? (isAr ? `باقي ${productStock} قطع فقط!` : `Only ${productStock} left!`)
                           : (isAr ? 'متوفر' : 'In Stock')
                       }
                     </span>
@@ -121,7 +173,6 @@ export default function Wishlist() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2.5 shrink-0 flex-wrap justify-center sm:justify-end">
-                    {/* Move to Cart */}
                     {!isOutOfStock && (
                       <LuxuryButton
                         variant="primary"
@@ -133,7 +184,6 @@ export default function Wishlist() {
                       </LuxuryButton>
                     )}
 
-                    {/* WhatsApp Inquiry */}
                     <LuxuryButton
                       href={whatsappUrl}
                       target="_blank"
@@ -145,7 +195,6 @@ export default function Wishlist() {
                       {isAr ? 'واتساب' : 'Inquire'}
                     </LuxuryButton>
 
-                    {/* Remove from Wishlist */}
                     <LuxuryButton
                       variant="icon"
                       onClick={() => toggleWishlist(product.id)}
@@ -163,8 +212,8 @@ export default function Wishlist() {
 
           {/* Continue Shopping CTA */}
           <div className="flex justify-center mt-4">
-            <LuxuryButton 
-              href="/shop" 
+            <LuxuryButton
+              href="/shop"
               variant="ghost"
               className="!text-[10px] font-bold !text-[var(--color-text-secondary)] hover:!text-[var(--color-gold)] uppercase tracking-wider"
               iconRight={ArrowRight}

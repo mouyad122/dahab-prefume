@@ -7,6 +7,7 @@ import Footer from './Footer';
 import WhatsAppButton from './WhatsAppButton';
 import CartDrawer from '../cart/CartDrawer';
 import CartHydrator from '../cart/CartHydrator';
+import MobileBottomNav from './MobileBottomNav';
 
 export default function PublicLayoutWrapper({ children }) {
   const rawPathname = usePathname();
@@ -26,6 +27,7 @@ export default function PublicLayoutWrapper({ children }) {
       </main>
       <Footer />
       <WhatsAppButton />
+      <MobileBottomNav />
       <CartDrawer />
     </>
   );

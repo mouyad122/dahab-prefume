@@ -33,10 +33,6 @@ export default function Header() {
   const navItems = [
     { label: isAr ? 'الرئيسية' : 'Home', path: '/' },
     { label: isAr ? 'المتجر' : 'Shop', path: '/shop' },
-    { label: isAr ? 'المجموعات' : 'Collections', path: '/collections' },
-    { label: isAr ? 'عن دهب' : 'About', path: '/about' },
-    { label: isAr ? 'موقعنا' : 'Location', path: '/store-location' },
-
   ];
 
   const whatsappText = isAr

@@ -54,6 +54,7 @@ export default function StaticPages() {
             : 'Since 2007, our journey has been engraved with passion, creativity, and excellence. The story began in a small shop in Downtown Amman under the name "Dahab", becoming a destination for perfume lovers. Today, we are one of the leading perfume houses in Jordan. We blend our authentic heritage with a passion for innovation to create scents that touch the heart forever.'
         };
 
+      case '/location':
       case '/store-location':
         return {
           title: t('storeLocation'),
@@ -94,6 +95,7 @@ export default function StaticPages() {
             ? 'نثق بجودة عطورنا، ولذلك نتيح للعميل فحص واختبار العطر مباشرة عند الاستلام مع موظف التوصيل وقبل دفع الحساب.'
             : 'We trust our quality. Customers are welcome to inspect and test the fragrance with the delivery agent prior to paying.'
         };
+      case '/privacy':
       case '/privacy-policy':
         return {
           title: t('privacy'),
@@ -102,6 +104,7 @@ export default function StaticPages() {
             ? 'نحن نحترم خصوصيتك بالكامل. لا نقوم بتخزين أي بيانات شخصية أو بنكية دائمة للعملاء؛ الطلبات تُعالج كزائر وتمريرها مباشرة إلى الواتساب.'
             : 'We respect your privacy. No personal checkout details are stored permanently on our servers; guest checkouts are routed directly to WhatsApp.'
         };
+      case '/terms':
       case '/terms-and-conditions':
         return {
           title: t('terms'),
@@ -139,7 +142,7 @@ export default function StaticPages() {
           <p className="text-sm md:text-base text-[var(--color-text-secondary)] font-light leading-relaxed dir-auto whitespace-pre-line text-center">
             {content.desc}
           </p>
-          {pathname === '/store-location' && (
+          {(pathname === '/store-location' || pathname === '/location') && (
             <div className="mt-4 flex flex-col gap-4">
               <div className="relative h-[250px] md:h-[350px] rounded-2xl overflow-hidden border border-[var(--color-border)]">
                 <iframe 

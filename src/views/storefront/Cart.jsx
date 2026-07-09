@@ -161,14 +161,13 @@ export default function Cart() {
               >
                 {isAr ? 'تفريغ السلة بالكامل' : 'Clear All Items'}
               </LuxuryButton>
-              <LuxuryButton 
-                href="/shop" 
-                variant="ghost"
-                className="!text-[10px] font-bold !text-[var(--color-gold)] hover:!text-[var(--color-gold-light)] uppercase tracking-wider"
-                iconLeft={ArrowLeft}
+              <Link 
+                href="/shop"
+                className="inline-flex items-center gap-2 text-[10px] font-bold text-[var(--color-gold)] hover:text-[var(--color-gold-light)] uppercase tracking-wider transition-colors"
               >
-                {isAr ? 'متابعة التسوق' : 'Continue Shopping'}
-              </LuxuryButton>
+                <ArrowLeft size={13} />
+                {isAr ? '← متابعة التسوق' : '← Continue Shopping'}
+              </Link>
             </div>
           </div>
 

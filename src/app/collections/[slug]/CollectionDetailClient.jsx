@@ -2,6 +2,7 @@
 
 import React, { useContext } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, MagnifyingGlass, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../../contexts/LanguageContext';
 import { getProductImageSrc } from '../../../lib/productDisplay';
@@ -68,7 +69,13 @@ export default function CollectionDetailClient({ category, products = [] }) {
                 return (
                   <Link href={`/products/${product.slug}`} key={product.id} className="fragrance-card">
                     <div className="fragrance-image">
-                      <img src={image} alt={productName} />
+                      <Image 
+                        src={image} 
+                        alt={`${product.name_ar || productName} من DAHAB PERFUMES`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-700 ease-out hover:scale-105"
+                      />
                       {product.media_display_type === 'ai_360' && (
                         <span className="media-pill">{isAr ? 'عرض 360' : '360 View'}</span>
                       )}

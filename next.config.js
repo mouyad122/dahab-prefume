@@ -25,6 +25,27 @@ const nextConfig = {
   // ── Disable X-Powered-By header (hides Next.js fingerprint) ───────────────
   poweredByHeader: false,
 
+  // ── Redirects ─────────────────────────────────────────────────────────────
+  async redirects() {
+    return [
+      {
+        source: '/store-location',
+        destination: '/location',
+        permanent: true,
+      },
+      {
+        source: '/privacy-policy',
+        destination: '/privacy',
+        permanent: true,
+      },
+      {
+        source: '/terms-and-conditions',
+        destination: '/terms',
+        permanent: true,
+      },
+    ];
+  },
+
   // ── Security Headers ───────────────────────────────────────────────────────
   async headers() {
     return [

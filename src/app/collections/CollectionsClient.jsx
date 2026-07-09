@@ -2,6 +2,7 @@
 
 import React, { useContext } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import PageContainer from '../../components/layout/PageContainer';
@@ -64,10 +65,15 @@ export default function CollectionsClient({ categories = [] }) {
           const description = (isAr ? category.description_ar : category.description_en) || category.description_ar || category.description_en;
           return (
             <Link key={category.id} href={`/collections/${category.slug}`} className="collection-tile">
-              <img
-                src={category.image || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=900'}
-                alt={title}
-              />
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <Image
+                  src={category.image || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=900'}
+                  alt={title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
               <div>
                 <span className="media-pill static inline-flex mb-3">
                   {category._count?.products || 0} {isAr ? 'منتج' : 'products'}

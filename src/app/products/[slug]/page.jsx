@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '../../../lib/prisma';
 import ProductDetailClient from './ProductDetailClient';
-import { ALLOWED_CATEGORY_SLUGS, ALLOWED_SEASON_SLUGS, getCategoryLabel } from '../../../lib/productClassification';
+import { getCategoryLabel } from '../../../lib/productClassification';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -13,9 +13,39 @@ export async function generateMetadata({ params }) {
 
   if (!product) return { title: 'Product Not Found' };
 
+  const categoryStr = product.category_slug === 'men' ? 'عطر رجالي' : product.category_slug === 'women' ? 'عطر نسائي' : 'عطر شرقي/للجنسين';
+  const familyStr = product.fragrance_family ? `من العائلة العطرية ${product.fragrance_family}` : '';
+  const seasonStr = product.season ? `مثالي لفصل ${product.season}` : '';
+  const shortDesc = product.short_description || product.short_description_ar || '';
+  
+  const seoDescription = `${product.name_ar} من DAHAB PERFUMES: ${shortDesc} ${categoryStr} فاخر ${familyStr} ${seasonStr}. متوفر الآن لطلبك في عمان والأردن مع توصيل سريع.`.trim();
+
   return {
     title: `${product.name_ar} | DAHAB PERFUMES`,
-    description: product.short_description,
+    description: seoDescription,
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
+    openGraph: {
+      title: `${product.name_ar} | DAHAB PERFUMES`,
+      description: seoDescription,
+      url: `https://dahabperfume.com/products/${product.slug}`,
+      type: 'website',
+      images: [
+        {
+          url: product.image_url || `https://dahabperfume.com/products/${product.image_name || 'placeholder.png'}`,
+          width: 800,
+          height: 800,
+          alt: `${product.name_ar} من DAHAB PERFUMES`,
+        }
+      ]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name_ar} | DAHAB PERFUMES`,
+      description: seoDescription,
+      images: [product.image_url || `https://dahabperfume.com/products/${product.image_name || 'placeholder.png'}`],
+    }
   };
 }
 
@@ -38,10 +68,7 @@ export default async function ProductPage({ params }) {
     }
   });
 
-  const categorySlug = product?.category_slug || getCategoryLabel(product, 'en')?.toLowerCase();
-  const seasonSlug = product?.season_slug || (product?.season === 'كل المواسم' ? 'both' : null);
-
-  if (!product || !product.visible) {
+  if (!product) {
     notFound();
   }
 
@@ -78,5 +105,44 @@ export default async function ProductPage({ params }) {
     }
   });
 
-  return <ProductDetailClient product={product} relatedProducts={relatedProducts} />;
+  // Construct Product JSON-LD structured data safely
+  const variants = product.variants || [];
+  const defaultVariant = variants.find(v => v.price > 0) || variants[0];
+  const startingPrice = defaultVariant ? (defaultVariant.price / 1000).toFixed(2) : '0.00';
+  const totalStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+  const availability = totalStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+  
+  const productImage = product.image_url || `https://dahabperfume.com/products/${product.image_name || 'placeholder.png'}`;
+  
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    'name': product.name_ar,
+    'description': product.short_description || product.short_description_ar || `${product.name_ar} عطر فاخر من دهب للعطور.`,
+    'image': [productImage],
+    'sku': product.sku,
+    'brand': {
+      '@type': 'Brand',
+      'name': 'DAHAB PERFUMES'
+    },
+    'category': product.category?.name_ar || 'عطور',
+    'offers': {
+      '@type': 'Offer',
+      'url': `https://dahabperfume.com/products/${product.slug}`,
+      'priceCurrency': 'JOD',
+      'price': startingPrice,
+      'availability': availability,
+      'itemCondition': 'https://schema.org/NewCondition'
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <ProductDetailClient product={product} relatedProducts={relatedProducts} />
+    </>
+  );
 }

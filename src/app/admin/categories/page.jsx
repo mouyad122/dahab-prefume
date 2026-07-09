@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Plus, PencilSimple, Trash, X, ArrowUpRight, Eye, Sparkle, Tag } from '@phosphor-icons/react';
-import ImageUpload from '../../../components/admin/ImageUpload';
+import { Plus, PencilSimple, Trash, X, ArrowUpRight, Eye, Tag } from '@phosphor-icons/react';
 import LuxuryButton from '../../../components/ui/LuxuryButton';
 
 export default function AdminCategories() {
@@ -20,7 +19,6 @@ export default function AdminCategories() {
     name_en: '',
     description_ar: '',
     description_en: '',
-    image: '',
     display_order: 0,
     is_active: true
   });
@@ -51,7 +49,6 @@ export default function AdminCategories() {
       name_en: '',
       description_ar: '',
       description_en: '',
-      image: '',
       display_order: 0,
       is_active: true
     });
@@ -70,7 +67,6 @@ export default function AdminCategories() {
       name_en: category.name_en || '',
       description_ar: category.description_ar || '',
       description_en: category.description_en || '',
-      image: category.image || '',
       display_order: category.display_order || 0,
       is_active: category.is_active !== false
     });
@@ -176,12 +172,9 @@ export default function AdminCategories() {
               {categories.map(category => (
                 <div key={category.id} className="p-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] hover:border-[var(--color-gold)] transition-colors flex flex-col gap-4 group">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-black/40 overflow-hidden border border-[var(--color-border-subtle)] shrink-0">
-                      {category.image ? (
-                        <img src={category.image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[0.6rem] text-[var(--color-text-muted)]">بدون صورة</div>
-                      )}
+                    {/* Icon placeholder instead of image */}
+                    <div className="w-12 h-12 rounded-lg bg-[var(--color-gold-dim)] border border-[var(--color-border-strong)] shrink-0 flex items-center justify-center">
+                      <Tag size={20} className="text-[var(--color-gold-light)]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-[var(--color-text-primary)] text-sm mb-1 truncate">{category.name_ar}</h3>
@@ -298,13 +291,7 @@ export default function AdminCategories() {
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <ImageUpload
-                    label="صورة المجموعة"
-                    value={formData.image}
-                    onChange={(url) => setFormData({...formData, image: url})}
-                  />
-                </div>
+                {/* Note: Image field removed - categories are text-only sections */}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

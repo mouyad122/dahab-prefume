@@ -27,26 +27,32 @@ const outfit = Outfit({
   display: 'swap',
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#0E0E0E',
+  viewportFit: 'cover',
+};
+
 export const metadata = {
   title: 'DAHAB PERFUMES | Luxury Fragrance Boutique',
   description: 'Hand-blended luxury niche fragrances and hair mists with unmatched longevity and projection. Downtown Amman, Jordan.',
   metadataBase: new URL('https://dahabperfume.com'),
-  alternates: {
-    canonical: '/',
+  alternates: { canonical: '/' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'DAHAB PERFUMES',
   },
+  formatDetection: { telephone: true },
   openGraph: {
     title: 'DAHAB PERFUMES | Luxury Fragrance Boutique',
     description: 'Let your scent spread your influence. Hand-blended luxury niche fragrances and hair mists.',
     url: 'https://dahabperfume.com',
     siteName: 'DAHAB PERFUMES',
-    images: [
-      {
-        url: '/images/background.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'DAHAB PERFUMES Luxury Boutique',
-      }
-    ],
+    images: [{ url: '/images/background.jpg', width: 1200, height: 630, alt: 'DAHAB PERFUMES Luxury Boutique' }],
     type: 'website',
   },
   twitter: {
@@ -57,8 +63,8 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
-  const cookieStore = cookies();
+export default async function RootLayout({ children }) {
+  const cookieStore = await cookies();
   const lang = cookieStore.get('dahab_lang')?.value || 'ar';
 
   return (

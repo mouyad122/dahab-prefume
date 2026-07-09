@@ -2,6 +2,7 @@
 
 import React, { useContext, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, WhatsappLogo, Eye, ShoppingBag, Check, Sparkle } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { useCartStore } from '../../stores/useCartStore';
@@ -105,11 +106,13 @@ export default function ProductCard({ product }) {
           className="block w-full aspect-square rounded-2xl overflow-hidden bg-[#0a0a0c] border border-white/10 mb-4 relative group/img focus:outline-none"
         >
           {hasImage ? (
-            <img 
+            <Image 
               src={imageSource} 
-              alt={titleText} 
+              alt={`${product.name_ar || titleText} من DAHAB PERFUMES`}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               onError={() => setImageError(true)}
-              className="w-full h-full object-cover opacity-90 group-hover/img:scale-105 group-hover/img:opacity-100 transition-all duration-500"
+              className="object-cover opacity-90 group-hover/img:scale-105 group-hover/img:opacity-100 transition-all duration-500"
             />
           ) : (
             /* Luxury DAHAB Placeholder for missing/broken images */

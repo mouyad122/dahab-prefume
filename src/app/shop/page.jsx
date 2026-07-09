@@ -4,8 +4,22 @@ import { prisma } from '../../lib/prisma';
 import { ALLOWED_CATEGORY_SLUGS, ALLOWED_SEASON_SLUGS } from '../../lib/productClassification';
 
 export const metadata = {
-  title: 'المتجر | DAHAB PERFUMES',
-  description: 'تصفّح مجموعة دهب الكاملة من العطور الشرقية والعالمية ومعطرات الشعر.',
+  title: 'تسوق عطور رجالية ونسائية وعود في الأردن | DAHAB PERFUMES',
+  description: 'تسوق عطور دهب الفاخرة أونلاين في الأردن. تشكيلة مميزة من عطور رجالية ونسائية، عود، وخلطات عطرية مع توصيل سريع لجميع المحافظات.',
+  alternates: {
+    canonical: '/shop',
+  },
+  openGraph: {
+    title: 'تسوق عطور رجالية ونسائية وعود في الأردن | DAHAB PERFUMES',
+    description: 'تسوق عطور دهب الفاخرة أونلاين في الأردن. تشكيلة مميزة من عطور رجالية ونسائية، عود، وخلطات عطرية مع توصيل سريع لجميع المحافظات.',
+    url: 'https://dahabperfume.com/shop',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'تسوق عطور رجالية ونسائية وعود في الأردن | DAHAB PERFUMES',
+    description: 'تسوق عطور دهب الفاخرة أونلاين في الأردن.',
+  }
 };
 
 export const revalidate = 60;
