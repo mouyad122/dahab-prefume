@@ -6,7 +6,7 @@ export default function HomeWatermarkVideo() {
   return (
     <>
       <video
-        className="home-watermark-video fixed inset-0 w-full h-[100dvh] object-cover z-0 pointer-events-none opacity-[0.12]"
+        className="home-watermark-video fixed inset-0 w-full h-[100dvh] object-cover z-0 pointer-events-none opacity-[0.25]"
         autoPlay
         muted
         loop
@@ -25,7 +25,7 @@ export default function HomeWatermarkVideo() {
           height: 100dvh;
           object-fit: cover;
           z-index: 0;
-          opacity: 0.12;
+          opacity: 0.25;
           pointer-events: none;
         }
         .home-watermark-overlay {

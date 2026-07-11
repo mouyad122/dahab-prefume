@@ -84,7 +84,7 @@ export default function HomeExperience() {
   ];
 
   return (
-    <main className={`dahab-home relative overflow-hidden bg-[#050505] ${isAr ? 'dir-ar' : 'dir-en'}`}>
+    <main className={`dahab-home relative overflow-hidden ${isAr ? 'dir-ar' : 'dir-en'}`}>
       <HomeWatermarkVideo />
       <div className="relative z-10">
       {/* ── Hero ── */}
