@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import HomeWatermarkVideo from './HomeWatermarkVideo';
 import { ArrowLeft, ArrowRight, CheckCircle, Clock, MapPin, Phone, Sparkle, Star, WhatsappLogo } from '@phosphor-icons/react';
 import { LanguageContext } from '../../contexts/LanguageContext';
 import { brandConfig } from '../../config/brand';
@@ -83,20 +84,11 @@ export default function HomeExperience() {
   ];
 
   return (
-    <main className={`dahab-home ${isAr ? 'dir-ar' : 'dir-en'}`}>
+    <main className={`dahab-home relative overflow-hidden bg-[#050505] ${isAr ? 'dir-ar' : 'dir-en'}`}>
+      <HomeWatermarkVideo />
+      <div className="relative z-10">
       {/* ── Hero ── */}
       <section className="home-hero" aria-labelledby="home-hero-title">
-        <div className="home-hero-bg" aria-hidden="true">
-          <Image
-            src="/images/background.jpg"
-            alt="Dahab Background"
-            className="home-hero-bg-image"
-            priority
-            fill
-            style={{ objectFit: 'cover' }}
-            sizes="100vw"
-          />
-        </div>
         <div className="premium-container home-hero-grid">
           <div className="home-hero-copy">
             <div className="eyebrow">
@@ -130,13 +122,6 @@ export default function HomeExperience() {
           </div>
 
           <div className="hero-product-stage">
-            <img
-              src="/brand/dahab-logo.png"
-              alt=""
-              aria-hidden="true"
-              className="hero-showcase-logo"
-              loading="eager"
-            />
             <div className="hero-rating">
               <Star size={16} weight="fill" />
               <strong>{brandConfig.rating.score}</strong>
@@ -276,14 +261,13 @@ export default function HomeExperience() {
           {/* Map + Info Grid */}
           <div className="location-grid">
             {/* Map */}
-            <div className="location-map-wrap">
+            <div className="location-map-wrap rounded-xl overflow-hidden border border-[var(--color-gold)] bg-[#050505]">
               <iframe
-                src={mapEmbedUrl}
-                title={isAr ? 'موقع معرض دهب للعطور' : 'Dahab Perfumes Location'}
-                className="location-map-iframe"
-                allowFullScreen=""
+                title="موقع DAHAB PERFUMES في عمّان"
+                src="https://www.google.com/maps?q=XW2J%2BRM%20Amman&output=embed"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
+                className="h-full w-full border-0 min-h-[300px]"
               />
               {/* Overlay tint that lifts on hover */}
               <div className="location-map-overlay" aria-hidden="true" />
@@ -356,6 +340,7 @@ export default function HomeExperience() {
           </Link>
         </div>
       </section>
+      </div>
     </main>
   );
 }
